@@ -3,6 +3,7 @@ A Voxel Engine that has emphasis on graphics and performance.
 
 # Planned Features
 - Greedy Meshing
+- Procedural Terrain Generation
 - Efficient Chunk Renderer
 - Lighting
 - Point Lights
