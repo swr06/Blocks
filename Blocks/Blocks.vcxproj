@@ -42,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -117,6 +117,8 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,6 +136,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,6 +149,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Application\Application.cpp" />
+    <ClCompile Include="Core\Application\Logger.cpp" />
+    <ClCompile Include="Core\Camera.cpp" />
+    <ClCompile Include="Core\FpsCamera.cpp" />
+    <ClCompile Include="Core\GLClasses\CubeTextureMap.cpp" />
+    <ClCompile Include="Core\GLClasses\DepthBuffer.cpp" />
+    <ClCompile Include="Core\GLClasses\Fps.cpp" />
+    <ClCompile Include="Core\GLClasses\Framebuffer.cpp" />
+    <ClCompile Include="Core\GLClasses\FramebufferRed.cpp" />
+    <ClCompile Include="Core\GLClasses\IndexBuffer.cpp" />
+    <ClCompile Include="Core\GLClasses\Random.cpp" />
+    <ClCompile Include="Core\GLClasses\Shader.cpp" />
+    <ClCompile Include="Core\GLClasses\SSBO.cpp" />
+    <ClCompile Include="Core\GLClasses\stb_image.cpp" />
+    <ClCompile Include="Core\GLClasses\Texture.cpp" />
+    <ClCompile Include="Core\GLClasses\VertexArray.cpp" />
+    <ClCompile Include="Core\GLClasses\VertexBuffer.cpp" />
+    <ClCompile Include="Core\Skybox.cpp" />
     <ClCompile Include="Dependencies\glad\src\glad.c" />
     <ClCompile Include="Dependencies\imgui\imgui.cpp" />
     <ClCompile Include="Dependencies\imgui\imgui_demo.cpp" />
@@ -155,6 +177,24 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Application\Application.h" />
+    <ClInclude Include="Core\Application\Logger.h" />
+    <ClInclude Include="Core\Camera.h" />
+    <ClInclude Include="Core\FpsCamera.h" />
+    <ClInclude Include="Core\GLClasses\CubeTextureMap.h" />
+    <ClInclude Include="Core\GLClasses\DepthBuffer.h" />
+    <ClInclude Include="Core\GLClasses\Fps.h" />
+    <ClInclude Include="Core\GLClasses\Framebuffer.h" />
+    <ClInclude Include="Core\GLClasses\FramebufferRed.h" />
+    <ClInclude Include="Core\GLClasses\IndexBuffer.h" />
+    <ClInclude Include="Core\GLClasses\Random.h" />
+    <ClInclude Include="Core\GLClasses\Shader.h" />
+    <ClInclude Include="Core\GLClasses\SSBO.h" />
+    <ClInclude Include="Core\GLClasses\stb_image.h" />
+    <ClInclude Include="Core\GLClasses\Texture.h" />
+    <ClInclude Include="Core\GLClasses\VertexArray.h" />
+    <ClInclude Include="Core\GLClasses\VertexBuffer.h" />
+    <ClInclude Include="Core\Skybox.h" />
     <ClInclude Include="Dependencies\imgui\imconfig.h" />
     <ClInclude Include="Dependencies\imgui\imgui.h" />
     <ClInclude Include="Dependencies\imgui\imgui_impl_glfw.h" />

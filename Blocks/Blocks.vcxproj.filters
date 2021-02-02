@@ -14,6 +14,15 @@
     <Filter Include="Dependencies\glad">
       <UniqueIdentifier>{421e36bf-d68d-493a-924e-5b3a3cd2da47}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Application">
+      <UniqueIdentifier>{1c277fd0-e5fa-4070-8d73-31c3befd19ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GL Classes">
+      <UniqueIdentifier>{062c0aec-04f7-4440-b804-8448d4ed8eef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Misc">
+      <UniqueIdentifier>{bb417163-d59f-4ed2-b1f5-684878ea8d77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -40,6 +49,60 @@
     <ClCompile Include="Dependencies\glad\src\glad.c">
       <Filter>Dependencies\glad</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Application\Application.cpp">
+      <Filter>Source Files\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Application\Logger.cpp">
+      <Filter>Source Files\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\CubeTextureMap.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\DepthBuffer.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\Fps.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\Framebuffer.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\FramebufferRed.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\IndexBuffer.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\Random.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\Shader.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\SSBO.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\stb_image.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\Texture.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Camera.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\FpsCamera.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Skybox.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\VertexArray.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GLClasses\VertexBuffer.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -65,6 +128,60 @@
     </ClInclude>
     <ClInclude Include="Dependencies\imgui\imstb_truetype.h">
       <Filter>Dependencies\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Application\Application.h">
+      <Filter>Source Files\Application</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Application\Logger.h">
+      <Filter>Source Files\Application</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\CubeTextureMap.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\DepthBuffer.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\Fps.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\Framebuffer.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\FramebufferRed.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\IndexBuffer.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\Random.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\Shader.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\SSBO.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\stb_image.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\Texture.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Skybox.h">
+      <Filter>Source Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Camera.h">
+      <Filter>Source Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\FpsCamera.h">
+      <Filter>Source Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\VertexArray.h">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\VertexBuffer.h">
+      <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
