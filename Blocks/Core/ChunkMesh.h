@@ -1,0 +1,48 @@
+#pragma once
+
+#include <iostream>
+#include <array>
+#include <vector>
+
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "Vertex.h"
+#include "GLClasses/VertexBuffer.h"
+#include "GLClasses/VertexArray.h"
+#include "GLClasses/IndexBuffer.h"
+#include "Block.h"
+#include "Macros.h"
+
+namespace Blocks
+{
+	class ChunkMesh
+	{
+	public :
+
+		ChunkMesh();
+		void GenerateMesh(std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z>& chunk_data, int section);
+		void Render();
+
+	private :
+
+		enum BlockFaceType
+		{
+			Front,
+			Back,
+			Top,
+			Bottom,
+			Left,
+			Right
+		};
+
+		void AddFace(const glm::vec3& position, BlockFaceType facetype);
+
+		std::vector<Vertex> m_Vertices;
+		GLClasses::VertexBuffer m_VBO;
+		GLClasses::VertexArray m_VAO;
+		int m_PolygonCount = 0;
+	};
+}

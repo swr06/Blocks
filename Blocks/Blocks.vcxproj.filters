@@ -23,6 +23,12 @@
     <Filter Include="Source Files\Misc">
       <UniqueIdentifier>{bb417163-d59f-4ed2-b1f5-684878ea8d77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Blocks">
+      <UniqueIdentifier>{8c093e5e-05e6-465a-8f91-3359c5880851}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{67926d0b-33a1-47d4-b28a-d9174b6dc22c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -102,6 +108,18 @@
     </ClCompile>
     <ClCompile Include="Core\GLClasses\VertexBuffer.cpp">
       <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\World.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\CubeRenderer.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ChunkMesh.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Chunk.cpp">
+      <Filter>Source Files\Blocks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -183,5 +201,34 @@
     <ClInclude Include="Core\GLClasses\VertexBuffer.h">
       <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
+    <ClInclude Include="Core\World.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\CubeRenderer.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ChunkMesh.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Chunk.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Block.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Vertex.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Macros.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Core\Shaders\TestFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\TestVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

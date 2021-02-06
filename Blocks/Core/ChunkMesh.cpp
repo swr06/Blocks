@@ -1,0 +1,214 @@
+#include "ChunkMesh.h"
+
+namespace Blocks
+{
+	static glm::vec4 FrontFace[4], BackFace[4], TopFace[4], BottomFace[4], LeftFace[4], RightFace[4];
+
+	ChunkMesh::ChunkMesh() : m_PolygonCount(0)
+	{
+		static GLClasses::IndexBuffer IBO;
+		static bool IndexBufferInitialized = false;
+
+		if (IndexBufferInitialized == false)
+		{
+			IndexBufferInitialized = true;
+
+			GLuint* IndexBuffer = nullptr;
+
+			int index_size = CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z * 6;
+			int index_offset = 0;
+
+			IndexBuffer = new GLuint[index_size * 6];
+
+			for (size_t i = 0; i < index_size; i += 6)
+			{
+				IndexBuffer[i] = 0 + index_offset;
+				IndexBuffer[i + 1] = 1 + index_offset;
+				IndexBuffer[i + 2] = 2 + index_offset;
+				IndexBuffer[i + 3] = 2 + index_offset;
+				IndexBuffer[i + 4] = 3 + index_offset;
+				IndexBuffer[i + 5] = 0 + index_offset;
+
+				index_offset = index_offset + 4;
+			}
+
+			IBO.BufferData(index_size * 6 * sizeof(GLuint), IndexBuffer, GL_STATIC_DRAW);
+
+			delete[] IndexBuffer;
+		}
+
+		m_VAO.Bind();
+		m_VBO.Bind();
+		IBO.Bind();
+		m_VBO.VertexAttribPointer(0, 3, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Position));
+		m_VBO.VertexAttribPointer(1, 2, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+		m_VAO.Unbind();
+
+		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		FrontFace[1] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+		FrontFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		FrontFace[3] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+		
+		BackFace[0] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		BackFace[1] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		BackFace[2] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+		BackFace[3] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		
+		TopFace[0] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		TopFace[1] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+		TopFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		TopFace[3] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+		
+		BottomFace[0] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		BottomFace[1] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		BottomFace[2] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+		BottomFace[3] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		
+		LeftFace[0] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+		LeftFace[1] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		LeftFace[2] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		LeftFace[3] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		
+		RightFace[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		RightFace[1] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+		RightFace[2] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		RightFace[3] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+	}
+
+	void ChunkMesh::GenerateMesh(std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z>& chunk_data, int section)
+	{
+		int start_y = section * RENDER_CHUNK_SIZE_Y;
+		int end_y = (section * RENDER_CHUNK_SIZE_Y) + RENDER_CHUNK_SIZE_Y;
+
+		for (int x = 0; x < CHUNK_SIZE_X; x++)
+		{
+			for (int y = start_y; y < end_y; y++)
+			{
+				for (int z = 0; z < CHUNK_SIZE_Z; z++)
+				{
+					if (x == 0)
+					{
+						AddFace(glm::vec3(x, y, z), BlockFaceType::Left);
+					}
+
+					else if (x == CHUNK_SIZE_X - 1)
+					{
+						AddFace(glm::vec3(x, y, z), BlockFaceType::Right);
+					}
+
+					if (y == 0)
+					{
+						AddFace(glm::vec3(x, y, z), BlockFaceType::Bottom);
+					}
+
+					else if (y == CHUNK_SIZE_Y - 1)
+					{
+						AddFace(glm::vec3(x, y, z), BlockFaceType::Top);
+					}
+
+					if (z == 0)
+					{
+						AddFace(glm::vec3(x, y, z), BlockFaceType::Back);
+					}
+
+					else if (z == CHUNK_SIZE_Z - 1)
+					{
+						AddFace(glm::vec3(x, y, z), BlockFaceType::Front);
+					}
+				}
+			}
+		}
+
+		m_VBO.BufferData(this->m_Vertices.size() * sizeof(Vertex), &this->m_Vertices.front(), GL_STATIC_DRAW);
+		m_Vertices.clear();
+	}
+
+	void ChunkMesh::Render()
+	{
+		m_VAO.Bind();
+		glDrawElements(GL_TRIANGLES, m_PolygonCount * 6, GL_UNSIGNED_INT, NULL);
+		m_VAO.Unbind();
+	}
+
+	void ChunkMesh::AddFace(const glm::vec3& position, BlockFaceType facetype)
+	{
+		Vertex v1, v2, v3, v4;
+		glm::vec4 translation = glm::vec4(position, 0.0f);
+
+		m_PolygonCount++;
+
+		switch (facetype)
+		{
+			case BlockFaceType::Top:
+			{
+				v1.Position = translation + TopFace[0];
+				v2.Position = translation + TopFace[1];
+				v3.Position = translation + TopFace[2];
+				v4.Position = translation + TopFace[3];
+
+				break;
+			}
+
+			case BlockFaceType::Bottom:
+			{
+				v1.Position = translation + BottomFace[3];
+				v2.Position = translation + BottomFace[2];
+				v3.Position = translation + BottomFace[1];
+				v4.Position = translation + BottomFace[0];
+
+				break;
+			}
+
+			case BlockFaceType::Front:
+			{
+				v1.Position = translation + FrontFace[3];
+				v2.Position = translation + FrontFace[2];
+				v3.Position = translation + FrontFace[1];
+				v4.Position = translation + FrontFace[0];
+
+				break;
+			}
+
+			case BlockFaceType::Back:
+			{
+				v1.Position = translation + BackFace[0];
+				v2.Position = translation + BackFace[1];
+				v3.Position = translation + BackFace[2];
+				v4.Position = translation + BackFace[3];
+
+				break;
+			}
+
+			case BlockFaceType::Left:
+			{
+				v1.Position = translation + LeftFace[3];
+				v2.Position = translation + LeftFace[2];
+				v3.Position = translation + LeftFace[1];
+				v4.Position = translation + LeftFace[0];
+
+				break;
+			}
+
+			case BlockFaceType::Right:
+			{
+				v1.Position = translation + RightFace[0];
+				v2.Position = translation + RightFace[1];
+				v3.Position = translation + RightFace[2];
+				v4.Position = translation + RightFace[3];
+
+				break;
+			}
+
+			default:
+			{
+				throw "Invalid \"facetype\" value";
+				break;
+			}
+		}
+
+		m_Vertices.push_back(v1);
+		m_Vertices.push_back(v2);
+		m_Vertices.push_back(v3);
+		m_Vertices.push_back(v4);
+	}
+}

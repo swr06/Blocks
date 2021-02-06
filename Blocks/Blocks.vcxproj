@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>ClangCL</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -152,6 +152,9 @@
     <ClCompile Include="Core\Application\Application.cpp" />
     <ClCompile Include="Core\Application\Logger.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
+    <ClCompile Include="Core\Chunk.cpp" />
+    <ClCompile Include="Core\ChunkMesh.cpp" />
+    <ClCompile Include="Core\CubeRenderer.cpp" />
     <ClCompile Include="Core\FpsCamera.cpp" />
     <ClCompile Include="Core\GLClasses\CubeTextureMap.cpp" />
     <ClCompile Include="Core\GLClasses\DepthBuffer.cpp" />
@@ -167,6 +170,7 @@
     <ClCompile Include="Core\GLClasses\VertexArray.cpp" />
     <ClCompile Include="Core\GLClasses\VertexBuffer.cpp" />
     <ClCompile Include="Core\Skybox.cpp" />
+    <ClCompile Include="Core\World.cpp" />
     <ClCompile Include="Dependencies\glad\src\glad.c" />
     <ClCompile Include="Dependencies\imgui\imgui.cpp" />
     <ClCompile Include="Dependencies\imgui\imgui_demo.cpp" />
@@ -179,7 +183,11 @@
   <ItemGroup>
     <ClInclude Include="Core\Application\Application.h" />
     <ClInclude Include="Core\Application\Logger.h" />
+    <ClInclude Include="Core\Block.h" />
     <ClInclude Include="Core\Camera.h" />
+    <ClInclude Include="Core\Chunk.h" />
+    <ClInclude Include="Core\ChunkMesh.h" />
+    <ClInclude Include="Core\CubeRenderer.h" />
     <ClInclude Include="Core\FpsCamera.h" />
     <ClInclude Include="Core\GLClasses\CubeTextureMap.h" />
     <ClInclude Include="Core\GLClasses\DepthBuffer.h" />
@@ -194,7 +202,10 @@
     <ClInclude Include="Core\GLClasses\Texture.h" />
     <ClInclude Include="Core\GLClasses\VertexArray.h" />
     <ClInclude Include="Core\GLClasses\VertexBuffer.h" />
+    <ClInclude Include="Core\Macros.h" />
     <ClInclude Include="Core\Skybox.h" />
+    <ClInclude Include="Core\Vertex.h" />
+    <ClInclude Include="Core\World.h" />
     <ClInclude Include="Dependencies\imgui\imconfig.h" />
     <ClInclude Include="Dependencies\imgui\imgui.h" />
     <ClInclude Include="Dependencies\imgui\imgui_impl_glfw.h" />
@@ -203,6 +214,10 @@
     <ClInclude Include="Dependencies\imgui\imstb_rectpack.h" />
     <ClInclude Include="Dependencies\imgui\imstb_textedit.h" />
     <ClInclude Include="Dependencies\imgui\imstb_truetype.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Core\Shaders\TestFrag.glsl" />
+    <None Include="Core\Shaders\TestVert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

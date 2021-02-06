@@ -19,12 +19,12 @@ namespace GLClasses
 		m_Program = 0;
 		auto start = std::chrono::steady_clock::now();
 
-		GLuint vs;
-		GLuint fs;
-		GLint successful;
+		GLuint vs = 0;
+		GLuint fs = 0;
+		GLint successful = 0;
 		GLchar GLInfoLog[512];
 
-		GLuint gs;
+		GLuint gs = 0;
 
 		if (m_GeometryData.size() > 0)
 		{

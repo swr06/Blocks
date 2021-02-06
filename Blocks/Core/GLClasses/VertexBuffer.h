@@ -13,7 +13,7 @@ namespace GLClasses
 	{
 	public:
 
-		VertexBuffer(GLenum type);
+		VertexBuffer(GLenum type = GL_ARRAY_BUFFER);
 		~VertexBuffer();
 
 		VertexBuffer(const VertexBuffer&) = delete;
