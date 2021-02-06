@@ -16,8 +16,10 @@ namespace Blocks
 	{
 	public : 
 
-		Chunk()
+		Chunk(const glm::ivec2& position)
 		{
+			m_Position = position;
+			
 			//memset(&m_ChunkData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
 
 			for (int i = 0; i < CHUNK_SIZE_X; i++)
@@ -46,7 +48,7 @@ namespace Blocks
 		{
 			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
 			{
-				m_ChunkMeshes[i].GenerateMesh(m_ChunkData, i);
+				m_ChunkMeshes[i].GenerateMesh(m_ChunkData, i, m_Position);
 			}
 		}
 
@@ -62,6 +64,6 @@ namespace Blocks
 
 		std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z> m_ChunkData;
 		std::array<ChunkMesh, CHUNK_RENDER_MESH_COUNT> m_ChunkMeshes;
-		glm::vec3 m_Position;
+		glm::vec2 m_Position;
 	};
 }

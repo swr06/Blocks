@@ -1,5 +1,7 @@
 #include "ChunkMesh.h"
 
+extern uint32_t _App_PolygonCount;
+
 namespace Blocks
 {
 	static glm::vec4 FrontFace[4], BackFace[4], TopFace[4], BottomFace[4], LeftFace[4], RightFace[4];
@@ -75,7 +77,7 @@ namespace Blocks
 		RightFace[3] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 	}
 
-	void ChunkMesh::GenerateMesh(std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z>& chunk_data, int section)
+	void ChunkMesh::GenerateMesh(std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z>& chunk_data, int section, const glm::vec2& chunk_pos)
 	{
 		int start_y = section * RENDER_CHUNK_SIZE_Y;
 		int end_y = (section * RENDER_CHUNK_SIZE_Y) + RENDER_CHUNK_SIZE_Y;
@@ -86,34 +88,37 @@ namespace Blocks
 			{
 				for (int z = 0; z < CHUNK_SIZE_Z; z++)
 				{
+					float world_x = x + (chunk_pos.x * CHUNK_SIZE_X);
+					float world_z = z + (chunk_pos.y * CHUNK_SIZE_Z);
+
 					if (x == 0)
 					{
-						AddFace(glm::vec3(x, y, z), BlockFaceType::Left);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Left);
 					}
 
 					else if (x == CHUNK_SIZE_X - 1)
 					{
-						AddFace(glm::vec3(x, y, z), BlockFaceType::Right);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Right);
 					}
 
 					if (y == 0)
 					{
-						AddFace(glm::vec3(x, y, z), BlockFaceType::Bottom);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
 					}
 
 					else if (y == CHUNK_SIZE_Y - 1)
 					{
-						AddFace(glm::vec3(x, y, z), BlockFaceType::Top);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top);
 					}
 
 					if (z == 0)
 					{
-						AddFace(glm::vec3(x, y, z), BlockFaceType::Back);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Back);
 					}
 
 					else if (z == CHUNK_SIZE_Z - 1)
 					{
-						AddFace(glm::vec3(x, y, z), BlockFaceType::Front);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Front);
 					}
 				}
 			}
@@ -136,6 +141,7 @@ namespace Blocks
 		glm::vec4 translation = glm::vec4(position, 0.0f);
 
 		m_PolygonCount++;
+		_App_PolygonCount += 1;
 
 		switch (facetype)
 		{

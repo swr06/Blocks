@@ -21,8 +21,10 @@
 #include "Core/CubeRenderer.h"
 #include "Core/Chunk.h"
 #include "Core/ChunkMesh.h"
+#include "Core/World.h"
 
 Blocks::FPSCamera Camera(60.0f, 800.0f / 600.0f, 0.1f, 1000.0f);
+extern uint32_t _App_PolygonCount;
 
 class BlocksApp : public Blocks::Application
 {
@@ -67,9 +69,9 @@ public:
 	{
 		ImGuiWindowFlags window_flags = 0;
 
-		if (ImGui::Begin("Test"))
+		if (ImGui::Begin("Stats"))
 		{
-			ImGui::Text("Test");
+			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
 
 		}
 
@@ -95,8 +97,10 @@ int main()
 	Shader.CreateShaderProgramFromFile("Core/Shaders/TestVert.glsl", "Core/Shaders/TestFrag.glsl");
 	Shader.CompileShaders();
 
-	Blocks::Chunk chunk;
-	chunk.GenerateMeshes();
+	Blocks::World world;
+
+	world.GenerateChunks();
+	app.SetCursorLocked(true);
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
@@ -109,8 +113,7 @@ int main()
 		Shader.Use();
 		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
 		Shader.SetMatrix4("u_ViewProjection", Camera.GetViewProjection());
-		chunk.RenderMeshes();
-       // Blocks::RenderCube(glm::vec3(0.0f), Camera.GetViewProjection());
+		world.RenderChunks();
 		app.FinishFrame();
 	}
 }

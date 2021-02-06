@@ -23,7 +23,8 @@ namespace Blocks
 	public :
 
 		ChunkMesh();
-		void GenerateMesh(std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z>& chunk_data, int section);
+		void GenerateMesh(std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z>& chunk_data, int section, 
+			const glm::vec2& chunk_pos);
 		void Render();
 
 	private :

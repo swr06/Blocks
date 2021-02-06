@@ -1,5 +1,7 @@
 #include "Application.h"
 
+uint32_t _App_PolygonCount = 0;
+
 namespace Blocks
 {
 	// Event callbacks
