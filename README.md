@@ -5,20 +5,18 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Greedy Meshing
 - Procedural Terrain Generation
 - Efficient Chunk Renderer
-- Lighting
-- Point Lights
+- PBR Lighting
+- Normal Mapping
+- SSR
 - Sun casting
 - Shadow Mapping 
-  - Cascaded Shadow Maps
+- Water with reflections
 - Volumetric Lighting
 - Water Shaders
 - Reflections
 - Depth of Field
 - Motion Blur
-- Screen Space Reflections
 - Skybox
-- Normal Mapping
-- PBR 
 - Alpha Blending
 - Ambient Occlusion
 
