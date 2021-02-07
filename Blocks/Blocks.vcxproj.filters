@@ -121,6 +121,12 @@
     <ClCompile Include="Core\Chunk.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\BlockDatabase.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\BlockDatabaseParser.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -220,6 +226,12 @@
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
     <ClInclude Include="Core\Macros.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\BlockDatabase.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\BlockDatabaseParser.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
   </ItemGroup>

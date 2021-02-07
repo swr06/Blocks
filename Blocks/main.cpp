@@ -22,6 +22,7 @@
 #include "Core/Chunk.h"
 #include "Core/ChunkMesh.h"
 #include "Core/World.h"
+#include "Core/BlockDatabaseParser.h"
 
 Blocks::FPSCamera Camera(60.0f, 800.0f / 600.0f, 0.1f, 1000.0f);
 extern uint32_t _App_PolygonCount;
@@ -101,6 +102,8 @@ int main()
 
 	world.GenerateChunks();
 	app.SetCursorLocked(true);
+
+	Blocks::BlockDatabaseParser::Parse("blockdb.txt");
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{

@@ -1,0 +1,28 @@
+{
+	Name : Block
+	Albedo : Resources/block.png
+	Normal : Resources/block_n.png
+	PBR : Resources/block_pbr.png
+}
+
+{
+	Name : Block1
+	Albedo : Resources/block1.png
+	Normal : Resources/block_n1.png
+	PBR : Resources/block_pbr1.png
+}
+
+{
+	Name : Block2
+	Albedo : Resources/block1.png
+	Normal : Resources/block_n1.png
+	PBR : Resources/block_pbr1.png
+}
+
+{
+	Name : Block1
+	Albedo : Resources/block1.png
+	Normal : Resources/block_n1.png
+	PBR : Resources/block_pbr1.png
+}
+

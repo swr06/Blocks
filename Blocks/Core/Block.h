@@ -14,13 +14,6 @@ namespace Blocks
 
 		inline bool IsTransparent()
 		{
-			/*if (ID != 0)
-			{
-				return false;
-			}
-
-			return true;*/
-
 			return false;
 		}
 	};
