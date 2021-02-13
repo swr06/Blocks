@@ -15,6 +15,7 @@
 #include "GLClasses/IndexBuffer.h"
 #include "Block.h"
 #include "Macros.h"
+#include "BlockDatabase.h"
 
 namespace Blocks
 {
@@ -28,16 +29,6 @@ namespace Blocks
 		void Render();
 
 	private :
-
-		enum BlockFaceType
-		{
-			Front,
-			Back,
-			Top,
-			Bottom,
-			Left,
-			Right
-		};
 
 		void AddFace(const glm::vec3& position, BlockFaceType facetype);
 

@@ -13,13 +13,23 @@ namespace Blocks
 {
 	namespace BlockDatabaseParser
 	{
+		struct BlockTexture
+		{
+			std::string front = "";
+			std::string back = "";
+			std::string left = "";
+			std::string right = "";
+			std::string top = "";
+			std::string bottom = "";
+		};
+
 		struct ParsedBlockData
 		{
-			std::string NormalMap;
-			std::string PBRMap;
-			std::string AlbedoMap;
-			std::string BlockName;
-			uint8_t ID;
+			BlockTexture NormalMap;
+			BlockTexture PBRMap;
+			BlockTexture AlbedoMap;
+			std::string BlockName = "";
+			uint8_t ID = 0;
 		};
 
 		void Parse(const std::string& path);

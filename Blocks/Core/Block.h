@@ -6,6 +6,16 @@
 
 namespace Blocks
 {
+	enum BlockFaceType
+	{
+		Front,
+		Back,
+		Top,
+		Bottom,
+		Left,
+		Right
+	};
+
 	class Block
 	{
 	public :

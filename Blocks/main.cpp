@@ -23,6 +23,7 @@
 #include "Core/ChunkMesh.h"
 #include "Core/World.h"
 #include "Core/BlockDatabaseParser.h"
+#include "Core/BlockDatabase.h"
 
 Blocks::FPSCamera Camera(60.0f, 800.0f / 600.0f, 0.1f, 1000.0f);
 extern uint32_t _App_PolygonCount;
@@ -94,6 +95,8 @@ int main()
 
 	app.Initialize();
 
+	Blocks::BlockDatabase::Initialize();
+
 	GLClasses::Shader Shader;
 	Shader.CreateShaderProgramFromFile("Core/Shaders/TestVert.glsl", "Core/Shaders/TestFrag.glsl");
 	Shader.CompileShaders();
@@ -107,15 +110,22 @@ int main()
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 
 		glViewport(0, 0, 800, 600);
 
 		app.OnUpdate();
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetTextureArray());
+
 		Shader.Use();
 		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
 		Shader.SetMatrix4("u_ViewProjection", Camera.GetViewProjection());
+		Shader.SetInteger("u_BlockTextures", 0);
 		world.RenderChunks();
 		app.FinishFrame();
 	}

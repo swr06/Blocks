@@ -9,5 +9,6 @@ namespace Blocks
 	{
 		glm::vec3 Position;
 		glm::vec2 TexCoords;
+		float TexIndex;
 	};
 }

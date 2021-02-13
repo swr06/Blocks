@@ -127,6 +127,9 @@
     <ClCompile Include="Core\BlockDatabaseParser.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\GLClasses\TextureArray.cpp">
+      <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -233,6 +236,9 @@
     </ClInclude>
     <ClInclude Include="Core\BlockDatabaseParser.h">
       <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GLClasses\TextureArray.h">
+      <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -37,7 +37,7 @@ namespace GLClasses
 
 		~Texture()
 		{
-			if (this->m_delete_texture == 1 && m_Texture == 0)
+			if (this->m_delete_texture == 1)
 			{
 				glDeleteTextures(1, &m_Texture);
 			}
