@@ -46,7 +46,7 @@ public:
 	void OnUserUpdate(double ts) override
 	{
 		GLFWwindow* window = GetWindow();
-		float camera_speed = 0.03f;
+		float camera_speed = 0.1f;
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 			Camera.ChangePosition(Camera.GetFront() * camera_speed);
@@ -82,12 +82,19 @@ public:
 
 	void OnEvent(Blocks::Event e) override
 	{
-        if (e.type == Blocks::EventTypes::MouseMove)
-        {
-            Camera.UpdateOnMouseMovement(e.mx, e.my);
-        }
+		if (e.type == Blocks::EventTypes::MouseMove)
+		{
+			Camera.UpdateOnMouseMovement(e.mx, e.my);
+		}
+
+		if (e.type == Blocks::EventTypes::WindowResize)
+		{
+			Camera.SetAspect((float)e.wx / (float)e.wy);
+		}
 	}
 };
+
+Blocks::World world;
 
 int main()
 {
@@ -101,9 +108,6 @@ int main()
 	Shader.CreateShaderProgramFromFile("Core/Shaders/TestVert.glsl", "Core/Shaders/TestFrag.glsl");
 	Shader.CompileShaders();
 
-	Blocks::World world;
-
-	world.GenerateChunks();
 	app.SetCursorLocked(true);
 
 	Blocks::BlockDatabaseParser::Parse("blockdb.txt");
@@ -126,7 +130,15 @@ int main()
 		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
 		Shader.SetMatrix4("u_ViewProjection", Camera.GetViewProjection());
 		Shader.SetInteger("u_BlockTextures", 0);
-		world.RenderChunks();
+		world.Update(Camera.GetPosition());
 		app.FinishFrame();
+	}
+}
+
+namespace Blocks
+{
+	Block GetWorldBlock(const glm::ivec3& block)
+	{
+		return world.GetWorldBlock(block);
 	}
 }

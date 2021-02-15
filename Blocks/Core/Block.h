@@ -16,15 +16,25 @@ namespace Blocks
 		Right
 	};
 
+	typedef uint8_t BlockIDType;
+
 	class Block
 	{
 	public :
 		
-		uint8_t ID = 0;
+		BlockIDType ID;
 
-		inline bool IsTransparent()
+		bool IsTransparent()
 		{
-			return false;
+			if (ID != 0)
+			{
+				return false;
+			}
+
+			else
+			{
+				return true;
+			}
 		}
 	};
 

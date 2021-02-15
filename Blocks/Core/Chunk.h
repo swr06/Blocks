@@ -3,6 +3,7 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <chrono>
 #include <assert.h>
 
 #include "Block.h"
@@ -28,7 +29,15 @@ namespace Blocks
 				{
 					for (int k = 0; k < CHUNK_SIZE_Z; k++)
 					{
-						m_ChunkData[i][j][k] = { 0 };
+						if (j < 40)
+						{
+							m_ChunkData[i][j][k].ID = BlockDatabase::GetBlockID("Grass");
+						}
+
+						else
+						{
+							m_ChunkData[i][j][k].ID = 0;
+						}
 					}
 				}
 			}
@@ -46,17 +55,29 @@ namespace Blocks
 
 		void GenerateMeshes()
 		{
+			auto t1 = std::chrono::high_resolution_clock::now();
+
 			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
 			{
-				m_ChunkMeshes[i].GenerateMesh(m_ChunkData, i, m_Position);
+				if (m_ChunkMeshes[i].m_ChunkMeshState == ChunkMeshState::Unbuilt)
+				{
+					m_ChunkMeshes[i].GenerateMesh(m_ChunkData, i, m_Position);
+				}
 			}
+
+			auto t2 = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+			std::cout << "\nMESHING TOOK : " << duration << "  ms";
 		}
 
 		void RenderMeshes()
 		{
 			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
 			{
-				m_ChunkMeshes[i].Render();
+				if (m_ChunkMeshes[i].m_ChunkMeshState == ChunkMeshState::Built)
+				{
+					m_ChunkMeshes[i].Render();
+				}
 			}
 		}
 
@@ -65,5 +86,7 @@ namespace Blocks
 		std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z> m_ChunkData;
 		std::array<ChunkMesh, CHUNK_RENDER_MESH_COUNT> m_ChunkMeshes;
 		glm::vec2 m_Position;
+
+		friend class World;
 	};
 }

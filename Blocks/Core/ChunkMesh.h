@@ -19,6 +19,14 @@
 
 namespace Blocks
 {
+	Block GetWorldBlock(const glm::ivec3& block);
+	
+	enum ChunkMeshState
+	{
+		Built,
+		Unbuilt
+	};
+
 	class ChunkMesh
 	{
 	public :
@@ -36,5 +44,10 @@ namespace Blocks
 		GLClasses::VertexBuffer m_VBO;
 		GLClasses::VertexArray m_VAO;
 		int m_PolygonCount = 0;
+
+		friend class World;
+		friend class Chunk;
+
+		ChunkMeshState m_ChunkMeshState = ChunkMeshState::Unbuilt;
 	};
 }

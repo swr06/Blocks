@@ -2,13 +2,22 @@
 
 namespace Blocks
 {
-	extern std::map<std::string, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataList;
+	extern std::unordered_map<std::string, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataList;
+	std::unordered_map<uint8_t, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataListID;
 	GLClasses::TextureArray BlockAlbedoTextureArray;
 	
 	void BlockDatabase::Initialize()
 	{
 		std::string database_path = "blockdb.txt";
 		BlockDatabaseParser::Parse(database_path);
+
+		for (auto& e : ParsedBlockDataList)
+		{
+			uint8_t id = e.second.ID;
+			const BlockDatabaseParser::ParsedBlockData& data = e.second;
+
+			ParsedBlockDataListID[id] = data;
+		}
 
 		Logger::Log("Successfully parsed database file");
 
@@ -90,6 +99,62 @@ namespace Blocks
 					pth = ParsedBlockDataList[block_name].AlbedoMap.bottom;
 					break;
 				}
+			}
+
+			return BlockAlbedoTextureArray.GetTexture(pth);
+		}
+
+		return 0;
+	}
+
+	int BlockDatabase::GetBlockTexture(BlockIDType block_id, const BlockFaceType type)
+	{
+		if (ParsedBlockDataListID.find(block_id) == ParsedBlockDataListID.end())
+		{
+			return 0;
+		}
+
+		else
+		{
+			std::string pth;
+
+			switch (type)
+			{
+			case BlockFaceType::Front:
+			{
+				pth = ParsedBlockDataListID[block_id].AlbedoMap.front;
+				break;
+			}
+
+			case BlockFaceType::Back:
+			{
+				pth = ParsedBlockDataListID[block_id].AlbedoMap.back;
+				break;
+			}
+
+			case BlockFaceType::Left:
+			{
+				pth = ParsedBlockDataListID[block_id].AlbedoMap.left;
+				break;
+			}
+
+			case BlockFaceType::Right:
+			{
+				pth = ParsedBlockDataListID[block_id].AlbedoMap.right;
+				break;
+			}
+
+			case BlockFaceType::Top:
+			{
+				pth = ParsedBlockDataListID[block_id].AlbedoMap.top;
+				break;
+			}
+
+			case BlockFaceType::Bottom:
+			{
+				pth = ParsedBlockDataListID[block_id].AlbedoMap.bottom;
+				break;
+			}
 			}
 
 			return BlockAlbedoTextureArray.GetTexture(pth);

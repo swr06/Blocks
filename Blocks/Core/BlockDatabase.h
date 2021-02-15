@@ -18,6 +18,7 @@ namespace Blocks
 		void Initialize();
 		uint8_t GetBlockID(const std::string& block_name);
 		int GetBlockTexture(const std::string& block_name, const BlockFaceType type);
+		int GetBlockTexture(BlockIDType block_id, const BlockFaceType type);
 		GLuint GetTextureArray();
 	}
 }

@@ -209,6 +209,8 @@ namespace Blocks
 			std::cout << "\tDEBUG : THE OPENGL SYNCHRONOUS DEBUG EXTENSION IS UN AVAILABLE\n";
 		}
 
+		glfwMaximizeWindow(m_Window);
+
 		return;
 	}
 

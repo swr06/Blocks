@@ -92,19 +92,29 @@ namespace Blocks
 					float world_x = x + (chunk_pos.x * CHUNK_SIZE_X);
 					float world_z = z + (chunk_pos.y * CHUNK_SIZE_Z);
 
-					if (x == 0)
+					if (GetWorldBlock(glm::vec3(world_x - 1, y, world_z)).IsTransparent())
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Left);
 					}
 
-					else if (x == CHUNK_SIZE_X - 1)
+					if (GetWorldBlock(glm::vec3(world_x + 1, y, world_z)).IsTransparent())
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Right);
 					}
 
-					if (y == 0)
+					if (y > 0 && GetWorldBlock(glm::vec3(world_x, y - 1, world_z)).IsTransparent())
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
+					}
+
+					else if (y == 0)
+					{
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
+					}
+
+					if (y < CHUNK_SIZE_Y - 1 && GetWorldBlock(glm::vec3(world_x, y + 1, world_z)).IsTransparent())
+					{
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top);
 					}
 
 					else if (y == CHUNK_SIZE_Y - 1)
@@ -112,35 +122,47 @@ namespace Blocks
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top);
 					}
 
-					if (z == 0)
-					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Back);
-					}
-
-					else if (z == CHUNK_SIZE_Z - 1)
+					if (GetWorldBlock(glm::vec3(world_x, y, world_z + 1)).IsTransparent())
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Front);
+					}
+
+					if (GetWorldBlock(glm::vec3(world_x, y, world_z - 1)).IsTransparent())
+					{
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Back);
 					}
 				}
 			}
 		}
+		
+		if (m_Vertices.size() > 0)
+		{
+			m_VBO.BufferData(this->m_Vertices.size() * sizeof(Vertex), &this->m_Vertices.front(), GL_STATIC_DRAW);
+			m_Vertices.clear();
+		}
 
-		m_VBO.BufferData(this->m_Vertices.size() * sizeof(Vertex), &this->m_Vertices.front(), GL_STATIC_DRAW);
-		m_Vertices.clear();
+		m_ChunkMeshState = ChunkMeshState::Built;
 	}
 
 	void ChunkMesh::Render()
 	{
-		m_VAO.Bind();
-		glDrawElements(GL_TRIANGLES, m_PolygonCount * 6, GL_UNSIGNED_INT, NULL);
-		m_VAO.Unbind();
+		if (m_PolygonCount > 0)
+		{
+			m_VAO.Bind();
+			glDrawElements(GL_TRIANGLES, m_PolygonCount * 6, GL_UNSIGNED_INT, NULL);
+			m_VAO.Unbind();
+		}
 	}
 
 	void ChunkMesh::AddFace(const glm::vec3& position, BlockFaceType facetype)
 	{
+		Block block = GetWorldBlock(position);
+
+		if (block.ID == 0) { return;  }
+
 		Vertex v1, v2, v3, v4;
 		glm::vec4 translation = glm::vec4(position, 0.0f);
-		float tex_index= BlockDatabase::GetBlockTexture("Grass", facetype);
+		float tex_index= BlockDatabase::GetBlockTexture(block.ID, facetype);
 
 		m_PolygonCount++;
 		_App_PolygonCount += 1;

@@ -2,7 +2,7 @@
 
 namespace Blocks
 {
-	std::map<std::string, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataList;
+	std::unordered_map<std::string, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataList;
 
 	uint8_t GenerateBlockID()
 	{
