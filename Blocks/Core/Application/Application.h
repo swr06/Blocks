@@ -55,6 +55,7 @@ namespace Blocks
 		unsigned int GetWidth();
 		unsigned int GetHeight();
 		void SetCursorLocked(bool locked);
+		inline bool GetCursorLocked() noexcept { return m_CursorLocked; }
 
 	protected:
 		GLFWwindow* m_Window;
@@ -76,5 +77,6 @@ namespace Blocks
 		std::queue<Event> m_EventQueue;
 		int m_CurrentWidth = 0;
 		int m_CurrentHeight = 0;
+		bool m_CursorLocked = false;
 	};
 }

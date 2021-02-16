@@ -295,6 +295,8 @@ namespace Blocks
 
 	void Application::SetCursorLocked(bool locked)
 	{
+		m_CursorLocked = locked;
+
 		if (locked)
 		{
 			glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

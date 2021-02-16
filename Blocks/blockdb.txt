@@ -7,3 +7,13 @@
 	Albedo_front : Res/grass_block_side.png
 	Albedo_back : Res/grass_block_side.png
 }
+
+{
+	Name : Dirt
+	Albedo : Res/dirt.png
+}
+
+{
+	Name : Stone
+	Albedo : Res/stone.png
+}

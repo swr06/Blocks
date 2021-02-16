@@ -31,6 +31,7 @@ namespace Blocks
 				if (!ChunkExists(glm::ivec2(i, j)))
 				{
 					m_WorldChunks.emplace(std::pair<int, int>(i, j), Chunk(glm::ivec2(i, j)));
+					WorldGenerator::GenerateChunk(&m_WorldChunks.at(std::pair<int, int>(i, j)));
 				}
 			}
 		}

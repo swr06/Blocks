@@ -29,6 +29,12 @@
     <Filter Include="Source Files\Shaders">
       <UniqueIdentifier>{67926d0b-33a1-47d4-b28a-d9174b6dc22c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Deps">
+      <UniqueIdentifier>{78150342-61cf-471d-bd8b-be06ce0d885e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Deps\Fast Noise">
+      <UniqueIdentifier>{2d4a21fa-292b-4102-bd7f-13f7eb04fa78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -129,6 +135,12 @@
     </ClCompile>
     <ClCompile Include="Core\GLClasses\TextureArray.cpp">
       <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\WorldGenerator.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\fast_noise\FastNoise.cpp">
+      <Filter>Source Files\Deps\Fast Noise</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -240,6 +252,12 @@
     <ClInclude Include="Core\GLClasses\TextureArray.h">
       <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
+    <ClInclude Include="Core\WorldGenerator.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\fast_noise\FastNoise.h">
+      <Filter>Source Files\Deps\Fast Noise</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\Shaders\TestFrag.glsl">
@@ -247,6 +265,12 @@
     </None>
     <None Include="Core\Shaders\TestVert.glsl">
       <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Dependencies\fast_noise\README.md">
+      <Filter>Source Files\Deps\Fast Noise</Filter>
+    </None>
+    <None Include="Dependencies\fast_noise\LICENSE">
+      <Filter>Source Files\Deps\Fast Noise</Filter>
     </None>
   </ItemGroup>
 </Project>

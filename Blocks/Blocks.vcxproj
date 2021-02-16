@@ -118,7 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\fast_noise</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -137,7 +137,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\fast_noise</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -176,6 +176,8 @@
     <ClCompile Include="Core\GLClasses\VertexBuffer.cpp" />
     <ClCompile Include="Core\Skybox.cpp" />
     <ClCompile Include="Core\World.cpp" />
+    <ClCompile Include="Core\WorldGenerator.cpp" />
+    <ClCompile Include="Dependencies\fast_noise\FastNoise.cpp" />
     <ClCompile Include="Dependencies\glad\src\glad.c" />
     <ClCompile Include="Dependencies\imgui\imgui.cpp" />
     <ClCompile Include="Dependencies\imgui\imgui_demo.cpp" />
@@ -214,6 +216,8 @@
     <ClInclude Include="Core\Skybox.h" />
     <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="Core\World.h" />
+    <ClInclude Include="Core\WorldGenerator.h" />
+    <ClInclude Include="Dependencies\fast_noise\FastNoise.h" />
     <ClInclude Include="Dependencies\imgui\imconfig.h" />
     <ClInclude Include="Dependencies\imgui\imgui.h" />
     <ClInclude Include="Dependencies\imgui\imgui_impl_glfw.h" />
@@ -226,6 +230,8 @@
   <ItemGroup>
     <None Include="Core\Shaders\TestFrag.glsl" />
     <None Include="Core\Shaders\TestVert.glsl" />
+    <None Include="Dependencies\fast_noise\LICENSE" />
+    <None Include="Dependencies\fast_noise\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -13,6 +13,14 @@
 
 namespace Blocks
 {
+	class Chunk;
+	
+	namespace WorldGenerator
+	{
+		void GenerateChunk(Chunk* chunk);
+		void SetVerticalBlocks(Chunk* chunk, int x, int z, int ylevel);
+	}
+
 	class Chunk
 	{
 	public : 
@@ -20,27 +28,7 @@ namespace Blocks
 		Chunk(const glm::ivec2& position)
 		{
 			m_Position = position;
-			
-			//memset(&m_ChunkData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
-
-			for (int i = 0; i < CHUNK_SIZE_X; i++)
-			{
-				for (int j = 0; j < CHUNK_SIZE_Y; j++)
-				{
-					for (int k = 0; k < CHUNK_SIZE_Z; k++)
-					{
-						if (j < 40)
-						{
-							m_ChunkData[i][j][k].ID = BlockDatabase::GetBlockID("Grass");
-						}
-
-						else
-						{
-							m_ChunkData[i][j][k].ID = 0;
-						}
-					}
-				}
-			}
+			memset(&m_ChunkData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
 		}
 		
 		inline void SetBlock(const int x, const int y, const int z, const Block& block) 
@@ -84,8 +72,11 @@ namespace Blocks
 
 		std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z> m_ChunkData;
 		std::array<ChunkMesh, CHUNK_RENDER_MESH_COUNT> m_ChunkMeshes;
+		std::array<std::array<uint8_t, CHUNK_SIZE_X>, CHUNK_SIZE_Z> m_Heightmap;
 		glm::vec2 m_Position;
 
 		friend class World;
+		friend void WorldGenerator::GenerateChunk(Chunk* chunk);
+		friend void WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int ylevel);
 	};
 }

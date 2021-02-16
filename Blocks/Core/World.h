@@ -10,6 +10,7 @@
 #include "Chunk.h"
 #include "Block.h"
 #include "Macros.h"
+#include "WorldGenerator.h"
 
 namespace Blocks
 {

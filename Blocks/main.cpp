@@ -91,6 +91,11 @@ public:
 		{
 			Camera.SetAspect((float)e.wx / (float)e.wy);
 		}
+
+		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F1)
+		{
+			this->SetCursorLocked(!this->GetCursorLocked());
+		}
 	}
 };
 

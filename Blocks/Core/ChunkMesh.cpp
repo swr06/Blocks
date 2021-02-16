@@ -109,7 +109,7 @@ namespace Blocks
 
 					else if (y == 0)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
+						//AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
 					}
 
 					if (y < CHUNK_SIZE_Y - 1 && GetWorldBlock(glm::vec3(world_x, y + 1, world_z)).IsTransparent())
