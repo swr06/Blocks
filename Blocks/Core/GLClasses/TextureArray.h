@@ -5,6 +5,7 @@
 #include <array>
 #include <unordered_map>
 #include <set>
+#include <algorithm>
 
 #include "stb_image.h"
 #include <glad/glad.h>

@@ -6,7 +6,7 @@ namespace Blocks
 
 	uint8_t GenerateBlockID()
 	{
-		static uint8_t v = 1;
+		static uint8_t v = 0;
 		v++;
 
 		if (v == 255)

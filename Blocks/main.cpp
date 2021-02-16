@@ -110,8 +110,6 @@ int main()
 
 	app.SetCursorLocked(true);
 
-	Blocks::BlockDatabaseParser::Parse("blockdb.txt");
-
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

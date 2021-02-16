@@ -22,7 +22,7 @@ namespace Blocks
 		Logger::Log("Successfully parsed database file");
 
 		std::vector<std::string> paths;
-		std::pair<int, int> texture_resolutions = { 16,16 };
+		std::pair<int, int> texture_resolutions = { 256,256 };
 
 		for (auto& e : ParsedBlockDataList)
 		{
@@ -40,15 +40,7 @@ namespace Blocks
 
 	uint8_t BlockDatabase::GetBlockID(const std::string& block_name)
 	{
-		if (ParsedBlockDataList.find(block_name) == ParsedBlockDataList.end())
-		{
-			return 0;
-		}
-
-		else
-		{
-			return ParsedBlockDataList[block_name].ID;
-		}
+		return ParsedBlockDataList[block_name].ID;
 	}
 
 	int BlockDatabase::GetBlockTexture(const std::string& block_name, const BlockFaceType type)

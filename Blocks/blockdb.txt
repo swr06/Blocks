@@ -1,7 +1,9 @@
 {
 	Name : Grass
-	Albedo_top : Res/top.png
-	Albedo : Res/rest.png
-	Normal : Resources/block_n.png
-	PBR : Resources/block_pbr.png
+	Albedo_top : Res/grass_block_top.png
+	Albedo_bottom : Res/dirt.png
+	Albedo_left : Res/grass_block_side.png
+	Albedo_right : Res/grass_block_side.png
+	Albedo_front : Res/grass_block_side.png
+	Albedo_back : Res/grass_block_side.png
 }

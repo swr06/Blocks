@@ -2,10 +2,17 @@
 
 namespace Blocks
 {
-	int render_distance_x = 8;
-	int render_distance_z = 8;
-	int build_distance_x = render_distance_x + 2;
-	int build_distance_z = render_distance_z + 2;
+#ifdef _DEBUG
+	int render_distance_x = 1;
+	int render_distance_z = 1;
+	int build_distance_x = render_distance_x + 1;
+	int build_distance_z = render_distance_z + 1;
+#else _RELEASE
+	int render_distance_x = 6;
+	int render_distance_z = 6;
+	int build_distance_x = render_distance_x + 1;
+	int build_distance_z = render_distance_z + 1;
+#endif
 
 	int Modulo(int a, int b)
 	{
