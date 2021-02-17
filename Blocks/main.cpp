@@ -27,6 +27,7 @@
 
 Blocks::FPSCamera Camera(60.0f, 800.0f / 600.0f, 0.1f, 1000.0f);
 extern uint32_t _App_PolygonCount;
+Blocks::World world;
 
 class BlocksApp : public Blocks::Application
 {
@@ -96,10 +97,19 @@ public:
 		{
 			this->SetCursorLocked(!this->GetCursorLocked());
 		}
+
+		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_LEFT)
+		{
+			world.RayCast(false, Camera.GetPosition(), Camera.GetFront());
+		}
+
+		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_RIGHT)
+		{
+			world.RayCast(true, Camera.GetPosition(), Camera.GetFront());
+		}
 	}
 };
 
-Blocks::World world;
 
 int main()
 {

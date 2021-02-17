@@ -75,6 +75,96 @@ namespace Blocks
 		return true;
 	}
 
+
+	void World::RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir)
+	{
+		glm::vec3 position = vposition;
+		const glm::vec3& direction = dir;
+		int max = 50; // block reach
+
+		glm::vec3 sign;
+
+		for (int i = 0; i < 3; ++i)
+			sign[i] = direction[i] > 0;
+
+		for (int i = 0; i < max; ++i)
+		{
+			glm::vec3 tvec = (floor(position + sign) - position) / direction;
+			float t = std::min(tvec.x, std::min(tvec.y, tvec.z));
+
+			position += direction * (t + 0.001f);
+
+			if (position.y >= 0 && position.y < CHUNK_SIZE_Y)
+			{
+				Block ray_block = GetWorldBlock(position);
+
+				if (ray_block.ID != 0)
+				{
+					glm::vec3 normal;
+
+					for (int j = 0; j < 3; ++j)
+					{
+						normal[j] = (t == tvec[j]);
+
+						if (sign[j])
+						{
+							normal[j] = -normal[j];
+						}
+					}
+
+					if (place)
+					{
+						position = position + normal;
+					}
+
+					auto edit_block = GetWorldBlockProps(position);
+
+					if (place)
+					{
+						edit_block.first->ID = BlockDatabase::GetBlockID("Dirt");
+					}
+
+					else
+					{
+						edit_block.first->ID = 0;
+					}
+
+					edit_block.second->ForceRegenerateMeshes();
+
+					glm::ivec3 block_chunk_pos = WorldToChunkCoords(position);
+					glm::vec2 chunk_pos = edit_block.second->GetPosition();
+
+					if (block_chunk_pos.x == 0)
+					{
+						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x - 1, chunk_pos.y));
+						chunk->ForceRegenerateMeshes();
+					}
+
+					if (block_chunk_pos.x == CHUNK_SIZE_X - 1)
+					{
+						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x + 1, chunk_pos.y));
+						chunk->ForceRegenerateMeshes();
+					}
+
+					if (block_chunk_pos.z == 0)
+					{
+						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x, chunk_pos.y + 1));
+						chunk->ForceRegenerateMeshes();
+					}
+
+					if (block_chunk_pos.z == CHUNK_SIZE_Z - 1)
+					{
+						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x, chunk_pos.y - 1));
+						chunk->ForceRegenerateMeshes();
+					}
+
+					return;
+				}
+			}
+		}
+	}
+
+
 	void World::Update(const glm::vec3& position)
 	{
 		GenerateChunks(position);
@@ -90,13 +180,49 @@ namespace Blocks
 	{
 		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
 		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
-		int bx = Modulo(block_loc.x, CHUNK_SIZE_X);
+		int bx = Modulo(floor(block_loc.x), CHUNK_SIZE_X);
 		int by = static_cast<int>(floor(block_loc.y)); 
-		int bz = Modulo(block_loc.z, CHUNK_SIZE_Z);
+		int bz = Modulo(floor(block_loc.z), CHUNK_SIZE_Z);
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
 
 		return chunk->m_ChunkData[bx][by][bz];
+	}
+
+	Block* World::GetWorldBlockPtr(const glm::ivec3& block_loc)
+	{
+		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
+		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
+		int bx = Modulo(floor(block_loc.x), CHUNK_SIZE_X);
+		int by = block_loc.y;
+		int bz = Modulo(floor(block_loc.z), CHUNK_SIZE_Z);
+
+		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
+
+		return &chunk->m_ChunkData[bx][by][bz];
+	}
+
+	std::pair<Block*, Chunk*> World::GetWorldBlockProps(const glm::ivec3& block_loc)
+	{
+		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
+		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
+		int bx = Modulo(floor(block_loc.x), CHUNK_SIZE_X);
+		int by = block_loc.y;
+		int bz = Modulo(floor(block_loc.z), CHUNK_SIZE_Z);
+
+		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
+		Block* block = &chunk->m_ChunkData[bx][by][bz];
+
+		return std::pair<Block*, Chunk*>(block, chunk);
+	}
+
+	glm::ivec3 World::WorldToChunkCoords(const glm::ivec3& world_loc)
+	{
+		int bx = Modulo(floor(world_loc.x), CHUNK_SIZE_X);
+		int by = world_loc.y;
+		int bz = Modulo(floor(world_loc.z), CHUNK_SIZE_Z);
+
+		return glm::ivec3(bx, by, bz);
 	}
 
 }

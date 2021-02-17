@@ -21,7 +21,12 @@ namespace Blocks
 		World() {};
 
 		Block GetWorldBlock(const glm::ivec3& block_loc);
+		Block* GetWorldBlockPtr(const glm::ivec3& block_loc);
+		std::pair<Block*, Chunk*> GetWorldBlockProps(const glm::ivec3& block_loc);
+		glm::ivec3 WorldToChunkCoords(const glm::ivec3& world_loc);
+
 		void Update(const glm::vec3& position);
+		void RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir);
 
 	private :
 
@@ -31,6 +36,5 @@ namespace Blocks
 
 		Chunk* GetChunk(const glm::ivec2& chunk_loc);
 		std::map<std::pair<int, int>, Chunk> m_WorldChunks;
-
 	};
 }

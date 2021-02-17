@@ -41,6 +41,11 @@ namespace Blocks
 			return m_ChunkData[x][y][z];
 		}
 
+		inline glm::vec2 GetPosition() const noexcept
+		{
+			return m_Position;
+		}
+
 		void GenerateMeshes()
 		{
 			auto t1 = std::chrono::high_resolution_clock::now();
@@ -51,6 +56,19 @@ namespace Blocks
 				{
 					m_ChunkMeshes[i].GenerateMesh(m_ChunkData, i, m_Position);
 				}
+			}
+
+			auto t2 = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+		}
+
+		void ForceRegenerateMeshes()
+		{
+			auto t1 = std::chrono::high_resolution_clock::now();
+
+			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
+			{
+				m_ChunkMeshes[i].GenerateMesh(m_ChunkData, i, m_Position);
 			}
 
 			auto t2 = std::chrono::high_resolution_clock::now();
