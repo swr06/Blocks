@@ -88,8 +88,8 @@ namespace Blocks
 
 	Block World::GetWorldBlock(const glm::ivec3& block_loc)
 	{
-		int block_chunk_x = static_cast<int>(floor(block_loc.x / CHUNK_SIZE_X));
-		int block_chunk_z = static_cast<int>(floor(block_loc.z / CHUNK_SIZE_Z));
+		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
+		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
 		int bx = Modulo(block_loc.x, CHUNK_SIZE_X);
 		int by = static_cast<int>(floor(block_loc.y)); 
 		int bz = Modulo(block_loc.z, CHUNK_SIZE_Z);

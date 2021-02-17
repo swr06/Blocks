@@ -1,10 +1,24 @@
 #include "WorldGenerator.h"
 
-void Blocks::WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int ylevel)
+void Blocks::WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int y_level)
 {
-	for (int y = 0; y < ylevel; y++)
+	for (int y = 0; y < y_level; y++)
 	{
-		chunk->m_ChunkData[x][y][z].ID = BlockDatabase::GetBlockID("Grass");
+		if (y >= y_level - 1)
+		{
+			chunk->m_ChunkData[x][y][z].ID = BlockDatabase::GetBlockID("Grass");
+		}
+
+		else if (y >= y_level - 5)
+		{
+			chunk->m_ChunkData[x][y][z].ID = BlockDatabase::GetBlockID("Dirt");
+		}
+
+		else
+		{
+			chunk->m_ChunkData[x][y][z].ID = BlockDatabase::GetBlockID("Stone");
+		}
+
 	}
 }
 

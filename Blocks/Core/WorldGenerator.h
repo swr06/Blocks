@@ -14,6 +14,6 @@ namespace Blocks
 	namespace WorldGenerator
 	{
 		void GenerateChunk(Chunk* chunk);
-		void SetVerticalBlocks(Chunk* chunk, int x, int z, int ylevel);
+		void SetVerticalBlocks(Chunk* chunk, int x, int z, int y_level);
 	}
 }

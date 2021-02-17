@@ -89,6 +89,9 @@ namespace Blocks
 			{
 				for (int z = 0; z < CHUNK_SIZE_Z; z++)
 				{
+					Block block = chunk_data[x][y][z];
+					if (block.ID == 0) { continue; }
+
 					float world_x = x + (chunk_pos.x * CHUNK_SIZE_X);
 					float world_z = z + (chunk_pos.y * CHUNK_SIZE_Z);
 
@@ -161,6 +164,7 @@ namespace Blocks
 		if (block.ID == 0) { return;  }
 
 		Vertex v1, v2, v3, v4;
+		bool reverse_texcoords = false;
 		glm::vec4 translation = glm::vec4(position, 0.0f);
 		float tex_index= BlockDatabase::GetBlockTexture(block.ID, facetype);
 
@@ -175,7 +179,7 @@ namespace Blocks
 				v2.Position = translation + TopFace[1];
 				v3.Position = translation + TopFace[2];
 				v4.Position = translation + TopFace[3];
-
+				
 				break;
 			}
 
@@ -205,6 +209,7 @@ namespace Blocks
 				v2.Position = translation + BackFace[1];
 				v3.Position = translation + BackFace[2];
 				v4.Position = translation + BackFace[3];
+				reverse_texcoords = true;
 
 				break;
 			}
@@ -215,6 +220,7 @@ namespace Blocks
 				v2.Position = translation + LeftFace[2];
 				v3.Position = translation + LeftFace[1];
 				v4.Position = translation + LeftFace[0];
+				reverse_texcoords = true;
 
 				break;
 			}
@@ -241,11 +247,22 @@ namespace Blocks
 		v3.TexIndex = tex_index;
 		v4.TexIndex = tex_index;
 
-		v1.TexCoords = glm::vec2(0.0f, 0.0f);
-		v2.TexCoords = glm::vec2(1.0f, 0.0f);
-		v3.TexCoords = glm::vec2(1.0f, 1.0f);
-		v4.TexCoords = glm::vec2(0.0f, 1.0f);
+		if (reverse_texcoords)
+		{
+			v1.TexCoords = glm::vec2(0.0f, 1.0f);
+			v2.TexCoords = glm::vec2(1.0f, 1.0f);
+			v3.TexCoords = glm::vec2(1.0f, 0.0f);
+			v4.TexCoords = glm::vec2(0.0f, 0.0f);
+		}
 
+		else
+		{
+			v1.TexCoords = glm::vec2(0.0f, 0.0f);
+			v2.TexCoords = glm::vec2(1.0f, 0.0f);
+			v3.TexCoords = glm::vec2(1.0f, 1.0f);
+			v4.TexCoords = glm::vec2(0.0f, 1.0f);
+		}
+		
 		m_Vertices.push_back(v1);
 		m_Vertices.push_back(v2);
 		m_Vertices.push_back(v3);

@@ -74,7 +74,7 @@ public:
 		if (ImGui::Begin("Stats"))
 		{
 			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
-
+			ImGui::Text("Position : (%f, %f, %f)", Camera.GetPosition().x, Camera.GetPosition().y, Camera.GetPosition().z);
 		}
 
 		ImGui::End();
