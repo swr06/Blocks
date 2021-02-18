@@ -134,27 +134,16 @@ namespace Blocks
 					glm::ivec3 block_chunk_pos = WorldToChunkCoords(position);
 					glm::vec2 chunk_pos = edit_block.second->GetPosition();
 
-					if (block_chunk_pos.x == 0)
+					if (block_chunk_pos.x <= 0 || block_chunk_pos.x >= CHUNK_SIZE_X - 1 ||
+						block_chunk_pos.z <= 0 || block_chunk_pos.z >= CHUNK_SIZE_Z - 1)
 					{
 						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x - 1, chunk_pos.y));
 						chunk->ForceRegenerateMeshes();
-					}
-
-					if (block_chunk_pos.x == CHUNK_SIZE_X - 1)
-					{
-						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x + 1, chunk_pos.y));
+						chunk = GetChunk(glm::ivec2(chunk_pos.x + 1, chunk_pos.y));
 						chunk->ForceRegenerateMeshes();
-					}
-
-					if (block_chunk_pos.z == 0)
-					{
-						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x, chunk_pos.y + 1));
+						chunk = GetChunk(glm::ivec2(chunk_pos.x, chunk_pos.y + 1));
 						chunk->ForceRegenerateMeshes();
-					}
-
-					if (block_chunk_pos.z == CHUNK_SIZE_Z - 1)
-					{
-						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x, chunk_pos.y - 1));
+						chunk = GetChunk(glm::ivec2(chunk_pos.x, chunk_pos.y - 1));
 						chunk->ForceRegenerateMeshes();
 					}
 
