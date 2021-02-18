@@ -260,17 +260,23 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Core\Shaders\TestFrag.glsl">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
-    <None Include="Core\Shaders\TestVert.glsl">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
     <None Include="Dependencies\fast_noise\README.md">
       <Filter>Source Files\Deps\Fast Noise</Filter>
     </None>
     <None Include="Dependencies\fast_noise\LICENSE">
       <Filter>Source Files\Deps\Fast Noise</Filter>
+    </None>
+    <None Include="Core\Shaders\SkyboxFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\SkyboxVertex.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\BlockFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\BlockVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

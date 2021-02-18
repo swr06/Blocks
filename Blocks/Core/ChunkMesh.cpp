@@ -45,6 +45,7 @@ namespace Blocks
 		m_VBO.VertexAttribPointer(0, 3, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 		m_VBO.VertexAttribPointer(1, 2, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 		m_VBO.VertexAttribPointer(2, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, TexIndex));
+		m_VBO.VertexAttribPointer(3, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 		m_VAO.Unbind();
 
 		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
@@ -262,6 +263,11 @@ namespace Blocks
 			v3.TexCoords = glm::vec2(1.0f, 1.0f);
 			v4.TexCoords = glm::vec2(0.0f, 1.0f);
 		}
+		
+		v1.Normal = (float)facetype;
+		v2.Normal = (float)facetype;
+		v3.Normal = (float)facetype;
+		v4.Normal = (float)facetype;
 		
 		m_Vertices.push_back(v1);
 		m_Vertices.push_back(v2);

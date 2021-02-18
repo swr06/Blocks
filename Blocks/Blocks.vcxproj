@@ -228,8 +228,10 @@
     <ClInclude Include="Dependencies\imgui\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Core\Shaders\TestFrag.glsl" />
-    <None Include="Core\Shaders\TestVert.glsl" />
+    <None Include="Core\Shaders\SkyboxFrag.glsl" />
+    <None Include="Core\Shaders\SkyboxVertex.glsl" />
+    <None Include="Core\Shaders\BlockFrag.glsl" />
+    <None Include="Core\Shaders\BlockVert.glsl" />
     <None Include="Dependencies\fast_noise\LICENSE" />
     <None Include="Dependencies\fast_noise\README.md" />
   </ItemGroup>

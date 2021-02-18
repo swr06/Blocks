@@ -24,6 +24,7 @@
 #include "Core/World.h"
 #include "Core/BlockDatabaseParser.h"
 #include "Core/BlockDatabase.h"
+#include "Core/Skybox.h"
 
 Blocks::FPSCamera Camera(60.0f, 800.0f / 600.0f, 0.1f, 1000.0f);
 extern uint32_t _App_PolygonCount;
@@ -37,6 +38,7 @@ public:
 	{
 		m_Width = 800;
 		m_Height = 600;
+		m_Appname = "Blocks";
 	}
 
 	void OnUserCreate(double ts) override
@@ -76,6 +78,7 @@ public:
 		{
 			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
 			ImGui::Text("Position : (%f, %f, %f)", Camera.GetPosition().x, Camera.GetPosition().y, Camera.GetPosition().z);
+			ImGui::Text("Camera Direction : (%f, %f, %f)", Camera.GetFront().x, Camera.GetFront().y, Camera.GetFront().z);
 		}
 
 		ImGui::End();
@@ -117,10 +120,19 @@ int main()
 
 	app.Initialize();
 
+	Blocks::Skybox skybox({
+		"Res/Skybox/right.bmp",
+		"Res/Skybox/left.bmp",
+		"Res/Skybox/top.bmp",
+		"Res/Skybox/bottom.bmp",
+		"Res/Skybox/front.bmp",
+		"Res/Skybox/back.bmp"
+		});
+
 	Blocks::BlockDatabase::Initialize();
 
 	GLClasses::Shader Shader;
-	Shader.CreateShaderProgramFromFile("Core/Shaders/TestVert.glsl", "Core/Shaders/TestFrag.glsl");
+	Shader.CreateShaderProgramFromFile("Core/Shaders/BlockVert.glsl", "Core/Shaders/BlockFrag.glsl");
 	Shader.CompileShaders();
 
 	app.SetCursorLocked(true);
@@ -130,14 +142,20 @@ int main()
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
 
-		glViewport(0, 0, 800, 600);
+		glViewport(0, 0, app.GetWidth(), app.GetHeight());
 
 		app.OnUpdate();
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetTextureArray());
+
+		skybox.RenderSkybox(&Camera);
+
+		// Prepare to render the chunks
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glFrontFace(GL_CW);
 
 		Shader.Use();
 		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
@@ -146,7 +164,10 @@ int main()
 		world.Update(Camera.GetPosition());
 		app.FinishFrame();
 	}
+
+	// glm::vec3(0.5976, -0.8012, -0.0287);
 }
+
 
 namespace Blocks
 {

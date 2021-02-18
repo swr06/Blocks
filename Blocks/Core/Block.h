@@ -8,7 +8,7 @@ namespace Blocks
 {
 	enum BlockFaceType
 	{
-		Front,
+		Front = 0,
 		Back,
 		Top,
 		Bottom,
