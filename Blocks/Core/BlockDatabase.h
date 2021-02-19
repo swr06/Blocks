@@ -19,6 +19,11 @@ namespace Blocks
 		uint8_t GetBlockID(const std::string& block_name);
 		int GetBlockTexture(const std::string& block_name, const BlockFaceType type);
 		int GetBlockTexture(BlockIDType block_id, const BlockFaceType type);
+		int GetBlockNormalTexture(const std::string& block_name, const BlockFaceType type);
+		int GetBlockNormalTexture(BlockIDType block_id, const BlockFaceType type);
+		int GetBlockPBRTexture(const std::string& block_name, const BlockFaceType type);
+		int GetBlockPBRTexture(BlockIDType block_id, const BlockFaceType type);
+
 		GLuint GetTextureArray();
 	}
 }

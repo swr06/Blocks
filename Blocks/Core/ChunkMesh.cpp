@@ -44,7 +44,7 @@ namespace Blocks
 		IBO.Bind();
 		m_VBO.VertexAttribPointer(0, 3, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 		m_VBO.VertexAttribPointer(1, 2, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
-		m_VBO.VertexAttribPointer(2, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, TexIndex));
+		m_VBO.VertexAttribPointer(2, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, AlbedoTexIndex));
 		m_VBO.VertexAttribPointer(3, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 		m_VAO.Unbind();
 
@@ -168,6 +168,8 @@ namespace Blocks
 		bool reverse_texcoords = false;
 		glm::vec4 translation = glm::vec4(position, 0.0f);
 		float tex_index= BlockDatabase::GetBlockTexture(block.ID, facetype);
+		float normaltex_index = BlockDatabase::GetBlockNormalTexture(block.ID, facetype);
+		float pbrtex_index = BlockDatabase::GetBlockPBRTexture(block.ID, facetype);
 
 		m_PolygonCount++;
 		_App_PolygonCount += 1;
@@ -243,10 +245,20 @@ namespace Blocks
 			}
 		}
 
-		v1.TexIndex = tex_index;
-		v2.TexIndex = tex_index;
-		v3.TexIndex = tex_index;
-		v4.TexIndex = tex_index;
+		v1.AlbedoTexIndex = tex_index;
+		v2.AlbedoTexIndex = tex_index;
+		v3.AlbedoTexIndex = tex_index;
+		v4.AlbedoTexIndex = tex_index;
+
+		v1.NormalTexIndex = normaltex_index;
+		v2.NormalTexIndex = normaltex_index;
+		v3.NormalTexIndex = tex_index;
+		v4.NormalTexIndex = tex_index;
+
+		v1.PBRTexIndex = pbrtex_index;
+		v2.PBRTexIndex = pbrtex_index;
+		v3.PBRTexIndex = pbrtex_index;
+		v4.PBRTexIndex = pbrtex_index;
 
 		if (reverse_texcoords)
 		{
