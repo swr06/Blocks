@@ -147,9 +147,6 @@ int main()
 
 		app.OnUpdate();
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetTextureArray());
-
 		skybox.RenderSkybox(&Camera);
 
 		// Prepare to render the chunks
@@ -158,9 +155,17 @@ int main()
 		glFrontFace(GL_CW);
 
 		Shader.Use();
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetTextureArray());
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetNormalTextureArray());
+
 		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
 		Shader.SetMatrix4("u_ViewProjection", Camera.GetViewProjection());
 		Shader.SetInteger("u_BlockTextures", 0);
+		Shader.SetInteger("u_BlockNormalTextures", 1);
 		world.Update(Camera.GetPosition());
 		app.FinishFrame();
 	}

@@ -5,6 +5,7 @@ namespace Blocks
 	extern std::unordered_map<std::string, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataList;
 	std::unordered_map<uint8_t, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataListID;
 	GLClasses::TextureArray BlockTextureArray;
+	GLClasses::TextureArray BlockNormalTextureArray;
 	
 	void BlockDatabase::Initialize()
 	{
@@ -22,6 +23,8 @@ namespace Blocks
 		Logger::Log("Successfully parsed database file");
 
 		std::vector<std::string> paths;
+		std::vector<std::string> normal_paths;
+		std::vector<std::string> pbr_paths;
 		std::pair<int, int> texture_resolutions = { 256,256 };
 
 		for (auto& e : ParsedBlockDataList)
@@ -33,12 +36,12 @@ namespace Blocks
 			paths.push_back(e.second.AlbedoMap.left);
 			paths.push_back(e.second.AlbedoMap.right);
 
-			paths.push_back(e.second.NormalMap.front);
-			paths.push_back(e.second.NormalMap.back);
-			paths.push_back(e.second.NormalMap.top);
-			paths.push_back(e.second.NormalMap.bottom);
-			paths.push_back(e.second.NormalMap.left);
-			paths.push_back(e.second.NormalMap.right);
+			normal_paths.push_back(e.second.NormalMap.front);
+			normal_paths.push_back(e.second.NormalMap.back);
+			normal_paths.push_back(e.second.NormalMap.top);
+			normal_paths.push_back(e.second.NormalMap.bottom);
+			normal_paths.push_back(e.second.NormalMap.left);
+			normal_paths.push_back(e.second.NormalMap.right);
 
 			paths.push_back(e.second.PBRMap.front);
 			paths.push_back(e.second.PBRMap.back);
@@ -49,7 +52,7 @@ namespace Blocks
 		}
 
 		BlockTextureArray.CreateArray(paths, texture_resolutions, true);
-
+		BlockNormalTextureArray.CreateArray(normal_paths, texture_resolutions, true, GL_LINEAR, true);
 	}
 
 	uint8_t BlockDatabase::GetBlockID(const std::string& block_name)
@@ -61,7 +64,7 @@ namespace Blocks
 	{
 		if (ParsedBlockDataList.find(block_name) == ParsedBlockDataList.end())
 		{
-			return 0;
+			return -1;
 		}
 
 		else
@@ -110,14 +113,14 @@ namespace Blocks
 			return BlockTextureArray.GetTexture(pth);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	int BlockDatabase::GetBlockTexture(BlockIDType block_id, const BlockFaceType type)
 	{
 		if (ParsedBlockDataListID.find(block_id) == ParsedBlockDataListID.end())
 		{
-			return 0;
+			return -1;
 		}
 
 		else
@@ -166,7 +169,7 @@ namespace Blocks
 			return BlockTextureArray.GetTexture(pth);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	// Normal
@@ -174,7 +177,7 @@ namespace Blocks
 	{
 		if (ParsedBlockDataList.find(block_name) == ParsedBlockDataList.end())
 		{
-			return 0;
+			return -1;
 		}
 
 		else
@@ -220,10 +223,10 @@ namespace Blocks
 			}
 			}
 
-			return BlockTextureArray.GetTexture(pth);
+			return BlockNormalTextureArray.GetTexture(pth);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	// Normal
@@ -231,7 +234,7 @@ namespace Blocks
 	{
 		if (ParsedBlockDataListID.find(block_id) == ParsedBlockDataListID.end())
 		{
-			return 0;
+			return -1;
 		}
 
 		else
@@ -277,10 +280,10 @@ namespace Blocks
 			}
 			}
 
-			return BlockTextureArray.GetTexture(pth);
+			return BlockNormalTextureArray.GetTexture(pth);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	// PBR
@@ -289,7 +292,7 @@ namespace Blocks
 	{
 		if (ParsedBlockDataList.find(block_name) == ParsedBlockDataList.end())
 		{
-			return 0;
+			return -1;
 		}
 
 		else
@@ -338,7 +341,7 @@ namespace Blocks
 			return BlockTextureArray.GetTexture(pth);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	// PBR
@@ -395,11 +398,16 @@ namespace Blocks
 			return BlockTextureArray.GetTexture(pth);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	GLuint BlockDatabase::GetTextureArray()
 	{
 		return BlockTextureArray.GetTextureArray();
+	}
+
+	GLuint BlockDatabase::GetNormalTextureArray()
+	{
+		return BlockNormalTextureArray.GetTextureArray();
 	}
 }

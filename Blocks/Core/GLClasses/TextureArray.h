@@ -31,7 +31,7 @@ namespace GLClasses
 			v.m_TextureArray = 0;
 		}
 
-		void CreateArray(std::vector<std::string> paths, std::pair<int, int> texture_size, bool limit_textures = false);
+		void CreateArray(std::vector<std::string> paths, std::pair<int, int> texture_size, bool gen_mips = true, GLint mag_filter = GL_NEAREST, bool limit_textures = false);
 		GLuint GetTextureArray() const noexcept { return m_TextureArray; }
 
 		int GetTexture(const std::string& s) const 

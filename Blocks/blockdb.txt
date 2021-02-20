@@ -6,14 +6,29 @@
 	Albedo_right : Res/grass_block_side.png
 	Albedo_front : Res/grass_block_side.png
 	Albedo_back : Res/grass_block_side.png
+	
+	Normal_top : Res/grass_block_top_n.png
+	Normal_bottom : Res/dirt_n.png
+	Normal_left : Res/grass_block_side_n.png
+	Normal_right : Res/grass_block_side_n.png
+	Normal_front : Res/grass_block_side_n.png
+	Normal_back : Res/grass_block_side_n.png
 }
 
 {
 	Name : Dirt
 	Albedo : Res/dirt.png
+
+	Normal_top : Res/dirt_n.png
+	Normal_bottom : Res/dirt_n.png
+	Normal_left : Res/dirt_n.png
+	Normal_right : Res/dirt_n.png
+	Normal_front : Res/dirt_n.png
+	Normal_back : Res/dirt_n.png
 }
 
 {
 	Name : Stone
 	Albedo : Res/stone.png
+	Normal_default : Res/stone_n.png
 }

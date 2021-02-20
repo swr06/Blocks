@@ -25,5 +25,6 @@ namespace Blocks
 		int GetBlockPBRTexture(BlockIDType block_id, const BlockFaceType type);
 
 		GLuint GetTextureArray();
+		GLuint GetNormalTextureArray();
 	}
 }
