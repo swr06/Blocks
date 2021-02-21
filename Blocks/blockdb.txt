@@ -13,6 +13,13 @@
 	Normal_right : Res/grass_block_side_n.png
 	Normal_front : Res/grass_block_side_n.png
 	Normal_back : Res/grass_block_side_n.png
+	
+	PBR_top : Res/grass_block_top_s.png
+	PBR_bottom : Res/dirt_s.png
+	PBR_left : Res/grass_block_side_s.png
+	PBR_right : Res/grass_block_side_s.png
+	PBR_front : Res/grass_block_side_s.png
+	PBR_back : Res/grass_block_side_s.png
 }
 
 {
@@ -25,10 +32,20 @@
 	Normal_right : Res/dirt_n.png
 	Normal_front : Res/dirt_n.png
 	Normal_back : Res/dirt_n.png
+	
+	PBR : Res/dirt_s.png
 }
 
 {
 	Name : Stone
 	Albedo : Res/stone.png
-	Normal_default : Res/stone_n.png
+	Normal : Res/stone_n.png
+	PBR : Res/stone_s.png
+}
+
+{
+	Name : polished_granite
+	Albedo : Res/polished_granite.png
+	Normal : Res/polished_granite_n.png
+	PBR : Res/polished_granite_s.png
 }

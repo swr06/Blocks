@@ -142,6 +142,12 @@
     <ClCompile Include="Dependencies\fast_noise\FastNoise.cpp">
       <Filter>Source Files\Deps\Fast Noise</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Renderer2D.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\OrthographicCamera.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -258,6 +264,12 @@
     <ClInclude Include="Dependencies\fast_noise\FastNoise.h">
       <Filter>Source Files\Deps\Fast Noise</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Renderer2D.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\OrthographicCamera.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">
@@ -276,6 +288,12 @@
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Core\Shaders\BlockVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\2DElementShaderFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\2DElementShaderVert.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>

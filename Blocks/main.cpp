@@ -17,6 +17,7 @@
 #include "Core/GLClasses/VertexBuffer.h"
 #include "Core/GLClasses/VertexArray.h"
 #include "Core/GLClasses/Shader.h"
+#include "Core/GLClasses/Fps.h"
 #include "Core/FpsCamera.h"
 #include "Core/CubeRenderer.h"
 #include "Core/Chunk.h"
@@ -25,8 +26,11 @@
 #include "Core/BlockDatabaseParser.h"
 #include "Core/BlockDatabase.h"
 #include "Core/Skybox.h"
+#include "Core/OrthographicCamera.h"
+#include "Core/Renderer2D.h"
 
 Blocks::FPSCamera Camera(60.0f, 800.0f / 600.0f, 0.1f, 1000.0f);
+Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
 extern uint32_t _App_PolygonCount;
 Blocks::World world;
 
@@ -94,6 +98,10 @@ public:
 		if (e.type == Blocks::EventTypes::WindowResize)
 		{
 			Camera.SetAspect((float)e.wx / (float)e.wy);
+			OCamera.SetProjection(0.0f, e.wx, 0.0f, e.wy);
+			m_Width = e.wx;
+			m_Height = e.wy;
+			glViewport(0, 0, e.wx, e.wy);
 		}
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F1)
@@ -119,6 +127,7 @@ int main()
 	BlocksApp app;
 
 	app.Initialize();
+	app.SetCursorLocked(true);
 
 	Blocks::Skybox skybox({
 		"Res/Skybox/right.bmp",
@@ -135,7 +144,13 @@ int main()
 	Shader.CreateShaderProgramFromFile("Core/Shaders/BlockVert.glsl", "Core/Shaders/BlockFrag.glsl");
 	Shader.CompileShaders();
 
-	app.SetCursorLocked(true);
+	Blocks::Renderer2D Renderer2D;
+	GLClasses::Texture Crosshair;
+
+	Crosshair.CreateTexture("Res/crosshair.png", false);
+
+	// Set up the Orthographic camera
+	OCamera.SetPosition(glm::vec3(0.0f));
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
@@ -143,13 +158,12 @@ int main()
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
-		glViewport(0, 0, app.GetWidth(), app.GetHeight());
-
 		app.OnUpdate();
 
 		skybox.RenderSkybox(&Camera);
 
 		// Prepare to render the chunks
+		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CW);
@@ -162,12 +176,24 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetNormalTextureArray());
 
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetPBRTextureArray());
+
 		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
-		Shader.SetMatrix4("u_ViewProjection", Camera.GetViewProjection());
+		Shader.SetMatrix4("u_Projection", Camera.GetProjectionMatrix());
+		Shader.SetMatrix4("u_View", Camera.GetViewMatrix());
 		Shader.SetInteger("u_BlockTextures", 0);
 		Shader.SetInteger("u_BlockNormalTextures", 1);
+		Shader.SetInteger("u_BlockPBRTextures", 2);
+		Shader.SetVector3f("u_ViewerPosition", Camera.GetPosition());
 		world.Update(Camera.GetPosition());
+
+		// Render the 2D elements
+		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
+
 		app.FinishFrame();
+		GLClasses::DisplayFrameRate(app.GetWindow(), "Blocks");
+		Camera.Refresh();
 	}
 
 	// glm::vec3(0.5976, -0.8012, -0.0287);

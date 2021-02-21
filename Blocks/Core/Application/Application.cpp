@@ -141,7 +141,7 @@ namespace Blocks
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
 
 		// Use the latest ogl version
-		m_Window = glfwCreateWindow(m_Width, m_Height, "Glide 3D", NULL, NULL); 
+		m_Window = glfwCreateWindow(m_Width, m_Height, "Blocks", NULL, NULL); 
 
 		if (!m_Window)
 		{

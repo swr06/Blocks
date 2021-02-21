@@ -19,6 +19,11 @@ namespace Blocks
 		return (a % b + b) % b;
 	}
 
+	float ModuloF(float a, float b)
+	{
+		return std::fmodf((std::fmodf(a, b) + b), b);
+	}
+
 	void World::GenerateChunks(const glm::vec3& position)
 	{
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
@@ -80,7 +85,7 @@ namespace Blocks
 	{
 		glm::vec3 position = vposition;
 		const glm::vec3& direction = dir;
-		int max = 50; // block reach
+		int max = 20; // block reach
 
 		glm::vec3 sign;
 
@@ -121,7 +126,7 @@ namespace Blocks
 
 					if (place)
 					{
-						edit_block.first->ID = BlockDatabase::GetBlockID("Dirt");
+						edit_block.first->ID = BlockDatabase::GetBlockID("polished_granite");
 					}
 
 					else

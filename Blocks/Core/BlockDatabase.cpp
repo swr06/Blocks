@@ -6,6 +6,7 @@ namespace Blocks
 	std::unordered_map<uint8_t, BlockDatabaseParser::ParsedBlockData> ParsedBlockDataListID;
 	GLClasses::TextureArray BlockTextureArray;
 	GLClasses::TextureArray BlockNormalTextureArray;
+	GLClasses::TextureArray BlockPBRTextureArray;
 	
 	void BlockDatabase::Initialize()
 	{
@@ -43,16 +44,17 @@ namespace Blocks
 			normal_paths.push_back(e.second.NormalMap.left);
 			normal_paths.push_back(e.second.NormalMap.right);
 
-			paths.push_back(e.second.PBRMap.front);
-			paths.push_back(e.second.PBRMap.back);
-			paths.push_back(e.second.PBRMap.top);
-			paths.push_back(e.second.PBRMap.bottom);
-			paths.push_back(e.second.PBRMap.left);
-			paths.push_back(e.second.PBRMap.right);
+			pbr_paths.push_back(e.second.PBRMap.front);
+			pbr_paths.push_back(e.second.PBRMap.back);
+			pbr_paths.push_back(e.second.PBRMap.top);
+			pbr_paths.push_back(e.second.PBRMap.bottom);
+			pbr_paths.push_back(e.second.PBRMap.left);
+			pbr_paths.push_back(e.second.PBRMap.right);
 		}
 
 		BlockTextureArray.CreateArray(paths, texture_resolutions, true);
 		BlockNormalTextureArray.CreateArray(normal_paths, texture_resolutions, true, GL_LINEAR, true);
+		BlockPBRTextureArray.CreateArray(pbr_paths, texture_resolutions, false, GL_LINEAR, true);
 	}
 
 	uint8_t BlockDatabase::GetBlockID(const std::string& block_name)
@@ -338,7 +340,7 @@ namespace Blocks
 			}
 			}
 
-			return BlockTextureArray.GetTexture(pth);
+			return BlockPBRTextureArray.GetTexture(pth);
 		}
 
 		return -1;
@@ -395,7 +397,7 @@ namespace Blocks
 			}
 			}
 
-			return BlockTextureArray.GetTexture(pth);
+			return BlockPBRTextureArray.GetTexture(pth);
 		}
 
 		return -1;
@@ -409,5 +411,10 @@ namespace Blocks
 	GLuint BlockDatabase::GetNormalTextureArray()
 	{
 		return BlockNormalTextureArray.GetTextureArray();
+	}
+
+	GLuint BlockDatabase::GetPBRTextureArray()
+	{
+		return BlockPBRTextureArray.GetTextureArray();
 	}
 }

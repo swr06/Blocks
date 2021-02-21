@@ -26,5 +26,6 @@ namespace Blocks
 
 		GLuint GetTextureArray();
 		GLuint GetNormalTextureArray();
+		GLuint GetPBRTextureArray();
 	}
 }
