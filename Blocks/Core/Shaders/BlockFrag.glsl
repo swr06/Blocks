@@ -47,7 +47,7 @@ void main()
     {
         vec3 PBR_Color = texture(u_BlockPBRTextures, vec3(v_TexCoord, v_PBRTexIndex)).xyz;
         g_Roughness = 1.0f - PBR_Color.x;
-        g_Metalness = PBR_Color.z;
+        g_Metalness = max(0.01f, PBR_Color.z);
 
         g_F0 = vec3(0.04f); 
 		g_F0 = mix(g_F0, g_Albedo, g_Metalness);

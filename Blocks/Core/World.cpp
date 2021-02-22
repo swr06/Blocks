@@ -85,7 +85,7 @@ namespace Blocks
 	{
 		glm::vec3 position = vposition;
 		const glm::vec3& direction = dir;
-		int max = 20; // block reach
+		int max = 50; // block reach
 
 		glm::vec3 sign;
 
@@ -101,7 +101,10 @@ namespace Blocks
 
 			if (position.y >= 0 && position.y < CHUNK_SIZE_Y)
 			{
-				Block ray_block = GetWorldBlock(position);
+				Block ray_block = GetWorldBlock(glm::ivec3(
+					floor(position.x),
+					floor(position.y),
+					floor(position.z)));
 
 				if (ray_block.ID != 0)
 				{
@@ -122,7 +125,10 @@ namespace Blocks
 						position = position + normal;
 					}
 
-					auto edit_block = GetWorldBlockProps(position);
+					auto edit_block = GetWorldBlockProps(glm::vec3(
+						floor(position.x),
+						floor(position.y),
+						floor(position.z)));
 
 					if (place)
 					{
@@ -174,9 +180,9 @@ namespace Blocks
 	{
 		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
 		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
-		int bx = Modulo(floor(block_loc.x), CHUNK_SIZE_X);
-		int by = static_cast<int>(floor(block_loc.y)); 
-		int bz = Modulo(floor(block_loc.z), CHUNK_SIZE_Z);
+		int bx = block_loc.x & (CHUNK_SIZE_X - 1);
+		int by = block_loc.y; 
+		int bz = block_loc.z & (CHUNK_SIZE_Z - 1);
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
 
@@ -187,9 +193,9 @@ namespace Blocks
 	{
 		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
 		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
-		int bx = Modulo(floor(block_loc.x), CHUNK_SIZE_X);
+		int bx = block_loc.x & (CHUNK_SIZE_X - 1);
 		int by = block_loc.y;
-		int bz = Modulo(floor(block_loc.z), CHUNK_SIZE_Z);
+		int bz = block_loc.z & (CHUNK_SIZE_Z - 1);
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
 
@@ -200,9 +206,9 @@ namespace Blocks
 	{
 		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
 		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
-		int bx = Modulo(floor(block_loc.x), CHUNK_SIZE_X);
+		int bx = block_loc.x & (CHUNK_SIZE_X - 1);
 		int by = block_loc.y;
-		int bz = Modulo(floor(block_loc.z), CHUNK_SIZE_Z);
+		int bz = block_loc.z & (CHUNK_SIZE_Z - 1);
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
 		Block* block = &chunk->m_ChunkData[bx][by][bz];
@@ -212,9 +218,9 @@ namespace Blocks
 
 	glm::ivec3 World::WorldToChunkCoords(const glm::ivec3& world_loc)
 	{
-		int bx = Modulo(floor(world_loc.x), CHUNK_SIZE_X);
+		int bx = world_loc.x & (CHUNK_SIZE_X - 1);
 		int by = world_loc.y;
-		int bz = Modulo(floor(world_loc.z), CHUNK_SIZE_Z);
+		int bz = world_loc.z & (CHUNK_SIZE_Z - 1);
 
 		return glm::ivec3(bx, by, bz);
 	}

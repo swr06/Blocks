@@ -9,6 +9,7 @@
 
 #include "stb_image.h"
 #include <glad/glad.h>
+#include <glfw/glfw3.h>
 
 namespace GLClasses
 {

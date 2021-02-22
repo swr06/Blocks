@@ -97,7 +97,9 @@ public:
 
 		if (e.type == Blocks::EventTypes::WindowResize)
 		{
-			Camera.SetAspect((float)e.wx / (float)e.wy);
+			float aspect = (float)e.wx / (float)e.wy;
+
+			Camera.SetAspect(aspect);
 			OCamera.SetProjection(0.0f, e.wx, 0.0f, e.wy);
 			m_Width = e.wx;
 			m_Height = e.wy;

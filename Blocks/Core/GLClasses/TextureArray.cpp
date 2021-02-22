@@ -57,5 +57,14 @@ namespace GLClasses
 		{
 			glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 		}
+
+		if (glfwExtensionSupported("GL_EXT_texture_filter_anisotropic"))
+		{
+			GLfloat max;
+
+			glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
+			float amount = std::min(4.0f, max);
+			glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, amount);
+		}
 	}
 }
