@@ -403,6 +403,11 @@ namespace Blocks
 		return -1;
 	}
 
+	int BlockDatabase::GetNumberOfBlocksInDatabase()
+	{
+		return ParsedBlockDataList.size();
+	}
+
 	GLuint BlockDatabase::GetTextureArray()
 	{
 		return BlockTextureArray.GetTextureArray();

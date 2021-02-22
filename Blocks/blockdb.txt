@@ -49,3 +49,52 @@
 	Normal : Res/polished_granite_n.png
 	PBR : Res/polished_granite_s.png
 }
+
+{
+	Name : Bricks
+	Albedo : Res/bricks.png
+	Normal : Res/bricks_n.png
+	PBR : Res/bricks_s.png
+}
+
+{
+	Name : chiseled_stone_bricks
+	Albedo : Res/chiseled_stone_bricks.png
+	Normal : Res/chiseled_stone_bricks_n.png
+	PBR : Res/chiseled_stone_bricks_s.png
+}
+
+{
+	Name : oak_planks
+	Albedo : Res/oak_planks.png
+	Normal : Res/oak_planks_n.png
+	PBR : Res/oak_planks_s.png
+}
+
+{
+	Name : obsidian
+	Albedo : Res/obsidian.png
+	Normal : Res/obsidian_n.png
+	PBR : Res/obsidian_s.png
+}
+
+{
+	Name : red_wool
+	Albedo : Res/red_wool.png
+	Normal : Res/red_wool_n.png
+	PBR : Res/red_wool_s.png
+}
+
+{
+	Name : lime_wool
+	Albedo : Res/lime_wool.png
+	Normal : Res/lime_wool_n.png
+	PBR : Res/lime_wool_s.png
+}
+
+{
+	Name : blue_wool
+	Albedo : Res/blue_wool.png
+	Normal : Res/blue_wool_n.png
+	PBR : Res/blue_wool_s.png
+}

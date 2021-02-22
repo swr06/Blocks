@@ -26,26 +26,44 @@ static FastNoise NoiseGenerator(1000);
 
 void Blocks::WorldGenerator::GenerateChunk(Chunk* chunk)
 {
-	NoiseGenerator.SetNoiseType(FastNoise::SimplexFractal);
-//	NoiseGenerator.SetFrequency(0.006);
-//	NoiseGenerator.SetFractalOctaves(5);
-//	NoiseGenerator.SetFractalLacunarity(2.0f);
+	bool gen_type = 0;
 
-	for (int x = 0; x < CHUNK_SIZE_X; x++)
+	if (gen_type)
 	{
-		for (int z = 0; z < CHUNK_SIZE_Z; z++)
+		NoiseGenerator.SetNoiseType(FastNoise::SimplexFractal);
+		NoiseGenerator.SetFrequency(0.006);
+		NoiseGenerator.SetFractalOctaves(5);
+		NoiseGenerator.SetFractalLacunarity(2.0f);
+
+		for (int x = 0; x < CHUNK_SIZE_X; x++)
 		{
-			float real_x = x + (chunk->m_Position.x * CHUNK_SIZE_X);
-			float real_z = z + (chunk->m_Position.y * CHUNK_SIZE_Z);
-			float height;
-			float h;
+			for (int z = 0; z < CHUNK_SIZE_Z; z++)
+			{
+				float real_x = x + (chunk->m_Position.x * CHUNK_SIZE_X);
+				float real_z = z + (chunk->m_Position.y * CHUNK_SIZE_Z);
+				float height;
+				float h;
 
-			h = (NoiseGenerator.GetNoise(real_x, real_z));
-			height = ((h + 1.0f) / 2.0f) * 100;
+				h = (NoiseGenerator.GetNoise(real_x, real_z));
+				height = ((h + 1.0f) / 2.0f) * 100;
 
-			chunk->m_Heightmap[x][z] = (uint8_t)height;
+				chunk->m_Heightmap[x][z] = (uint8_t)height;
 
-			SetVerticalBlocks(chunk, x, z, height);
+				SetVerticalBlocks(chunk, x, z, height);
+			}
+		}
+	}
+
+	else
+	{
+		for (int x = 0; x < CHUNK_SIZE_X; x++)
+		{
+			for (int z = 0; z < CHUNK_SIZE_Z; z++)
+			{
+				chunk->m_Heightmap[x][z] = (uint8_t)40;
+
+				SetVerticalBlocks(chunk, x, z, 40);
+			}
 		}
 	}
 }

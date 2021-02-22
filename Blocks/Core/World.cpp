@@ -80,9 +80,9 @@ namespace Blocks
 		return true;
 	}
 
-
 	void World::RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir)
 	{
+		
 		glm::vec3 position = vposition;
 		const glm::vec3& direction = dir;
 		int max = 50; // block reach
@@ -132,7 +132,7 @@ namespace Blocks
 
 					if (place)
 					{
-						edit_block.first->ID = BlockDatabase::GetBlockID("polished_granite");
+						edit_block.first->ID = m_CurrentBlock;
 					}
 
 					else
@@ -164,6 +164,15 @@ namespace Blocks
 		}
 	}
 
+	void World::ChangeCurrentBlock()
+	{
+		m_CurrentBlock += 1;
+
+		if (m_CurrentBlock == BlockDatabase::GetNumberOfBlocksInDatabase())
+		{
+			m_CurrentBlock = 1;
+		}
+	}
 
 	void World::Update(const glm::vec3& position)
 	{

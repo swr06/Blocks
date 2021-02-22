@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <glm/glm.hpp>
+#include <utility>
 
 #include "Chunk.h"
 #include "Block.h"
@@ -27,6 +28,7 @@ namespace Blocks
 
 		void Update(const glm::vec3& position);
 		void RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir);
+		void ChangeCurrentBlock();
 
 	private :
 
@@ -36,5 +38,7 @@ namespace Blocks
 
 		Chunk* GetChunk(const glm::ivec2& chunk_loc);
 		std::map<std::pair<int, int>, Chunk> m_WorldChunks;
+
+		int m_CurrentBlock = 1;
 	};
 }

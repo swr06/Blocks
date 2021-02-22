@@ -24,6 +24,8 @@ namespace Blocks
 		int GetBlockPBRTexture(const std::string& block_name, const BlockFaceType type);
 		int GetBlockPBRTexture(BlockIDType block_id, const BlockFaceType type);
 
+		int GetNumberOfBlocksInDatabase();
+
 		GLuint GetTextureArray();
 		GLuint GetNormalTextureArray();
 		GLuint GetPBRTextureArray();

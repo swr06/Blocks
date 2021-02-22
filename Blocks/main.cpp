@@ -53,25 +53,44 @@ public:
 	void OnUserUpdate(double ts) override
 	{
 		GLFWwindow* window = GetWindow();
-		float camera_speed = 0.1f;
+		float camera_speed = 0.05f;
+
+		Camera.ResetAcceleration();
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			Camera.ChangePosition(Camera.GetFront() * camera_speed);
+		{
+			// Take the cross product of the camera's right and up.
+			glm::vec3 front = -glm::cross(Camera.GetRight(), Camera.GetUp());
+			Camera.ApplyAcceleration(front * camera_speed);
+		}
 
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			Camera.ChangePosition(-(Camera.GetFront() * camera_speed));
+		{
+			glm::vec3 back = glm::cross(Camera.GetRight(), Camera.GetUp());
+			Camera.ApplyAcceleration(back * camera_speed);
+		}
 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			Camera.ChangePosition(-(Camera.GetRight() * camera_speed));
+		{
+			Camera.ApplyAcceleration(-(Camera.GetRight() * camera_speed));
+		}
 
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			Camera.ChangePosition(Camera.GetRight() * camera_speed);
+		{
+			Camera.ApplyAcceleration(Camera.GetRight() * camera_speed);
+		}
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-			Camera.ChangePosition(Camera.GetUp() * camera_speed);
+		{
+			Camera.ApplyAcceleration(Camera.GetUp() * camera_speed);
+		}
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-			Camera.ChangePosition(-(Camera.GetUp() * camera_speed));
+		{
+			Camera.ApplyAcceleration(-(Camera.GetUp() * camera_speed));
+		}
+
+		Camera.OnUpdate();
 	}
 
 	void OnImguiRender(double ts) override
@@ -109,6 +128,11 @@ public:
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F1)
 		{
 			this->SetCursorLocked(!this->GetCursorLocked());
+		}
+
+		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_Q)
+		{
+			world.ChangeCurrentBlock();
 		}
 
 		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_LEFT)
@@ -153,6 +177,9 @@ int main()
 
 	// Set up the Orthographic camera
 	OCamera.SetPosition(glm::vec3(0.0f));
+	Camera.SetPosition(glm::vec3(0.0f, 60.0f, 0.0f));
+
+	glfwSwapInterval(1);
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
