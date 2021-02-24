@@ -28,11 +28,16 @@
 #include "Core/Skybox.h"
 #include "Core/OrthographicCamera.h"
 #include "Core/Renderer2D.h"
+#include "Core/Player.h"
+#include "Core/GLClasses/DepthBuffer.h"
+#include "Core/ShadowRenderer.h"
 
-Blocks::FPSCamera Camera(60.0f, 800.0f / 600.0f, 0.1f, 1000.0f);
+Blocks::Player Player;
 Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
-extern uint32_t _App_PolygonCount;
 Blocks::World world;
+bool VSync = 1;
+
+extern uint32_t _App_PolygonCount;
 
 class BlocksApp : public Blocks::Application
 {
@@ -52,45 +57,7 @@ public:
 
 	void OnUserUpdate(double ts) override
 	{
-		GLFWwindow* window = GetWindow();
-		float camera_speed = 0.05f;
-
-		Camera.ResetAcceleration();
-
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		{
-			// Take the cross product of the camera's right and up.
-			glm::vec3 front = -glm::cross(Camera.GetRight(), Camera.GetUp());
-			Camera.ApplyAcceleration(front * camera_speed);
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		{
-			glm::vec3 back = glm::cross(Camera.GetRight(), Camera.GetUp());
-			Camera.ApplyAcceleration(back * camera_speed);
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		{
-			Camera.ApplyAcceleration(-(Camera.GetRight() * camera_speed));
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		{
-			Camera.ApplyAcceleration(Camera.GetRight() * camera_speed);
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		{
-			Camera.ApplyAcceleration(Camera.GetUp() * camera_speed);
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		{
-			Camera.ApplyAcceleration(-(Camera.GetUp() * camera_speed));
-		}
-
-		Camera.OnUpdate();
+		Player.OnUpdate(m_Window);
 	}
 
 	void OnImguiRender(double ts) override
@@ -100,8 +67,8 @@ public:
 		if (ImGui::Begin("Stats"))
 		{
 			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
-			ImGui::Text("Position : (%f, %f, %f)", Camera.GetPosition().x, Camera.GetPosition().y, Camera.GetPosition().z);
-			ImGui::Text("Camera Direction : (%f, %f, %f)", Camera.GetFront().x, Camera.GetFront().y, Camera.GetFront().z);
+			ImGui::Text("Position : (%f, %f, %f)", Player.Camera.GetPosition().x, Player.Camera.GetPosition().y, Player.Camera.GetPosition().z);
+			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
 		}
 
 		ImGui::End();
@@ -111,14 +78,14 @@ public:
 	{
 		if (e.type == Blocks::EventTypes::MouseMove)
 		{
-			Camera.UpdateOnMouseMovement(e.mx, e.my);
+			Player.Camera.UpdateOnMouseMovement(e.mx, e.my);
 		}
 
 		if (e.type == Blocks::EventTypes::WindowResize)
 		{
 			float aspect = (float)e.wx / (float)e.wy;
 
-			Camera.SetAspect(aspect);
+			Player.Camera.SetAspect(aspect);
 			OCamera.SetProjection(0.0f, e.wx, 0.0f, e.wy);
 			m_Width = e.wx;
 			m_Height = e.wy;
@@ -135,14 +102,19 @@ public:
 			world.ChangeCurrentBlock();
 		}
 
+		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_V)
+		{
+			VSync = !VSync;
+		}
+
 		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_LEFT)
 		{
-			world.RayCast(false, Camera.GetPosition(), Camera.GetFront());
+			world.RayCast(false, Player.Camera.GetPosition(), Player.Camera.GetFront());
 		}
 
 		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_RIGHT)
 		{
-			world.RayCast(true, Camera.GetPosition(), Camera.GetFront());
+			world.RayCast(true, Player.Camera.GetPosition(), Player.Camera.GetFront());
 		}
 	}
 };
@@ -175,21 +147,21 @@ int main()
 
 	Crosshair.CreateTexture("Res/crosshair.png", false);
 
-	// Set up the Orthographic camera
+	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
-	Camera.SetPosition(glm::vec3(0.0f, 60.0f, 0.0f));
-
-	glfwSwapInterval(1);
+	Player.Camera.SetPosition(glm::vec3(0.0f, 60.0f, 0.0f));
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
+		glfwSwapInterval(VSync);
+
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
 		app.OnUpdate();
 
-		skybox.RenderSkybox(&Camera);
+		skybox.RenderSkybox(&Player.Camera);
 
 		// Prepare to render the chunks
 		glEnable(GL_DEPTH_TEST);
@@ -209,20 +181,20 @@ int main()
 		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetPBRTextureArray());
 
 		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
-		Shader.SetMatrix4("u_Projection", Camera.GetProjectionMatrix());
-		Shader.SetMatrix4("u_View", Camera.GetViewMatrix());
+		Shader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
+		Shader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
 		Shader.SetInteger("u_BlockTextures", 0);
 		Shader.SetInteger("u_BlockNormalTextures", 1);
 		Shader.SetInteger("u_BlockPBRTextures", 2);
-		Shader.SetVector3f("u_ViewerPosition", Camera.GetPosition());
-		world.Update(Camera.GetPosition());
+		Shader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
+		world.Update(Player.Camera.GetPosition());
 
 		// Render the 2D elements
 		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
 
 		app.FinishFrame();
 		GLClasses::DisplayFrameRate(app.GetWindow(), "Blocks");
-		Camera.Refresh();
+		Player.Camera.Refresh();
 	}
 
 	// glm::vec3(0.5976, -0.8012, -0.0287);

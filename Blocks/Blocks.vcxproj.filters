@@ -148,6 +148,12 @@
     <ClCompile Include="Core\OrthographicCamera.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Player.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ShadowRenderer.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -270,6 +276,12 @@
     <ClInclude Include="Core\OrthographicCamera.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Player.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ShadowRenderer.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">
@@ -294,6 +306,12 @@
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Core\Shaders\2DElementShaderVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\DepthFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\DepthVert.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>

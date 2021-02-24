@@ -34,6 +34,8 @@ namespace GLClasses
 			v.m_DepthMapFBO = 0;
 		}
 
+		void Create();
+
 		inline GLuint GetDepthTexture() const
 		{
 			return m_DepthMap;
@@ -50,10 +52,20 @@ namespace GLClasses
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
 
-		void OnUpdate()
+		void SetSize(int width, int height)
 		{
-			Bind();
-			glClear(GL_DEPTH_BUFFER_BIT);
+			if (width != m_Width || height != m_Height)
+			{
+				glDeleteFramebuffers(1, &m_DepthMapFBO);
+				glDeleteTextures(1, &m_DepthMap);
+
+				m_DepthMap = 0;
+				m_DepthMapFBO = 0;
+				m_Width = width;
+				m_Height = height;
+
+				Create();
+			}
 		}
 
 		inline unsigned int GetWidth() const noexcept { return m_Width; }

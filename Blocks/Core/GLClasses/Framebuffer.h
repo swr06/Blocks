@@ -47,39 +47,6 @@ namespace GLClasses
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
 
-		/*
-		To be called once every frame (Before the rendering)
-		It updates the view port and clears the framebuffer.
-
-		width and height should be the dimensions of the window
-		*/
-		void OnUpdate(int width, int height, bool wireframe = false) 
-		{
-			this->Bind();
-
-			if (wireframe)
-			{
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			}
-
-			else
-			{
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			}
-
-			if (width != m_FBWidth || height != m_FBHeight)
-			{
-				glDeleteFramebuffers(1, &m_FBO);
-				m_FBO = 0;
-				CreateFramebuffer(width, height, m_IsHDR);
-				m_FBWidth = width;
-				m_FBHeight = height;
-
-			}
-			
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		}
-
 		void SetSize(uint32_t width, uint32_t height)
 		{
 			if (width != m_FBWidth || height != m_FBHeight)
@@ -91,9 +58,9 @@ namespace GLClasses
 				m_FBO = 0;
 				m_TextureAttachment = 0;
 				m_DepthStencilBuffer = 0;
-				CreateFramebuffer(width, height, m_IsHDR);
 				m_FBWidth = width;
 				m_FBHeight = height;
+				CreateFramebuffer();
 			}
 		}
 
@@ -131,8 +98,10 @@ namespace GLClasses
 			return m_Exposure;
 		}
 
+		// Creates the framebuffer with the appropriate settings
+		void CreateFramebuffer();
+
 	private :
-		void CreateFramebuffer(int w, int h, bool hdr);
 
 		GLuint m_FBO; // The Framebuffer object
 		GLuint m_TextureAttachment; // The actual texture attachment

@@ -9,7 +9,7 @@ namespace GLClasses
     Framebuffer::Framebuffer(unsigned int w, unsigned int h, bool hdr, bool has_depth_attachment) :
         m_FBO(0), m_FBWidth(w), m_FBHeight(h), m_IsHDR(hdr), m_HasDepthMap(has_depth_attachment)
     {
-        CreateFramebuffer(w, h, hdr);
+        CreateFramebuffer();
     }
 
 	Framebuffer::~Framebuffer()
@@ -17,8 +17,12 @@ namespace GLClasses
 		glDeleteFramebuffers(1, &m_FBO);
 	}
 
-	void Framebuffer::CreateFramebuffer(int w, int h, bool hdr)
+	void Framebuffer::CreateFramebuffer()
 	{
+        int w = m_FBWidth;
+        int h = m_FBHeight;
+        bool hdr = m_IsHDR;
+
         GLenum format = hdr ? GL_RGBA16F : GL_RGBA;
         GLenum type = hdr ? GL_FLOAT : GL_UNSIGNED_BYTE;
 
