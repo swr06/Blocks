@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "../Core/Application/Logger.h"
 
@@ -32,18 +33,16 @@ namespace Blocks
 			m_Height = v.m_Height;
 
 			m_ColorTexture = v.m_ColorTexture;
-			m_PositionTexture = v.m_PositionTexture;
 			m_NormalTexture = v.m_NormalTexture;
-			m_DepthRenderBuffer = v.m_DepthRenderBuffer;
-			m_PBRComponentTexture = v.m_PBRComponentTexture;
+			m_DepthTexture = v.m_DepthTexture;
+			m_SSRMaskTexture = v.m_SSRMaskTexture;
 			m_FBO = v.m_FBO;
 
 			v.m_ColorTexture = 0;
-			v.m_PositionTexture = 0;
+			v.m_SSRMaskTexture = 0;
 			v.m_NormalTexture = 0;
-			v.m_DepthRenderBuffer = 0;
+			v.m_DepthTexture = 0;
 			v.m_FBO = 0;
-			v.m_PBRComponentTexture = 0;
 		}
 
 		void Bind() const
@@ -65,14 +64,14 @@ namespace Blocks
 		}
 
 		inline GLuint GetFramebufferID() const noexcept { return m_FBO; }
-		inline GLuint GetPositionTexture() const noexcept { return m_PositionTexture; }
 		inline GLuint GetColorTexture() const noexcept { return m_ColorTexture; }
 		inline GLuint GetNormalTexture() const noexcept { return m_NormalTexture; }
-		inline GLuint GetPBRComponentTexture() const noexcept { return m_PBRComponentTexture; }
+		inline GLuint GetDepthTexture() const noexcept { return m_DepthTexture; }
+		inline GLuint GetSSRMaskTexture() const noexcept { return m_SSRMaskTexture; }
+		void GenerateFramebuffers();
 
 	private :
 
-		void GenerateFramebuffers();
 		void DeleteEverything();
 
 		GLuint m_ColorTexture = 0;

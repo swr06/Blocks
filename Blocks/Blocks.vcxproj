@@ -155,6 +155,7 @@
     <ClCompile Include="Core\Application\Logger.cpp" />
     <ClCompile Include="Core\BlockDatabase.cpp" />
     <ClCompile Include="Core\BlockDatabaseParser.cpp" />
+    <ClCompile Include="Core\BlocksRenderBuffer.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
     <ClCompile Include="Core\Chunk.cpp" />
     <ClCompile Include="Core\ChunkMesh.cpp" />
@@ -197,6 +198,7 @@
     <ClInclude Include="Core\Block.h" />
     <ClInclude Include="Core\BlockDatabase.h" />
     <ClInclude Include="Core\BlockDatabaseParser.h" />
+    <ClInclude Include="Core\BlocksRenderBuffer.h" />
     <ClInclude Include="Core\Camera.h" />
     <ClInclude Include="Core\Chunk.h" />
     <ClInclude Include="Core\ChunkMesh.h" />
@@ -240,10 +242,21 @@
     <None Include="Core\Shaders\2DElementShaderVert.glsl" />
     <None Include="Core\Shaders\DepthFrag.glsl" />
     <None Include="Core\Shaders\DepthVert.glsl" />
+    <None Include="Core\Shaders\FBOVert.glsl" />
     <None Include="Core\Shaders\SkyboxFrag.glsl" />
     <None Include="Core\Shaders\SkyboxVertex.glsl" />
     <None Include="Core\Shaders\BlockFrag.glsl" />
     <None Include="Core\Shaders\BlockVert.glsl" />
+    <None Include="Core\Shaders\Tonemapping\ACES.glsl" />
+    <None Include="Core\Shaders\Tonemapping\filmic.glsl" />
+    <None Include="Core\Shaders\Tonemapping\LICENSE.MD" />
+    <None Include="Core\Shaders\Tonemapping\lottes.glsl" />
+    <None Include="Core\Shaders\Tonemapping\README.md" />
+    <None Include="Core\Shaders\Tonemapping\reinhard.glsl" />
+    <None Include="Core\Shaders\Tonemapping\reinhard2.glsl" />
+    <None Include="Core\Shaders\Tonemapping\uchimura.glsl" />
+    <None Include="Core\Shaders\Tonemapping\uncharted2.glsl" />
+    <None Include="Core\Shaders\Tonemapping\unreal.glsl" />
     <None Include="Dependencies\fast_noise\LICENSE" />
     <None Include="Dependencies\fast_noise\README.md" />
   </ItemGroup>

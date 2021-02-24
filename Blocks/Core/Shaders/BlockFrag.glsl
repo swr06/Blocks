@@ -2,6 +2,9 @@
 
 #define PI 3.141592653589
 
+layout (location = 0) out vec4 o_Color;
+layout (location = 1) out vec3 o_Normal;
+
 in vec2 v_TexCoord;
 in float v_TexIndex;
 in float v_NormalTexIndex;
@@ -9,8 +12,6 @@ in float v_PBRTexIndex;
 in vec3 v_Normal;
 in mat3 v_TBNMatrix;
 in vec3 v_FragPosition;
-
-out vec4 o_Color;
 
 uniform vec3 u_ViewerPosition;
 uniform sampler2DArray u_BlockTextures;
@@ -24,7 +25,7 @@ float g_Roughness = 0.1f;
 float g_Metalness = 0.1f;
 
 //const vec3 SUN_COLOR = vec3(252.0f / 255.0f, 212.0f / 255.0f, 64.0f / 255.0f);
-const vec3 SUN_COLOR = vec3(1.0f) * 2.0f;
+const vec3 SUN_COLOR = vec3(1.0f) * 2.5f;
 //const vec3 SUN_DIRECTION = vec3(0.5976, -0.8012, -0.0287);
 const vec3 SUN_DIRECTION = vec3(0.0f, 1.0f, 0.0f);
 
@@ -57,6 +58,8 @@ void main()
     vec3 Ambient = 0.2f * g_Albedo;
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
+    o_Normal = g_Normal;
+
     //o_Color = vec4(vec3(g_Metalness), 1.0f);
 }
 

@@ -19,5 +19,5 @@ uniform float u_Exposure = 1.0f;
 void main()
 {
     vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
-    o_Color = vec4(pow(aces(HDR.rgb), vec3(1.0 / 2.2)), 1.0);
+    o_Color = vec4(aces(HDR.rgb), 1.0);
 }

@@ -31,10 +31,13 @@
 #include "Core/Player.h"
 #include "Core/GLClasses/DepthBuffer.h"
 #include "Core/ShadowRenderer.h"
+#include "Core/BlocksRenderBuffer.h"
 
 Blocks::Player Player;
 Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
 Blocks::World world;
+Blocks::BlocksRenderBuffer FBO(800, 600);
+
 bool VSync = 1;
 
 extern uint32_t _App_PolygonCount;
@@ -89,6 +92,7 @@ public:
 			OCamera.SetProjection(0.0f, e.wx, 0.0f, e.wy);
 			m_Width = e.wx;
 			m_Height = e.wy;
+			FBO.SetDimensions(e.wx, e.wy);
 			glViewport(0, 0, e.wx, e.wy);
 		}
 
@@ -140,9 +144,33 @@ int main()
 	Blocks::Renderer2D Renderer2D;
 	GLClasses::Texture Crosshair;
 	GLClasses::Shader RenderShader;
+	GLClasses::Shader PPShader;
+	GLClasses::VertexArray FBOVAO;
+	GLClasses::VertexBuffer FBOVBO;
 
+	// Setup the basic vao
+
+	float QuadVertices[] =
+	{
+		-1.0f,  1.0f,  0.0f, 1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f, -1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,  1.0f,  1.0f,  1.0f, 1.0f
+	};
+
+	FBOVBO.BufferData(sizeof(QuadVertices), QuadVertices, GL_STATIC_DRAW);
+	FBOVAO.Bind();
+	FBOVBO.Bind();
+	FBOVBO.VertexAttribPointer(0, 2, GL_FLOAT, 0, 4 * sizeof(GLfloat), 0);
+	FBOVBO.VertexAttribPointer(1, 2, GL_FLOAT, 0, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+	FBOVAO.Unbind();
+
+	// Create and compile the shaders
 	RenderShader.CreateShaderProgramFromFile("Core/Shaders/BlockVert.glsl", "Core/Shaders/BlockFrag.glsl");
 	RenderShader.CompileShaders();
+	PPShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/Tonemapping/ACES.glsl");
+	PPShader.CompileShaders();
+
+	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
 
 	// Set up the Orthographic Player.Camera
@@ -153,11 +181,14 @@ int main()
 	{
 		glfwSwapInterval(VSync);
 
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
 		app.OnUpdate();
+
+		FBO.Bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, FBO.GetDimensions().first, FBO.GetDimensions().second);
 
 		skybox.RenderSkybox(&Player.Camera);
 
@@ -187,6 +218,24 @@ int main()
 		RenderShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 		world.Update(Player.Camera.GetPosition());
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glUseProgram(0);
+
+		// Now, use the tonemapping shaders and write it to the screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+
+		PPShader.Use();
+		PPShader.SetInteger("u_FramebufferTexture", 0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
+
+		FBOVAO.Bind();
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		FBOVAO.Unbind();
+
 		// Render the 2D elements
 		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
 
@@ -194,8 +243,6 @@ int main()
 		GLClasses::DisplayFrameRate(app.GetWindow(), "Blocks");
 		Player.Camera.Refresh();
 	}
-
-	// glm::vec3(0.5976, -0.8012, -0.0287);
 }
 
 

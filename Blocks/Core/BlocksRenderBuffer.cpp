@@ -6,7 +6,6 @@ namespace Blocks
 	{
 		m_Width = w;
 		m_Height = h;
-		GenerateFramebuffers();
 	}
 
 	BlocksRenderBuffer::~BlocksRenderBuffer()

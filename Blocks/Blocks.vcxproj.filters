@@ -35,6 +35,9 @@
     <Filter Include="Source Files\Deps\Fast Noise">
       <UniqueIdentifier>{2d4a21fa-292b-4102-bd7f-13f7eb04fa78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Shaders\Tonemapping">
+      <UniqueIdentifier>{8bf93e9a-f878-4855-99f1-93919dc13fc1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -152,6 +155,9 @@
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
     <ClCompile Include="Core\ShadowRenderer.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\BlocksRenderBuffer.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
   </ItemGroup>
@@ -282,6 +288,9 @@
     <ClInclude Include="Core\ShadowRenderer.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="Core\BlocksRenderBuffer.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">
@@ -313,6 +322,39 @@
     </None>
     <None Include="Core\Shaders\DepthVert.glsl">
       <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\FBOVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\ACES.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\filmic.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\LICENSE.MD">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\lottes.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\README.md">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\reinhard.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\reinhard2.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\uchimura.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\uncharted2.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\Tonemapping\unreal.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
     </None>
   </ItemGroup>
 </Project>
