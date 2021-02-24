@@ -137,14 +137,12 @@ int main()
 		});
 
 	Blocks::BlockDatabase::Initialize();
-
-	GLClasses::Shader Shader;
-	Shader.CreateShaderProgramFromFile("Core/Shaders/BlockVert.glsl", "Core/Shaders/BlockFrag.glsl");
-	Shader.CompileShaders();
-
 	Blocks::Renderer2D Renderer2D;
 	GLClasses::Texture Crosshair;
+	GLClasses::Shader RenderShader;
 
+	RenderShader.CreateShaderProgramFromFile("Core/Shaders/BlockVert.glsl", "Core/Shaders/BlockFrag.glsl");
+	RenderShader.CompileShaders();
 	Crosshair.CreateTexture("Res/crosshair.png", false);
 
 	// Set up the Orthographic Player.Camera
@@ -169,7 +167,7 @@ int main()
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CW);
 
-		Shader.Use();
+		RenderShader.Use();
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetTextureArray());
@@ -180,13 +178,13 @@ int main()
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetPBRTextureArray());
 
-		Shader.SetMatrix4("u_Model", glm::mat4(1.0f));
-		Shader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
-		Shader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
-		Shader.SetInteger("u_BlockTextures", 0);
-		Shader.SetInteger("u_BlockNormalTextures", 1);
-		Shader.SetInteger("u_BlockPBRTextures", 2);
-		Shader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
+		RenderShader.SetMatrix4("u_Model", glm::mat4(1.0f));
+		RenderShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
+		RenderShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
+		RenderShader.SetInteger("u_BlockTextures", 0);
+		RenderShader.SetInteger("u_BlockNormalTextures", 1);
+		RenderShader.SetInteger("u_BlockPBRTextures", 2);
+		RenderShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 		world.Update(Player.Camera.GetPosition());
 
 		// Render the 2D elements
