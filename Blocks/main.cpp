@@ -39,7 +39,7 @@ Blocks::World world;
 Blocks::BlocksRenderBuffer FBO(800, 600);
 glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
 
-float ShadowBias = 0.00015f;
+float ShadowBias = 0.001f;
 
 // Flags that change from frame to frame
 bool PlayerMoved = false;
