@@ -25,6 +25,7 @@ uniform sampler2D u_LightShadowMap;
 uniform mat4 u_LightViewMatrix;
 uniform mat4 u_LightProjectionMatrix;
 uniform vec3 u_LightDirection;
+uniform float u_ShadowBias;
 
 vec3 g_Albedo;
 vec3 g_Normal;
@@ -82,7 +83,6 @@ float CalculateSunShadow()
 	}
 
     float Depth = ProjectionCoordinates.z;
-    float Bias =  0.005f;
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
@@ -93,14 +93,14 @@ float CalculateSunShadow()
 	    	for(int y = -PCF_RANGE; y <= PCF_RANGE; y++)
 	    	{
 	    		float pcf = texture(u_LightShadowMap, ProjectionCoordinates.xy + vec2(x, y) * TexelSize).r; 
-	    		shadow += Depth - Bias > pcf ? 1.0 : 0.0;        
+	    		shadow += Depth - u_ShadowBias > pcf ? 1.0 : 0.0;        
 	    	}    
 	    }
 
 	    shadow /= 9.0;
     #else
         float ClosestDepth = texture(u_LightShadowMap, ProjectionCoordinates.xy).r; 
-	    shadow = Depth - Bias > ClosestDepth ? 1.0 : 0.0;    
+	    shadow = Depth - u_ShadowBias > ClosestDepth ? 1.0 : 0.0;    
     #endif
 
     return shadow;

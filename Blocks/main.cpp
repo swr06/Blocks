@@ -39,9 +39,12 @@ Blocks::World world;
 Blocks::BlocksRenderBuffer FBO(800, 600);
 glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
 
+float ShadowBias = 0.00015f;
+
 // Flags that change from frame to frame
 bool PlayerMoved = false;
 bool BlockModified = false;
+bool SunDirectionChanged = false;
 
 bool VSync = 1;
 
@@ -72,12 +75,20 @@ public:
 	{
 		ImGuiWindowFlags window_flags = 0;
 
+		glm::vec3 prevSunDirection = SunDirection;
+
 		if (ImGui::Begin("Stats"))
 		{
 			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
 			ImGui::Text("Position : (%f, %f, %f)", Player.Camera.GetPosition().x, Player.Camera.GetPosition().y, Player.Camera.GetPosition().z);
 			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
 			ImGui::SliderFloat3("Sun Direction", &SunDirection[0], -1.0f, 1.0f);
+			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
+		}
+
+		if (prevSunDirection != SunDirection)
+		{
+			SunDirectionChanged = true;
 		}
 
 		ImGui::End();
@@ -194,14 +205,17 @@ int main()
 	{
 		glfwSwapInterval(VSync);
 
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
 		app.OnUpdate();
-		
-		// Render the shadow map
-		Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &world);
-		
+
+		if (PlayerMoved || BlockModified || SunDirectionChanged)
+		{
+			// Render the shadow map
+			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &world);
+		}
+
 		// Do the normal rendering
 		FBO.Bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -237,6 +251,7 @@ int main()
 		RenderShader.SetInteger("u_BlockPBRTextures", 2);
 		RenderShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 		RenderShader.SetVector3f("u_LightDirection", -SunDirection);
+		RenderShader.SetFloat("u_ShadowBias", ShadowBias);
 
 		// Shadows
 		RenderShader.SetInteger("u_LightShadowMap", 3);
@@ -273,6 +288,7 @@ int main()
 		// Write the default values for flags that change from frame to frame
 		PlayerMoved = false;
 		BlockModified = false;
+		SunDirectionChanged = false;
 	}
 }
 

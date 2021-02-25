@@ -22,7 +22,7 @@ void Blocks::WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int y
 	}
 }
 
-static FastNoise NoiseGenerator(1000);
+static FastNoise NoiseGenerator(2384);
 
 void Blocks::WorldGenerator::GenerateChunk(Chunk* chunk)
 {
