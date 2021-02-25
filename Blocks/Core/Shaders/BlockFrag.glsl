@@ -18,6 +18,12 @@ uniform sampler2DArray u_BlockTextures;
 uniform sampler2DArray u_BlockNormalTextures;
 uniform sampler2DArray u_BlockPBRTextures;
 
+// Shadowing and light info
+uniform sampler2D u_LightShadowMap;
+uniform mat4 u_LightViewMatrix;
+uniform mat4 u_LightProjectionMatrix;
+uniform vec3 u_LightDirection;
+
 vec3 g_Albedo;
 vec3 g_Normal;
 vec3 g_F0;
@@ -26,8 +32,6 @@ float g_Metalness = 0.1f;
 
 //const vec3 SUN_COLOR = vec3(252.0f / 255.0f, 212.0f / 255.0f, 64.0f / 255.0f);
 const vec3 SUN_COLOR = vec3(1.0f) * 2.5f;
-//const vec3 SUN_DIRECTION = vec3(0.5976, -0.8012, -0.0287);
-const vec3 SUN_DIRECTION = vec3(0.0f, 1.0f, 0.0f);
 
 vec3 CalculateDirectionalLightPBR();
 
@@ -54,13 +58,44 @@ void main()
 		g_F0 = mix(g_F0, g_Albedo, g_Metalness);
     }
 
-	float diff = max(dot(g_Normal, SUN_DIRECTION), 0.2);
     vec3 Ambient = 0.2f * g_Albedo;
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
     o_Normal = g_Normal;
 
     //o_Color = vec4(vec3(g_Metalness), 1.0f);
+}
+
+float CalculateSunShadow()
+{
+    vec4 light_fragpos = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f);
+
+    vec3 ProjectionCoordinates = light_fragpos.xyz / light_fragpos.w; // Perspective division is not really needed for orthagonal projection but whatever
+    ProjectionCoordinates = ProjectionCoordinates * 0.5f + 0.5f;
+	float shadow = 0.0;
+
+	if (ProjectionCoordinates.z > 1.0)
+	{
+		return 0.0f;
+	}
+
+    float ClosestDepth = texture(u_LightShadowMap, ProjectionCoordinates.xy).r; 
+    float Depth = ProjectionCoordinates.z;
+    float Bias =  0.005f;
+	vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
+
+	// Take the average of the surrounding texels to create the PCF effect
+	for(int x = -1; x <= 1; x++)
+	{
+		for(int y = -1; y <= 1; y++)
+		{
+			float pcf = texture(u_LightShadowMap, ProjectionCoordinates.xy + vec2(x, y) * TexelSize).r; 
+			shadow += Depth - Bias > pcf ? 1.0 : 0.0;        
+		}    
+	}
+
+	shadow /= 9.0;
+    return shadow;
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -105,8 +140,10 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR()
 {
+    float Shadow = max(CalculateSunShadow(), 0.2f);
+
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
-    vec3 L = SUN_DIRECTION;
+    vec3 L = u_LightDirection;
     vec3 H = normalize(V + L);
 	vec3 radiance = SUN_COLOR;
 
@@ -125,5 +162,5 @@ vec3 CalculateDirectionalLightPBR()
     float NdotL = max(dot(g_Normal, L), 0.0);
 	vec3 Result = (kD * g_Albedo / PI + (specular * 4.0f)) * radiance * NdotL;
 
-    return Result;
+    return Result * (1.0f - Shadow);
 }

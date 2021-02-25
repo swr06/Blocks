@@ -220,8 +220,6 @@ namespace Blocks
 	*/
 	void Application::OnUpdate()
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 		glfwGetFramebufferSize(m_Window, &m_CurrentWidth, &m_CurrentHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, m_CurrentWidth, m_CurrentHeight);

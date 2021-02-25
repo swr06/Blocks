@@ -37,6 +37,11 @@ Blocks::Player Player;
 Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
 Blocks::World world;
 Blocks::BlocksRenderBuffer FBO(800, 600);
+glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
+
+// Flags that change from frame to frame
+bool PlayerMoved = false;
+bool BlockModified = false;
 
 bool VSync = 1;
 
@@ -60,7 +65,7 @@ public:
 
 	void OnUserUpdate(double ts) override
 	{
-		Player.OnUpdate(m_Window);
+		PlayerMoved = Player.OnUpdate(m_Window);
 	}
 
 	void OnImguiRender(double ts) override
@@ -72,6 +77,7 @@ public:
 			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
 			ImGui::Text("Position : (%f, %f, %f)", Player.Camera.GetPosition().x, Player.Camera.GetPosition().y, Player.Camera.GetPosition().z);
 			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
+			ImGui::SliderFloat3("Sun Direction", &SunDirection[0], -1.0f, 1.0f);
 		}
 
 		ImGui::End();
@@ -79,7 +85,7 @@ public:
 
 	void OnEvent(Blocks::Event e) override
 	{
-		if (e.type == Blocks::EventTypes::MouseMove)
+		if (e.type == Blocks::EventTypes::MouseMove && this->GetCursorLocked())
 		{
 			Player.Camera.UpdateOnMouseMovement(e.mx, e.my);
 		}
@@ -111,13 +117,15 @@ public:
 			VSync = !VSync;
 		}
 
-		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_LEFT)
+		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_LEFT && this->GetCursorLocked())
 		{
+			BlockModified = true;
 			world.RayCast(false, Player.Camera.GetPosition(), Player.Camera.GetFront());
 		}
 
-		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_RIGHT)
+		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_RIGHT && this->GetCursorLocked())
 		{
+			BlockModified = true;
 			world.RayCast(true, Player.Camera.GetPosition(), Player.Camera.GetFront());
 		}
 	}
@@ -147,6 +155,7 @@ int main()
 	GLClasses::Shader PPShader;
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
+	GLClasses::DepthBuffer ShadowMap(3072, 3072);
 
 	// Setup the basic vao
 
@@ -177,6 +186,10 @@ int main()
 	OCamera.SetPosition(glm::vec3(0.0f));
 	Player.Camera.SetPosition(glm::vec3(0.0f, 60.0f, 0.0f));
 
+	// Setup shadow maps and shadow map renderer
+	Blocks::ShadowMapRenderer::InitializeShadowRenderer();
+	ShadowMap.Create();
+
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		glfwSwapInterval(VSync);
@@ -185,7 +198,11 @@ int main()
 		glEnable(GL_DEPTH_TEST);
 
 		app.OnUpdate();
-
+		
+		// Render the shadow map
+		Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &world);
+		
+		// Do the normal rendering
 		FBO.Bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, FBO.GetDimensions().first, FBO.GetDimensions().second);
@@ -209,6 +226,9 @@ int main()
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetPBRTextureArray());
 
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
+
 		RenderShader.SetMatrix4("u_Model", glm::mat4(1.0f));
 		RenderShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
 		RenderShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
@@ -216,6 +236,13 @@ int main()
 		RenderShader.SetInteger("u_BlockNormalTextures", 1);
 		RenderShader.SetInteger("u_BlockPBRTextures", 2);
 		RenderShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
+		RenderShader.SetVector3f("u_LightDirection", -SunDirection);
+
+		// Shadows
+		RenderShader.SetInteger("u_LightShadowMap", 3);
+		RenderShader.SetMatrix4("u_LightViewMatrix", Blocks::ShadowMapRenderer::GetLightViewMatrix());
+		RenderShader.SetMatrix4("u_LightProjectionMatrix", Blocks::ShadowMapRenderer::GetLightProjectionMatrix());
+		
 		world.Update(Player.Camera.GetPosition());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -242,6 +269,10 @@ int main()
 		app.FinishFrame();
 		GLClasses::DisplayFrameRate(app.GetWindow(), "Blocks");
 		Player.Camera.Refresh();
+
+		// Write the default values for flags that change from frame to frame
+		PlayerMoved = false;
+		BlockModified = false;
 	}
 }
 

@@ -11,7 +11,7 @@ namespace Blocks
 	public :
 
 		Player();
-		void OnUpdate(GLFWwindow* window);
+		bool OnUpdate(GLFWwindow* window);
 
 		FPSCamera Camera;
 	};
