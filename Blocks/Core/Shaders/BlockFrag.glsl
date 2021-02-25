@@ -1,6 +1,8 @@
 #version 330 core
-
 #define PI 3.141592653589
+#define USE_PCF
+#define PCF_RANGE 1
+#pragma optionNV (unroll all) // fixes loop unrolling bug on nvidia cards
 
 layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
@@ -79,22 +81,28 @@ float CalculateSunShadow()
 		return 0.0f;
 	}
 
-    float ClosestDepth = texture(u_LightShadowMap, ProjectionCoordinates.xy).r; 
     float Depth = ProjectionCoordinates.z;
     float Bias =  0.005f;
-	vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
 
-	// Take the average of the surrounding texels to create the PCF effect
-	for(int x = -1; x <= 1; x++)
-	{
-		for(int y = -1; y <= 1; y++)
-		{
-			float pcf = texture(u_LightShadowMap, ProjectionCoordinates.xy + vec2(x, y) * TexelSize).r; 
-			shadow += Depth - Bias > pcf ? 1.0 : 0.0;        
-		}    
-	}
+    #ifdef USE_PCF
+	    vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
 
-	shadow /= 9.0;
+	    // Take the average of the surrounding texels to create the PCF effect
+	    for(int x = -PCF_RANGE; x <= PCF_RANGE; x++)
+	    {
+	    	for(int y = -PCF_RANGE; y <= PCF_RANGE; y++)
+	    	{
+	    		float pcf = texture(u_LightShadowMap, ProjectionCoordinates.xy + vec2(x, y) * TexelSize).r; 
+	    		shadow += Depth - Bias > pcf ? 1.0 : 0.0;        
+	    	}    
+	    }
+
+	    shadow /= 9.0;
+    #else
+        float ClosestDepth = texture(u_LightShadowMap, ProjectionCoordinates.xy).r; 
+	    shadow = Depth - Bias > ClosestDepth ? 1.0 : 0.0;    
+    #endif
+
     return shadow;
 }
 
@@ -143,7 +151,7 @@ vec3 CalculateDirectionalLightPBR()
     float Shadow = max(CalculateSunShadow(), 0.2f);
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
-    vec3 L = u_LightDirection;
+    vec3 L = normalize(u_LightDirection);
     vec3 H = normalize(V + L);
 	vec3 radiance = SUN_COLOR;
 

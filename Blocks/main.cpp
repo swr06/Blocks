@@ -155,7 +155,7 @@ int main()
 	GLClasses::Shader PPShader;
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(3072, 3072);
+	GLClasses::DepthBuffer ShadowMap(4096, 4096);
 
 	// Setup the basic vao
 

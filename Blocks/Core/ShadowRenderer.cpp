@@ -17,11 +17,11 @@ void Blocks::ShadowMapRenderer::InitializeShadowRenderer()
 
 void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_buffer, const glm::vec3& center, const glm::vec3& light_direction, World* world)
 {
-	float SHADOW_DISTANCE_X = 40.0f;
-	float SHADOW_DISTANCE_Y = 40.0f;
-	float SHADOW_DISTANCE_Z = 61.0f;
+	float SHADOW_DISTANCE_X = -90;
+	float SHADOW_DISTANCE_Y = 90;
+	float SHADOW_DISTANCE_Z = 170.0f;
 
-	LightPosition = glm::vec3(floor(center.x), 0.0f, floor(center.z)) + (-light_direction * 60.0f);
+	LightPosition = glm::vec3(floor(center.x), 0.0f, floor(center.z)) + (-light_direction * 70.0f);
 
 	LightProjectionMatrix = glm::ortho(-SHADOW_DISTANCE_X, SHADOW_DISTANCE_X,
 		-SHADOW_DISTANCE_Y, SHADOW_DISTANCE_Y,
