@@ -6,17 +6,17 @@ void Blocks::WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int y
 	{
 		if (y >= y_level - 1)
 		{
-			chunk->m_ChunkData[x][y][z].ID = BlockDatabase::GetBlockID("Grass");
+			chunk->SetBlock(x, y, z, BlockDatabase::GetBlockID("Grass"));
 		}
 
 		else if (y >= y_level - 5)
 		{
-			chunk->m_ChunkData[x][y][z].ID = BlockDatabase::GetBlockID("Dirt");
+			chunk->SetBlock(x, y, z, BlockDatabase::GetBlockID("Dirt"));
 		}
 
 		else
 		{
-			chunk->m_ChunkData[x][y][z].ID = BlockDatabase::GetBlockID("Stone");
+			chunk->SetBlock(x, y, z, BlockDatabase::GetBlockID("Stone"));
 		}
 
 	}

@@ -6,6 +6,16 @@ namespace Blocks
 {
 	static glm::vec4 FrontFace[4], BackFace[4], TopFace[4], BottomFace[4], LeftFace[4], RightFace[4];
 
+	static Block GetChunkBlock(const glm::ivec3& block_loc, std::array<Block, CHUNK_SIZE_X* CHUNK_SIZE_Y* CHUNK_SIZE_Z>& chunk_data)
+	{
+		return chunk_data[(block_loc.z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (block_loc.y * CHUNK_SIZE_X) + block_loc.x];
+	}
+
+	static void SetChunkBlock(const glm::ivec3& block_loc, const Block& block, std::array<Block, CHUNK_SIZE_X* CHUNK_SIZE_Y* CHUNK_SIZE_Z>& chunk_data)
+	{
+		chunk_data[(block_loc.z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (block_loc.y * CHUNK_SIZE_X) + block_loc.x] = block;
+	}
+
 	ChunkMesh::ChunkMesh() : m_PolygonCount(0)
 	{
 		static GLClasses::IndexBuffer IBO;
@@ -81,7 +91,7 @@ namespace Blocks
 		RightFace[3] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 	}
 
-	void ChunkMesh::GenerateMesh(std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z>& chunk_data, int section, const glm::vec2& chunk_pos)
+	void ChunkMesh::GenerateMesh(std::array<Block, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z>& chunk_data, int section, const glm::vec2& chunk_pos)
 	{
 		int start_y = section * RENDER_CHUNK_SIZE_Y;
 		int end_y = (section * RENDER_CHUNK_SIZE_Y) + RENDER_CHUNK_SIZE_Y;
@@ -92,7 +102,7 @@ namespace Blocks
 			{
 				for (int z = 0; z < CHUNK_SIZE_Z; z++)
 				{
-					Block block = chunk_data[x][y][z];
+					Block block = GetChunkBlock(glm::ivec3(x, y, z), chunk_data);
 					if (block.ID == 0) { continue; }
 
 					float world_x = x + (chunk_pos.x * CHUNK_SIZE_X);

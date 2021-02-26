@@ -31,15 +31,20 @@ namespace Blocks
 			m_Position = position;
 			memset(&m_ChunkData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
 		}
-		
-		inline void SetBlock(const int x, const int y, const int z, const Block& block) 
+
+		inline const Block& GetBlock(uint8_t x, uint8_t y, uint8_t z) const noexcept
 		{
-			m_ChunkData[x][y][z] = block;
+			return m_ChunkData[(z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (y * CHUNK_SIZE_X) + x];
 		}
 
-		inline Block GetBlock(const int x, const int y, const int z)
+		inline void SetBlock(uint8_t x, uint8_t y, uint8_t z, const Block& block)
 		{
-			return m_ChunkData[x][y][z];
+			m_ChunkData[(z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (y * CHUNK_SIZE_X) + x] = block;
+		}
+
+		inline void SetBlock(uint8_t x, uint8_t y, uint8_t z, uint8_t id)
+		{
+			m_ChunkData[(z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (y * CHUNK_SIZE_X) + x].ID = id;
 		}
 
 		inline glm::vec2 GetPosition() const noexcept
@@ -87,9 +92,11 @@ namespace Blocks
 			}
 		}
 
+		
+
 	private :
 
-		std::array<std::array<std::array<Block, CHUNK_SIZE_X>, CHUNK_SIZE_Y>, CHUNK_SIZE_Z> m_ChunkData;
+		std::array<Block, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z> m_ChunkData;
 		std::array<ChunkMesh, CHUNK_RENDER_MESH_COUNT> m_ChunkMeshes;
 		std::array<std::array<uint8_t, CHUNK_SIZE_X>, CHUNK_SIZE_Z> m_Heightmap;
 		glm::vec2 m_Position;

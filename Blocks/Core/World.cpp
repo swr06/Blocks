@@ -195,7 +195,7 @@ namespace Blocks
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
 
-		return chunk->m_ChunkData[bx][by][bz];
+		return chunk->GetBlock(bx, by, bz);
 	}
 
 	Block* World::GetWorldBlockPtr(const glm::ivec3& block_loc)
@@ -208,7 +208,7 @@ namespace Blocks
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
 
-		return &chunk->m_ChunkData[bx][by][bz];
+		return (Block*)&chunk->GetBlock(bx, by, bz);
 	}
 
 	std::pair<Block*, Chunk*> World::GetWorldBlockProps(const glm::ivec3& block_loc)
@@ -220,7 +220,7 @@ namespace Blocks
 		int bz = block_loc.z & (CHUNK_SIZE_Z - 1);
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
-		Block* block = &chunk->m_ChunkData[bx][by][bz];
+		Block* block = (Block*)&chunk->GetBlock(bx, by, bz);
 
 		return std::pair<Block*, Chunk*>(block, chunk);
 	}
