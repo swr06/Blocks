@@ -162,11 +162,12 @@ int main()
 	Blocks::BlockDatabase::Initialize();
 	Blocks::Renderer2D Renderer2D;
 	GLClasses::Texture Crosshair;
+	GLClasses::Texture BlueNoiseTexture;
 	GLClasses::Shader RenderShader;
 	GLClasses::Shader PPShader;
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(4096, 4096);
+	GLClasses::DepthBuffer ShadowMap(2048, 2048);
 
 	// Setup the basic vao
 
@@ -192,6 +193,7 @@ int main()
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
+	BlueNoiseTexture.CreateTexture("blue_noise.png", false);
 
 	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
@@ -243,6 +245,9 @@ int main()
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
 
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+
 		RenderShader.SetMatrix4("u_Model", glm::mat4(1.0f));
 		RenderShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
 		RenderShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
@@ -258,6 +263,8 @@ int main()
 		RenderShader.SetMatrix4("u_LightViewMatrix", Blocks::ShadowMapRenderer::GetLightViewMatrix());
 		RenderShader.SetMatrix4("u_LightProjectionMatrix", Blocks::ShadowMapRenderer::GetLightProjectionMatrix());
 		
+		RenderShader.SetInteger("u_BlueNoiseTexture", 4);
+
 		world.Update(Player.Camera.GetPosition());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

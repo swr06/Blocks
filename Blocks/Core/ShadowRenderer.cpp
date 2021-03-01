@@ -44,6 +44,7 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 	DepthShader->Use();
 	DepthShader->SetMatrix4("u_ProjectionMatrix", LightProjectionMatrix);
 	DepthShader->SetMatrix4("u_ViewMatrix", LightViewMatrix);
+	DepthShader->SetMatrix4("u_ViewProjectionMatrix", LightProjectionMatrix * LightViewMatrix);
 
 	world->Update(center);
 

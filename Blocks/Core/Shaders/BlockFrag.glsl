@@ -1,7 +1,7 @@
 #version 330 core
 #define PI 3.141592653589
 #define USE_PCF
-#define PCF_RANGE 1
+#define PCF_COUNT 24
 #pragma optionNV (unroll all) // fixes loop unrolling bug on nvidia cards
 
 layout (location = 0) out vec4 o_Color;
@@ -27,6 +27,9 @@ uniform mat4 u_LightProjectionMatrix;
 uniform vec3 u_LightDirection;
 uniform float u_ShadowBias;
 
+// Noise 
+uniform sampler2D u_BlueNoiseTexture;
+
 vec3 g_Albedo;
 vec3 g_Normal;
 vec3 g_F0;
@@ -37,9 +40,39 @@ float g_Metalness = 0.1f;
 const vec3 SUN_COLOR = vec3(1.0f) * 2.5f;
 
 vec3 CalculateDirectionalLightPBR();
+vec3 RandomPointInUnitSphere();
+float nextFloat(inout int seed);
+float nextFloat(inout int seed, in float max);
+float nextFloat(inout int seed, in float min, in float max);
+
+int MIN = -2147483648;
+int MAX = 2147483647;
+int RNG_SEED;
+
+const vec2 PoissonDisk[32] = 
+{
+    vec2(-0.613392, 0.617481),  vec2(0.751946, 0.453352),
+    vec2(0.170019, -0.040254),  vec2(0.078707, -0.715323),
+    vec2(-0.299417, 0.791925),  vec2(-0.075838, -0.529344),
+    vec2(0.645680, 0.493210),   vec2(0.724479, -0.580798),
+    vec2(-0.651784, 0.717887),  vec2(0.222999, -0.215125),
+    vec2(0.421003, 0.027070),   vec2(-0.467574, -0.405438),
+    vec2(-0.817194, -0.271096), vec2(-0.248268, -0.814753),
+    vec2(-0.705374, -0.668203), vec2(0.354411, -0.887570),
+    vec2(0.977050, -0.108615),  vec2(0.175817, 0.382366),
+    vec2(0.063326, 0.142369),   vec2(0.487472, -0.063082),
+    vec2(0.203528, 0.214331),   vec2(-0.084078, 0.898312),
+    vec2(-0.667531, 0.326090),  vec2(0.488876, -0.783441),
+    vec2(-0.098422, -0.295755), vec2(0.470016, 0.217933),
+    vec2(-0.885922, 0.215369),  vec2(-0.696890, -0.549791),
+    vec2(0.566637, 0.605213),   vec2(-0.149693, 0.605762),
+    vec2(0.039766, -0.396100),  vec2(0.034211, 0.979980)
+};
 
 void main()
 {
+    RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
+
 	g_Normal = v_Normal;
 	g_Albedo = texture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex)).xyz; 
     g_F0 = vec3(0.05f);
@@ -88,16 +121,23 @@ float CalculateSunShadow()
 	    vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
 
 	    // Take the average of the surrounding texels to create the PCF effect
-	    for(int x = -PCF_RANGE; x <= PCF_RANGE; x++)
+	    for(int x = 0; x <= PCF_COUNT; x++)
 	    {
-	    	for(int y = -PCF_RANGE; y <= PCF_RANGE; y++)
-	    	{
-	    		float pcf = texture(u_LightShadowMap, ProjectionCoordinates.xy + vec2(x, y) * TexelSize).r; 
-	    		shadow += Depth - u_ShadowBias > pcf ? 1.0 : 0.0;        
-	    	}    
+            //float noise = nextFloat(RNG_SEED);
+            float noise = texture(u_BlueNoiseTexture, gl_FragCoord.xy / textureSize(u_BlueNoiseTexture, 0)).r;
+            float theta = noise * 6.28318530718;
+            float cosTheta = cos(theta);
+            float sinTheta = sin(theta);
+            mat2 dither = mat2(vec2(cosTheta, -sinTheta), vec2(sinTheta, cosTheta));
+
+	    	vec2 jitter_value;
+            jitter_value = PoissonDisk[x] * dither;
+
+            float pcf = texture(u_LightShadowMap, ProjectionCoordinates.xy + jitter_value * TexelSize).r; 
+	    	shadow += (Depth - u_ShadowBias) > pcf ? 1.0 : 0.0;        
 	    }
 
-	    shadow /= 9.0;
+	    shadow /= float(PCF_COUNT);
     #else
         float ClosestDepth = texture(u_LightShadowMap, ProjectionCoordinates.xy).r; 
 	    shadow = Depth - u_ShadowBias > ClosestDepth ? 1.0 : 0.0;    
@@ -148,7 +188,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR()
 {
-    float Shadow = max(CalculateSunShadow(), 0.2f);
+    float Shadow = CalculateSunShadow() * 0.8f;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
     vec3 L = normalize(u_LightDirection);
@@ -171,4 +211,54 @@ vec3 CalculateDirectionalLightPBR()
 	vec3 Result = (kD * g_Albedo / PI + (specular * 4.0f)) * radiance * NdotL;
 
     return Result * (1.0f - Shadow);
+}
+
+
+
+// Utility
+
+
+int xorshift(in int value) 
+{
+    // Xorshift*32
+    // Based on George Marsaglia's work: http://www.jstatsoft.org/v08/i14/paper
+    value ^= value << 13;
+    value ^= value >> 17;
+    value ^= value << 5;
+    return value;
+}
+
+int nextInt(inout int seed) 
+{
+    seed = xorshift(seed);
+    return seed;
+}
+
+float nextFloat(inout int seed) 
+{
+    seed = xorshift(seed);
+    return abs(fract(float(seed) / 3141.592653));
+}
+
+float nextFloat(inout int seed, in float max) 
+{
+    return nextFloat(seed) * max;
+}
+
+float nextFloat(inout int seed, in float min, in float max) 
+{
+    return min + (max - min) * nextFloat(seed);
+}
+
+vec3 RandomPointInUnitSphere()
+{
+	float theta = nextFloat(RNG_SEED, 0.0f, 2.0f * PI);
+	float v = nextFloat(RNG_SEED, 0.0f, 1.0f);
+	float phi = acos((2.0f * v) - 1.0f);
+	float r = pow(nextFloat(RNG_SEED, 0.0f, 1.0f), 1.0f / 3.0f);
+	float x = r * sin(phi) * cos(theta);
+	float y = r * sin(phi) * sin(theta);
+	float z = r * cos(phi); 
+
+	return vec3(x, y, z);
 }
