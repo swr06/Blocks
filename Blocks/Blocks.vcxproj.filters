@@ -38,6 +38,9 @@
     <Filter Include="Source Files\Shaders\Tonemapping">
       <UniqueIdentifier>{8bf93e9a-f878-4855-99f1-93919dc13fc1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Utils">
+      <UniqueIdentifier>{973f56b2-cd76-4cad-ad61-89561a773e9f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -86,9 +89,6 @@
       <Filter>Source Files\GL Classes</Filter>
     </ClCompile>
     <ClCompile Include="Core\GLClasses\IndexBuffer.cpp">
-      <Filter>Source Files\GL Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\GLClasses\Random.cpp">
       <Filter>Source Files\GL Classes</Filter>
     </ClCompile>
     <ClCompile Include="Core\GLClasses\Shader.cpp">
@@ -160,6 +160,9 @@
     <ClCompile Include="Core\BlocksRenderBuffer.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\WorldStructures.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -208,9 +211,6 @@
       <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
     <ClInclude Include="Core\GLClasses\IndexBuffer.h">
-      <Filter>Source Files\GL Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\GLClasses\Random.h">
       <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
     <ClInclude Include="Core\GLClasses\Shader.h">
@@ -290,6 +290,15 @@
     </ClInclude>
     <ClInclude Include="Core\BlocksRenderBuffer.h">
       <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\WorldStructures.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utils\Random.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utils\Timer.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

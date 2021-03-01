@@ -37,6 +37,7 @@ namespace Blocks
 				{
 					m_WorldChunks.emplace(std::pair<int, int>(i, j), Chunk(glm::ivec2(i, j)));
 					WorldGenerator::GenerateChunk(&m_WorldChunks.at(std::pair<int, int>(i, j)));
+					m_WorldChunks.at(std::pair<int, int>(i, j)).m_ChunkGenerationState = ChunkGenerationState::Generated;
 				}
 			}
 		}
@@ -47,6 +48,8 @@ namespace Blocks
 			{
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
+					WorldGenerator::GenerateChunkFlora(&m_WorldChunks.at(std::pair<int, int>(i, j)));
+					m_WorldChunks.at(std::pair<int, int>(i, j)).m_ChunkGenerationState = ChunkGenerationState::GeneratedAndPlanted;
 					m_WorldChunks.at(std::pair<int, int>(i, j)).GenerateMeshes();
 				}
 			}

@@ -167,7 +167,7 @@ int main()
 	GLClasses::Shader PPShader;
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(2048, 2048);
+	GLClasses::DepthBuffer ShadowMap(3056, 3056);
 
 	// Setup the basic vao
 
@@ -305,5 +305,10 @@ namespace Blocks
 	Block GetWorldBlock(const glm::ivec3& block)
 	{
 		return world.GetWorldBlock(block);
+	}
+
+	Block* GetWorldBlockPtr(const glm::ivec3& block)
+	{
+		return world.GetWorldBlockPtr(block);
 	}
 }

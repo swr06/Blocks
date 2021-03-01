@@ -167,7 +167,6 @@
     <ClCompile Include="Core\GLClasses\Framebuffer.cpp" />
     <ClCompile Include="Core\GLClasses\FramebufferRed.cpp" />
     <ClCompile Include="Core\GLClasses\IndexBuffer.cpp" />
-    <ClCompile Include="Core\GLClasses\Random.cpp" />
     <ClCompile Include="Core\GLClasses\Shader.cpp" />
     <ClCompile Include="Core\GLClasses\SSBO.cpp" />
     <ClCompile Include="Core\GLClasses\stb_image.cpp" />
@@ -182,6 +181,7 @@
     <ClCompile Include="Core\Skybox.cpp" />
     <ClCompile Include="Core\World.cpp" />
     <ClCompile Include="Core\WorldGenerator.cpp" />
+    <ClCompile Include="Core\WorldStructures.cpp" />
     <ClCompile Include="Dependencies\fast_noise\FastNoise.cpp" />
     <ClCompile Include="Dependencies\glad\src\glad.c" />
     <ClCompile Include="Dependencies\imgui\imgui.cpp" />
@@ -210,7 +210,6 @@
     <ClInclude Include="Core\GLClasses\Framebuffer.h" />
     <ClInclude Include="Core\GLClasses\FramebufferRed.h" />
     <ClInclude Include="Core\GLClasses\IndexBuffer.h" />
-    <ClInclude Include="Core\GLClasses\Random.h" />
     <ClInclude Include="Core\GLClasses\Shader.h" />
     <ClInclude Include="Core\GLClasses\SSBO.h" />
     <ClInclude Include="Core\GLClasses\stb_image.h" />
@@ -224,9 +223,12 @@
     <ClInclude Include="Core\Renderer2D.h" />
     <ClInclude Include="Core\ShadowRenderer.h" />
     <ClInclude Include="Core\Skybox.h" />
+    <ClInclude Include="Core\Utils\Random.h" />
+    <ClInclude Include="Core\Utils\Timer.h" />
     <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="Core\World.h" />
     <ClInclude Include="Core\WorldGenerator.h" />
+    <ClInclude Include="Core\WorldStructures.h" />
     <ClInclude Include="Dependencies\fast_noise\FastNoise.h" />
     <ClInclude Include="Dependencies\imgui\imconfig.h" />
     <ClInclude Include="Dependencies\imgui\imgui.h" />

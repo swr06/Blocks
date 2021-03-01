@@ -74,8 +74,12 @@ void main()
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
 
 	g_Normal = v_Normal;
-	g_Albedo = texture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex)).xyz; 
+    vec4 SampledAlbedo = texture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex));
+
+	g_Albedo = SampledAlbedo.xyz ; 
     g_F0 = vec3(0.05f);
+
+    if (SampledAlbedo.a < 0.1f) { discard; } 
 
 	if (v_NormalTexIndex >= 0.0f)
 	{
@@ -188,7 +192,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR()
 {
-    float Shadow = CalculateSunShadow() * 0.8f;
+    float Shadow = CalculateSunShadow() * 0.64f;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
     vec3 L = normalize(u_LightDirection);

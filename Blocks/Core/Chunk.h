@@ -20,7 +20,15 @@ namespace Blocks
 	{
 		void GenerateChunk(Chunk* chunk);
 		void SetVerticalBlocks(Chunk* chunk, int x, int z, int ylevel);
+		void GenerateChunkFlora(Chunk* chunk);
 	}
+
+	enum class ChunkGenerationState
+	{
+		GeneratedAndPlanted,
+		Generated,
+		Ungenerated
+	};
 
 	class Chunk
 	{
@@ -101,8 +109,11 @@ namespace Blocks
 		std::array<std::array<uint8_t, CHUNK_SIZE_X>, CHUNK_SIZE_Z> m_Heightmap;
 		glm::vec2 m_Position;
 
+		ChunkGenerationState m_ChunkGenerationState = ChunkGenerationState::Ungenerated;
+
 		friend class World;
 		friend void WorldGenerator::GenerateChunk(Chunk* chunk);
 		friend void WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int ylevel);
+		friend void WorldGenerator::GenerateChunkFlora(Chunk* chunk);
 	};
 }

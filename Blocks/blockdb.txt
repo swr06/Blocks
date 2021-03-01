@@ -72,6 +72,23 @@
 }
 
 {
+	Name : oak_log
+	Albedo_top : Res/oak_log_top.png
+	Albedo : Res/oak_log.png
+	Normal_top : Res/oak_log_top_n.png
+	Normal : Res/oak_log_n.png
+	PBR_top : Res/oak_log_top_s.png
+	PBR : Res/oak_log_s.png
+}
+
+{
+	Name : oak_leaves
+	Albedo : Res/oak_leaves.png
+	Normal : Res/oak_leaves_n.png
+	PBR : Res/oak_leaves_s.png
+}
+
+{
 	Name : obsidian
 	Albedo : Res/obsidian.png
 	Normal : Res/obsidian_n.png

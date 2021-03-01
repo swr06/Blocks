@@ -5,7 +5,7 @@
 #include <sstream>
 #include "../Application/Logger.h"
 
-namespace Glide3D
+namespace Blocks
 {
 	enum class TimerDurationCast
 	{
