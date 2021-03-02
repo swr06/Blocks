@@ -1,7 +1,7 @@
 #version 330 core
 #define PI 3.141592653589
 #define USE_PCF
-#define PCF_COUNT 24
+#define PCF_COUNT 8
 #pragma optionNV (unroll all) // fixes loop unrolling bug on nvidia cards
 
 layout (location = 0) out vec4 o_Color;

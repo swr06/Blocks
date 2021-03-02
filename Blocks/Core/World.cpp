@@ -10,8 +10,10 @@ namespace Blocks
 #else _RELEASE
 	int render_distance_x = 6;
 	int render_distance_z = 6;
-	int build_distance_x = render_distance_x + 1;
-	int build_distance_z = render_distance_z + 1;
+	int build_distance_x = render_distance_x + 2;
+	int build_distance_z = render_distance_z + 2;
+	int flora_build_distance_x = render_distance_x + 1;
+	int flora_build_distance_z = render_distance_z + 1;
 #endif
 
 	int Modulo(int a, int b)
@@ -42,13 +44,23 @@ namespace Blocks
 			}
 		}
 
+		for (int i = player_chunk_x - flora_build_distance_x; i < player_chunk_x + flora_build_distance_x; i++)
+		{
+			for (int j = player_chunk_z - flora_build_distance_z; j < player_chunk_z + flora_build_distance_z; j++)
+			{
+				if (ChunkExists(glm::ivec2(i, j)))
+				{
+					WorldGenerator::GenerateChunkFlora(&m_WorldChunks.at(std::pair<int, int>(i, j)));
+				}
+			}
+		}
+
 		for (int i = player_chunk_x - render_distance_x; i < player_chunk_x + render_distance_x; i++)
 		{
 			for (int j = player_chunk_z - render_distance_z; j < player_chunk_z + render_distance_z; j++)
 			{
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
-					WorldGenerator::GenerateChunkFlora(&m_WorldChunks.at(std::pair<int, int>(i, j)));
 					m_WorldChunks.at(std::pair<int, int>(i, j)).m_ChunkGenerationState = ChunkGenerationState::GeneratedAndPlanted;
 					m_WorldChunks.at(std::pair<int, int>(i, j)).GenerateMeshes();
 				}
@@ -148,8 +160,8 @@ namespace Blocks
 					glm::ivec3 block_chunk_pos = WorldToChunkCoords(position);
 					glm::vec2 chunk_pos = edit_block.second->GetPosition();
 
-					if (block_chunk_pos.x <= 0 || block_chunk_pos.x >= CHUNK_SIZE_X - 1 ||
-						block_chunk_pos.z <= 0 || block_chunk_pos.z >= CHUNK_SIZE_Z - 1)
+					if (block_chunk_pos.x <= 1 || block_chunk_pos.x >= CHUNK_SIZE_X - 1 ||
+						block_chunk_pos.z <= 1 || block_chunk_pos.z >= CHUNK_SIZE_Z - 1)
 					{
 						Chunk* chunk = GetChunk(glm::ivec2(chunk_pos.x - 1, chunk_pos.y));
 						chunk->ForceRegenerateMeshes();

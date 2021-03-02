@@ -212,7 +212,7 @@ int main()
 
 		app.OnUpdate();
 
-		if (PlayerMoved || BlockModified || SunDirectionChanged)
+		if ((PlayerMoved && (app.GetCurrentFrame() % 2 == 0)) || BlockModified || SunDirectionChanged)
 		{
 			// Render the shadow map
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &world);

@@ -45,6 +45,10 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 	DepthShader->SetMatrix4("u_ProjectionMatrix", LightProjectionMatrix);
 	DepthShader->SetMatrix4("u_ViewMatrix", LightViewMatrix);
 	DepthShader->SetMatrix4("u_ViewProjectionMatrix", LightProjectionMatrix * LightViewMatrix);
+	DepthShader->SetInteger("u_BlockTextures", 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, BlockDatabase::GetTextureArray());
 
 	world->Update(center);
 
