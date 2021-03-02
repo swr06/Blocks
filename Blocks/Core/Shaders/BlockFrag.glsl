@@ -79,7 +79,10 @@ void main()
 	g_Albedo = SampledAlbedo.xyz ; 
     g_F0 = vec3(0.05f);
 
-    if (SampledAlbedo.a < 0.1f) { discard; } 
+    if (SampledAlbedo.a < 0.1f) 
+    { 
+        discard; 
+    } 
 
 	if (v_NormalTexIndex >= 0.0f)
 	{

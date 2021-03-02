@@ -97,7 +97,8 @@ namespace Blocks
 
 	void World::RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir)
 	{
-		
+		if (!m_FirstUpdateDone) { return; }
+
 		glm::vec3 position = vposition;
 		const glm::vec3& direction = dir;
 		int max = 50; // block reach
@@ -191,6 +192,7 @@ namespace Blocks
 
 	void World::Update(const glm::vec3& position)
 	{
+		m_FirstUpdateDone = true;
 		GenerateChunks(position);
 		RenderChunks(position);
 	}

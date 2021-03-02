@@ -40,5 +40,6 @@ namespace Blocks
 		std::map<std::pair<int, int>, Chunk> m_WorldChunks;
 
 		int m_CurrentBlock = 1;
+		bool m_FirstUpdateDone = false;
 	};
 }

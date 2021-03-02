@@ -37,10 +37,13 @@
 
 Blocks::Player Player;
 Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
-Blocks::World world;
+Blocks::World MainWorld;
+
 Blocks::BlocksRenderBuffer FBO(800, 600);
 GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer AlternateFBO(800, 600, true);
+GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
+
 glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
 
 float ShadowBias = 0.001f;
@@ -120,7 +123,8 @@ public:
 			FBO.SetDimensions(e.wx, e.wy);
 			VolumetricLightingFBO.SetSize(floor((float)e.wx / (float)1.5), floor((float)e.wy / (float)1.5));
 			AlternateFBO.SetSize(e.wx, e.wy);
-			
+			BloomFBO.SetSize(floor((float)e.wx / (float)6.0f), floor((float)e.wy / (float)6.0f));
+
 			glViewport(0, 0, e.wx, e.wy);
 		}
 
@@ -131,7 +135,7 @@ public:
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_Q)
 		{
-			world.ChangeCurrentBlock();
+			MainWorld.ChangeCurrentBlock();
 		}
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_V)
@@ -142,13 +146,13 @@ public:
 		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_LEFT && this->GetCursorLocked())
 		{
 			BlockModified = true;
-			world.RayCast(false, Player.Camera.GetPosition(), Player.Camera.GetFront());
+			MainWorld.RayCast(false, Player.Camera.GetPosition(), Player.Camera.GetFront());
 		}
 
 		if (e.type == Blocks::EventTypes::MousePress && e.button == GLFW_MOUSE_BUTTON_RIGHT && this->GetCursorLocked())
 		{
 			BlockModified = true;
-			world.RayCast(true, Player.Camera.GetPosition(), Player.Camera.GetFront());
+			MainWorld.RayCast(true, Player.Camera.GetPosition(), Player.Camera.GetFront());
 		}
 	}
 };
@@ -177,7 +181,7 @@ int main()
 	GLClasses::Shader RenderShader;
 	GLClasses::Shader PPShader;
 	GLClasses::Shader VolumetricShader;
-	GLClasses::Shader BilateralShader;
+	GLClasses::Shader BloomShader;
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
 	GLClasses::DepthBuffer ShadowMap(3056, 3056);
@@ -205,8 +209,8 @@ int main()
 	PPShader.CompileShaders();
 	VolumetricShader.CreateShaderProgramFromFile("Core/Shaders/VolumetricLightingVert.glsl", "Core/Shaders/VolumetricLightingFrag.glsl");
 	VolumetricShader.CompileShaders();
-	BilateralShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BilateralBlurFrag.glsl");
-	BilateralShader.CompileShaders();
+	BloomShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BloomBrightFrag.glsl");
+	BloomShader.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -232,7 +236,7 @@ int main()
 		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged)
 		{
 			// Render the shadow map
-			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &world);
+			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
 		}
 
 		// Do the normal rendering
@@ -282,7 +286,7 @@ int main()
 		
 		RenderShader.SetInteger("u_BlueNoiseTexture", 4);
 
-		world.Update(Player.Camera.GetPosition());
+		MainWorld.Update(Player.Camera.GetPosition());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);
@@ -332,6 +336,31 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);
 
+		// B L O O M.. Pass
+
+		BloomFBO.Bind();
+		glViewport(0, 0, BloomFBO.GetWidth(), BloomFBO.GetHeight());
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		
+		BloomShader.Use();
+		BloomShader.SetInteger("u_Texture", 0);
+		BloomShader.SetInteger("u_DepthTexture", 1);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, FBO.GetDepthTexture());
+
+		FBOVAO.Bind();
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		FBOVAO.Unbind();
+
+		glUseProgram(0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		// After the rendering, do the tonemapping pass
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -340,12 +369,16 @@ int main()
 		PPShader.Use();
 		PPShader.SetInteger("u_FramebufferTexture", 0);
 		PPShader.SetInteger("u_VolumetricTexture", 1);
+		PPShader.SetInteger("u_BloomTexture", 2);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, BloomFBO.GetTexture());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -370,11 +403,11 @@ namespace Blocks
 {
 	Block GetWorldBlock(const glm::ivec3& block)
 	{
-		return world.GetWorldBlock(block);
+		return MainWorld.GetWorldBlock(block);
 	}
 
 	Block* GetWorldBlockPtr(const glm::ivec3& block)
 	{
-		return world.GetWorldBlockPtr(block);
+		return MainWorld.GetWorldBlockPtr(block);
 	}
 }
