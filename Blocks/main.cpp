@@ -193,7 +193,7 @@ int main()
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
-	BlueNoiseTexture.CreateTexture("blue_noise.png", false);
+	BlueNoiseTexture.CreateTexture("Res/Misc/blue_noise.png", false);
 
 	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
@@ -212,7 +212,7 @@ int main()
 
 		app.OnUpdate();
 
-		if ((PlayerMoved && (app.GetCurrentFrame() % 2 == 0)) || BlockModified || SunDirectionChanged)
+		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged)
 		{
 			// Render the shadow map
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &world);

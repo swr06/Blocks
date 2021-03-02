@@ -403,6 +403,13 @@ namespace Blocks
 		return -1;
 	}
 
+	bool BlockDatabase::IsBlockTransparent(BlockIDType block_id)
+	{
+		if (block_id == 0) { return true; }
+
+		return ParsedBlockDataListID.at(block_id).transparent;
+	}
+
 	int BlockDatabase::GetNumberOfBlocksInDatabase()
 	{
 		return ParsedBlockDataList.size();

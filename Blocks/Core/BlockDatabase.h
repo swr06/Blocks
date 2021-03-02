@@ -23,6 +23,7 @@ namespace Blocks
 		int GetBlockNormalTexture(BlockIDType block_id, const BlockFaceType type);
 		int GetBlockPBRTexture(const std::string& block_name, const BlockFaceType type);
 		int GetBlockPBRTexture(BlockIDType block_id, const BlockFaceType type);
+		bool IsBlockTransparent(BlockIDType block_id);
 
 		int GetNumberOfBlocksInDatabase();
 

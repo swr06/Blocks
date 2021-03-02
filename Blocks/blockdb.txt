@@ -86,6 +86,7 @@
 	Albedo : Res/oak_leaves.png
 	Normal : Res/oak_leaves_n.png
 	PBR : Res/oak_leaves_s.png
+	Transparent;
 }
 
 {

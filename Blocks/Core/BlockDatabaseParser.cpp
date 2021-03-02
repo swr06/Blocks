@@ -291,6 +291,11 @@ namespace Blocks
 						parsed_data.PBRMap.front = parsed_data.PBRMap.front == "" ? s : parsed_data.PBRMap.front;
 						parsed_data.PBRMap.back = parsed_data.PBRMap.back == "" ? s : parsed_data.PBRMap.back;
 					}
+
+					else if (field.find("Transparent") != std::string::npos)
+					{
+						parsed_data.transparent = true;
+					}
 				}
 
 				parsed_data.ID = GenerateBlockID();

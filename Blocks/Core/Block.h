@@ -6,6 +6,11 @@
 
 namespace Blocks
 {
+	namespace BlockDatabase
+	{
+		bool IsBlockTransparent(uint8_t);
+	}
+
 	enum BlockFaceType
 	{
 		Front = 0,
@@ -24,11 +29,11 @@ namespace Blocks
 		
 		BlockIDType ID;
 
-		bool IsTransparent()
+		inline bool IsTransparent()
 		{
 			if (ID != 0)
 			{
-				return false;
+				return BlockDatabase::IsBlockTransparent(this->ID);
 			}
 
 			else

@@ -32,6 +32,7 @@ namespace Blocks
 			BlockTexture AlbedoMap;
 			std::string BlockName = "";
 			uint8_t ID = 0;
+			bool transparent = false;
 		};
 
 		void Parse(const std::string& path);
