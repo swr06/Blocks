@@ -182,10 +182,8 @@ namespace Blocks
 		ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
 		ImGui_ImplOpenGL3_Init(glsl_version);
 
-#ifndef NDEBUG
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
 		glDebugMessageCallback(gl_debug_callback, nullptr);
-#endif
 
 		//glClearColor(0.25f, 0.30f, 0.25f, 1.0f);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

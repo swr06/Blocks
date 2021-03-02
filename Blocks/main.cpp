@@ -32,14 +32,18 @@
 #include "Core/GLClasses/DepthBuffer.h"
 #include "Core/ShadowRenderer.h"
 #include "Core/BlocksRenderBuffer.h"
+#include "Core/GLClasses/Framebuffer.h"
 
 Blocks::Player Player;
 Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
 Blocks::World world;
 Blocks::BlocksRenderBuffer FBO(800, 600);
+GLClasses::Framebuffer VolumetricLightingFBO(800, 600, true);
+GLClasses::Framebuffer AlternateFBO(800, 600, true);
 glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
 
 float ShadowBias = 0.001f;
+float VolumetricScattering = 0.6f;
 
 // Flags that change from frame to frame
 bool PlayerMoved = false;
@@ -84,6 +88,7 @@ public:
 			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
 			ImGui::SliderFloat3("Sun Direction", &SunDirection[0], -1.0f, 1.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
+			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
 		}
 
 		if (prevSunDirection != SunDirection)
@@ -109,7 +114,12 @@ public:
 			OCamera.SetProjection(0.0f, e.wx, 0.0f, e.wy);
 			m_Width = e.wx;
 			m_Height = e.wy;
+
+			// Resize FBOs
 			FBO.SetDimensions(e.wx, e.wy);
+			VolumetricLightingFBO.SetSize(floor((float)e.wx / (float)1.5), floor((float)e.wy / (float)1.5));
+			AlternateFBO.SetSize(e.wx, e.wy);
+			
 			glViewport(0, 0, e.wx, e.wy);
 		}
 
@@ -165,6 +175,8 @@ int main()
 	GLClasses::Texture BlueNoiseTexture;
 	GLClasses::Shader RenderShader;
 	GLClasses::Shader PPShader;
+	GLClasses::Shader VolumetricShader;
+	GLClasses::Shader BilateralShader;
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
 	GLClasses::DepthBuffer ShadowMap(3056, 3056);
@@ -190,6 +202,10 @@ int main()
 	RenderShader.CompileShaders();
 	PPShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/Tonemapping/ACES.glsl");
 	PPShader.CompileShaders();
+	VolumetricShader.CreateShaderProgramFromFile("Core/Shaders/VolumetricLightingVert.glsl", "Core/Shaders/VolumetricLightingFrag.glsl");
+	VolumetricShader.CompileShaders();
+	BilateralShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BilateralBlurFrag.glsl");
+	BilateralShader.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -275,11 +291,60 @@ int main()
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
+		// ----------
+		// Volumetric lighting pass
+
+		VolumetricLightingFBO.Bind();
+
+		glViewport(0, 0, VolumetricLightingFBO.GetWidth(), VolumetricLightingFBO.GetHeight());
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+
+		VolumetricShader.Use();
+
+		VolumetricShader.SetInteger("u_DepthTexture", 0);
+		VolumetricShader.SetInteger("u_ShadowMap", 1);
+		VolumetricShader.SetInteger("u_NoiseTexture", 2);
+
+		VolumetricShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+		VolumetricShader.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
+		VolumetricShader.SetMatrix4("u_LightViewProjection", Blocks::ShadowMapRenderer::GetLightProjectionMatrix() * Blocks::ShadowMapRenderer::GetLightViewMatrix());
+		VolumetricShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
+		VolumetricShader.SetVector3f("u_LightDirection", glm::normalize(SunDirection));
+		VolumetricShader.SetInteger("u_Width", VolumetricLightingFBO.GetWidth());
+		VolumetricShader.SetInteger("u_Height", VolumetricLightingFBO.GetHeight());
+		VolumetricShader.SetFloat("u_Scattering", VolumetricScattering);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, FBO.GetDepthTexture());
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+
+		FBOVAO.Bind();
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		FBOVAO.Unbind();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glUseProgram(0);
+
+		// After the rendering, do the tonemapping pass
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, app.GetWidth(), app.GetHeight());
+
 		PPShader.Use();
 		PPShader.SetInteger("u_FramebufferTexture", 0);
+		PPShader.SetInteger("u_VolumetricTexture", 1);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);

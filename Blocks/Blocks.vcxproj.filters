@@ -365,5 +365,20 @@
     <None Include="Core\Shaders\Tonemapping\unreal.glsl">
       <Filter>Source Files\Shaders\Tonemapping</Filter>
     </None>
+    <None Include="Core\Shaders\BloomBrightFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\BloomBrightVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\VolumetricLightingFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\VolumetricLightingVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\BilateralBlurFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

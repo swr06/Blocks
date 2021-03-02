@@ -14,10 +14,19 @@ in vec2 v_TexCoords;
 layout(location = 0) out vec4 o_Color;
 
 uniform sampler2D u_FramebufferTexture;
+uniform sampler2D u_VolumetricTexture;
 uniform float u_Exposure = 1.0f;
+
+const vec3 SUN_COLOR = vec3(196.0f / 255.0f, 224.0f / 255.0f, 253.0f / 255.0f);
 
 void main()
 {
     vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
-    o_Color = vec4(aces(HDR.rgb), 1.0);
+    float volumetric = texture(u_VolumetricTexture, v_TexCoords).r;
+    vec3 volumetric_col = (volumetric * SUN_COLOR);
+
+    vec3 final_color;
+    final_color = HDR + (volumetric_col * 0.1f);
+
+    o_Color = vec4(aces(final_color), 1.0);
 }

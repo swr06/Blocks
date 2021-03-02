@@ -242,6 +242,9 @@
   <ItemGroup>
     <None Include="Core\Shaders\2DElementShaderFrag.glsl" />
     <None Include="Core\Shaders\2DElementShaderVert.glsl" />
+    <None Include="Core\Shaders\BilateralBlurFrag.glsl" />
+    <None Include="Core\Shaders\BloomBrightFrag.glsl" />
+    <None Include="Core\Shaders\BloomBrightVert.glsl" />
     <None Include="Core\Shaders\DepthFrag.glsl" />
     <None Include="Core\Shaders\DepthVert.glsl" />
     <None Include="Core\Shaders\FBOVert.glsl" />
@@ -259,6 +262,8 @@
     <None Include="Core\Shaders\Tonemapping\uchimura.glsl" />
     <None Include="Core\Shaders\Tonemapping\uncharted2.glsl" />
     <None Include="Core\Shaders\Tonemapping\unreal.glsl" />
+    <None Include="Core\Shaders\VolumetricLightingFrag.glsl" />
+    <None Include="Core\Shaders\VolumetricLightingVert.glsl" />
     <None Include="Dependencies\fast_noise\LICENSE" />
     <None Include="Dependencies\fast_noise\README.md" />
   </ItemGroup>

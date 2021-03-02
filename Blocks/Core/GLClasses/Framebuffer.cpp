@@ -9,7 +9,7 @@ namespace GLClasses
     Framebuffer::Framebuffer(unsigned int w, unsigned int h, bool hdr, bool has_depth_attachment) :
         m_FBO(0), m_FBWidth(w), m_FBHeight(h), m_IsHDR(hdr), m_HasDepthMap(has_depth_attachment)
     {
-        CreateFramebuffer();
+       // CreateFramebuffer();
     }
 
 	Framebuffer::~Framebuffer()
