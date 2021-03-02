@@ -3,7 +3,7 @@
 #define PI 3.14159265359f
 #define NB_STEPS 30
 
-layout(location = 0) out vec3 o_VolumetricFog; // outputs to the volumetric texture that is in half resolution
+layout(location = 0) out float o_VolumetricFog; // outputs to the volumetric texture that is in half resolution
 in vec2 v_TexCoords;
 
 uniform float u_Scattering;
@@ -83,12 +83,12 @@ void main()
 		
 		if ((CurrentDepth - bias) < SampledDepth)
 		{
-			TotalFog += ComputeScattering(dot(RayDirection, -u_LightDirection)) * vec3(4.5f);
+			TotalFog += ComputeScattering(dot(RayDirection, -u_LightDirection)) * vec3(5.2f);
 		}
 
 		CurrentPosition += step_sz;
 	}
 
 	TotalFog /= NB_STEPS;
-	o_VolumetricFog = TotalFog;
+	o_VolumetricFog = TotalFog.r;
 }

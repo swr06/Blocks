@@ -17,7 +17,7 @@ uniform sampler2D u_FramebufferTexture;
 uniform sampler2D u_VolumetricTexture;
 uniform float u_Exposure = 1.0f;
 
-const vec3 SUN_COLOR = vec3(196.0f / 255.0f, 224.0f / 255.0f, 253.0f / 255.0f);
+const vec3 SUN_COLOR = vec3(133.0f / 255.0f, 223.0f / 255.0f, 240.0f / 255.0f);
 
 void main()
 {

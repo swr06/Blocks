@@ -33,12 +33,13 @@
 #include "Core/ShadowRenderer.h"
 #include "Core/BlocksRenderBuffer.h"
 #include "Core/GLClasses/Framebuffer.h"
+#include "Core/GLClasses/FramebufferRed.h"
 
 Blocks::Player Player;
 Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
 Blocks::World world;
 Blocks::BlocksRenderBuffer FBO(800, 600);
-GLClasses::Framebuffer VolumetricLightingFBO(800, 600, true);
+GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer AlternateFBO(800, 600, true);
 glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
 
