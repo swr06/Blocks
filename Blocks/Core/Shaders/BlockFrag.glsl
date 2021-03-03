@@ -6,6 +6,7 @@
 
 layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
+layout (location = 2) out float o_SSRMask;
 
 in vec2 v_TexCoord;
 in float v_TexIndex;
@@ -29,6 +30,9 @@ uniform float u_ShadowBias;
 
 // Noise 
 uniform sampler2D u_BlueNoiseTexture;
+
+// Misc
+uniform float u_GraniteTexIndex;
 
 vec3 g_Albedo;
 vec3 g_Normal;
@@ -105,6 +109,16 @@ void main()
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
     o_Normal = g_Normal;
+
+    if (v_TexIndex == u_GraniteTexIndex)
+    {
+        o_SSRMask = 1.0f;
+    }
+
+    else 
+    {
+        o_SSRMask = 0.0f;
+    }
 
     //o_Color = vec4(vec3(g_Metalness), 1.0f);
 }
