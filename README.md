@@ -27,11 +27,11 @@ A Voxel Engine that has emphasis on graphics and performance.
 # Note 
 This project is purely educational (To Learn more about Computer Graphics). I own none of the assets. </br>
 
-# Test Environment 
-CPU : Ryzen 3 2200G
-GPU : Vega 8 iGPU
-RAM : 8GB
-Target FPS : 60 FPS 
+# Test Environment <br>
+CPU : Ryzen 3 2200G <br>
+GPU : Vega 8 iGPU <br>
+RAM : 8GB <br>
+Target FPS : 60 FPS <br>
 
 # Special Thanks (In no particular order)
 - Dekrain
