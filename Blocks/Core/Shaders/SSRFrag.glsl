@@ -14,6 +14,7 @@ uniform sampler2D u_SSRMaskTexture;
 //Projection matrix
 uniform mat4 u_ProjectionMatrix;
 uniform mat4 u_InverseProjectionMatrix;
+uniform mat4 u_ViewMatrix;
 uniform float u_zNear;
 uniform float u_zFar;
 
@@ -61,7 +62,7 @@ vec4 ComputeReflection()
 	//Values from textures
 	vec2 ScreenSpacePosition2D = v_TexCoords;
 	vec3 ViewSpacePosition = ViewPosFromDepth(texture(u_DepthTexture, ScreenSpacePosition2D).r);
-	vec3 ViewSpaceNormal = texture(u_NormalTexture, ScreenSpacePosition2D).xyz;
+	vec3 ViewSpaceNormal = vec3(u_ViewMatrix * vec4(texture(u_NormalTexture, ScreenSpacePosition2D).xyz, 0.0f));
 
 	//Screen space vector
 	vec3 ViewSpaceViewDir = normalize(ViewSpacePosition);

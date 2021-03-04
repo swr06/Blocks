@@ -322,6 +322,7 @@ int main()
 		SSRShader.SetInteger("u_NoiseTexture", 4);
 
 		SSRShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
+		SSRShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
 		SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
 		SSRShader.SetFloat("u_zNear", 0.1f);
 		SSRShader.SetFloat("u_zFar", 1000.0f);
