@@ -318,14 +318,13 @@ int main()
 		SSRShader.SetInteger("u_ColorTexture", 0);
 		SSRShader.SetInteger("u_NormalTexture", 1);
 		SSRShader.SetInteger("u_DepthTexture", 2);
-		SSRShader.SetInteger("u_SSRMask", 3);
+		SSRShader.SetInteger("u_SSRMaskTexture", 3);
+		SSRShader.SetInteger("u_NoiseTexture", 4);
 
 		SSRShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
-		SSRShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
 		SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
-		SSRShader.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
-
-		SSRShader.SetVector3f("u_CameraPosition", Player.Camera.GetPosition());
+		SSRShader.SetFloat("u_zNear", 0.1f);
+		SSRShader.SetFloat("u_zFar", 1000.0f);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
@@ -338,6 +337,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, FBO.GetSSRMaskTexture());
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -422,19 +424,15 @@ int main()
 		PPShader.SetInteger("u_FramebufferTexture", 0);
 		PPShader.SetInteger("u_VolumetricTexture", 1);
 		PPShader.SetInteger("u_BloomTexture", 2);
-		PPShader.SetInteger("u_SSRMaskTexture", 3);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
+		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
 
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, BloomFBO.GetTexture());
-
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);

@@ -108,7 +108,7 @@ void main()
     vec3 Ambient = 0.2f * g_Albedo;
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
-    o_Normal = g_Normal;
+    o_Normal = v_Normal;
 
     if (v_TexIndex == u_GraniteTexIndex)
     {

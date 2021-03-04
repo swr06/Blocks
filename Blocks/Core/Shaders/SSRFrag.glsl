@@ -1,159 +1,27 @@
-#version 330 core
+#version 330
 
-layout (location = 0) out vec3 o_Color;
 in vec2 v_TexCoords;
 
-// Input textures
+//Output
+out vec3 outputColor;
+
+//Uniforms
 uniform sampler2D u_ColorTexture;
 uniform sampler2D u_NormalTexture;
 uniform sampler2D u_DepthTexture;
-uniform sampler2D u_SSRMask;
+uniform sampler2D u_SSRMaskTexture;
 
+//Projection matrix
 uniform mat4 u_ProjectionMatrix;
-uniform mat4 u_ViewMatrix;
 uniform mat4 u_InverseProjectionMatrix;
-uniform mat4 u_InverseViewMatrix;
+uniform float u_zNear;
+uniform float u_zFar;
 
-uniform vec3 u_CameraPosition;
-
-// Function prototypes
-vec3 ViewPosFromDepth(float depth);
-vec3 WorldPosFromDepth(float depth);
-vec4 RayMarch(vec3 Direction, inout vec3 HitPosition, inout float dDepth);
-vec3 BinarySearch(inout vec3 Direction, inout vec3 HitPosition, inout float dDepth);
-
-// Variables
-const float RAY_STEP = 0.1f;
-const float MIN_RAY_STEP = 0.1f;
-const int MAX_STEPS = 30;
-const int SEARCH_DISTANCE = 5;
-const int NUM_BINARY_SEARCH_STEPS = 5;
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+// Basic random function used to jitter the ray
+float rand(vec2 co)
 {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
-
-void main()
-{
-    float SSR_Value = texture(u_SSRMask, v_TexCoords).r;
-    vec4 Coords = vec4(v_TexCoords, 1.0f, 1.0f);
-    vec3 Albedo = texture(u_ColorTexture, Coords.xy).rgb;;
-
-    if (SSR_Value == 1.0f)
-    {
-        vec3 ViewPosition = ViewPosFromDepth(texture(u_DepthTexture, v_TexCoords).r);
-        vec3 WorldPosition = WorldPosFromDepth(texture(u_DepthTexture, v_TexCoords).r);
-        vec3 Normal = vec3(texture(u_NormalTexture, v_TexCoords));
-        vec3 HitPosition = ViewPosition;
-        float dDepth = 0.0f;
-        vec3 Reflected = reflect(normalize(ViewPosition), (Normal));
-
-        Coords = RayMarch(normalize(Reflected), HitPosition, dDepth);
-
-        if (Coords.x > 1.0f || Coords.y > 1.0f || Coords.x < 0.0f || Coords.y < 0.0f)
-        {
-            o_Color = vec3(0.2f);
-        }
-
-        else 
-        {
-            o_Color = texture(u_ColorTexture, Coords.xy).rgb;
-        }
-       // o_Color = vec3(Coords.xy, 1.0f);
-    }  
-
-    else 
-    {
-        o_Color = Albedo;
-    }
-}
-
-vec3 BinarySearch(inout vec3 Direction, inout vec3 HitPosition, inout float dDepth)
-{
-    vec4 ProjectedCoords;
-    float depth;
-
-    for (int i = 0 ; i < NUM_BINARY_SEARCH_STEPS ; i++)
-    {
-        ProjectedCoords = u_ProjectionMatrix * vec4(HitPosition, 1.0f);
-        ProjectedCoords.xy /= ProjectedCoords.w;
-        ProjectedCoords.xy = ProjectedCoords.xy * 0.5f + 0.5f;
-
-        depth = ViewPosFromDepth(texture(u_DepthTexture, ProjectedCoords.xy).r).z;
-        dDepth = HitPosition.z - depth;
-
-        Direction *= 0.5;
-
-        if(dDepth > 0.0)
-        {
-            HitPosition += Direction;
-        }
-
-        else
-        {
-            HitPosition -= Direction;    
-        }
-    }
-
-     ProjectedCoords = u_ProjectionMatrix * vec4(HitPosition, 1.0f);
-     ProjectedCoords.xy /= ProjectedCoords.w;
-     ProjectedCoords.xy = ProjectedCoords.xy * 0.5f + 0.5f;
-
-     return vec3(ProjectedCoords.xy, depth);
-}
-
-vec4 RayMarch(vec3 Direction, inout vec3 HitPosition, inout float dDepth)
-{
-    float depth;
-    vec4 ProjectedCoordinate;
-
-    Direction *= RAY_STEP;
-
-    for (int i = 0 ; i < MAX_STEPS ; i++)
-    {
-        HitPosition += Direction;
-
-        ProjectedCoordinate = u_ProjectionMatrix * vec4(HitPosition, 1.0);
-        ProjectedCoordinate.xy /= ProjectedCoordinate.w;
-        ProjectedCoordinate.xy = ProjectedCoordinate.xy * 0.5f + 0.5f; // Convert Range
-
-        float DepthAt = texture(u_DepthTexture, ProjectedCoordinate.xy).r;
-        depth = ViewPosFromDepth(DepthAt).z;
-
-        dDepth = HitPosition.z - depth;
-
-        if ((Direction.z - dDepth) < 0.01f)
-        {
-            if (dDepth <= 0.0f)
-            {
-                vec4 Result;
-                Result = vec4(BinarySearch(Direction, HitPosition, dDepth), 1.0f);
-
-                return Result;
-            }
-        }
-    }
-
-    return vec4(ProjectedCoordinate.xy, depth, 0.0);
-}
-
-// Utility
-vec3 WorldPosFromDepth(float depth)
-{
-    float z = depth * 2.0f - 1.0f; // No need to linearize
-
-    vec4 ClipSpacePosition = vec4(v_TexCoords * 2.0 - 1.0, z, 1.0);
-    vec4 ViewSpacePosition = u_InverseProjectionMatrix * ClipSpacePosition;
-
-    // Perspective division
-    ViewSpacePosition /= ViewSpacePosition.w;
-
-    vec4 WorldSpacePosition = u_InverseViewMatrix * ViewSpacePosition;
-
-    return WorldSpacePosition.xyz;
-}
-
 
 vec3 ViewPosFromDepth(float depth)
 {
@@ -166,4 +34,113 @@ vec3 ViewPosFromDepth(float depth)
     ViewSpacePosition /= ViewSpacePosition.w;
 
     return ViewSpacePosition.xyz;
+}
+
+//Z buffer is nonlinear by default, so we fix this here
+float linearizeDepth(float depth)
+{
+	return (2.0 * u_zNear) / (u_zFar + u_zNear - depth * (u_zFar - u_zNear));
+}
+
+vec3 ViewSpaceToClipSpace(in vec3 view_space)
+{
+	vec4 clipSpace = u_ProjectionMatrix * vec4(view_space, 1);
+	vec3 NDCSpace = clipSpace.xyz / clipSpace.w;
+	vec3 screenSpace = 0.5 * NDCSpace + 0.5;
+	return screenSpace;
+}
+
+vec4 ComputeReflection()
+{
+	//Tweakable variables
+	float InitialStepAmount = .01f;
+	float StepRefinementAmount = .7f;
+	int MaxRefinements = 6;
+	int MaxDepth = 1;
+	
+	//Values from textures
+	vec2 ScreenSpacePosition2D = v_TexCoords;
+	vec3 ViewSpacePosition = ViewPosFromDepth(texture(u_DepthTexture, ScreenSpacePosition2D).r);
+	vec3 ViewSpaceNormal = texture(u_NormalTexture, ScreenSpacePosition2D).xyz;
+
+	//Screen space vector
+	vec3 ViewSpaceViewDir = normalize(ViewSpacePosition);
+	vec3 ViewSpaceVector = normalize(reflect(ViewSpaceViewDir, ViewSpaceNormal));
+	vec3 ScreenSpacePosition = ViewSpaceToClipSpace(ViewSpacePosition);
+	vec3 ViewSpaceVectorPosition = ViewSpacePosition + ViewSpaceVector;
+	vec3 ScreenSpaceVectorPosition = ViewSpaceToClipSpace(ViewSpaceVectorPosition);
+	vec3 ScreenSpaceVector = InitialStepAmount * normalize(ScreenSpaceVectorPosition - ScreenSpacePosition);
+	
+	//Jitter the initial ray
+	float Offset1 = clamp(rand(gl_FragCoord.xy), 0.0f, 1.0f) / 6000.0f;
+	float Offset2 = clamp(rand(gl_FragCoord.yy), 0.0f, 1.0f) / 6000.0f;
+	ScreenSpaceVector += vec3(Offset1, Offset2, 0.0f); // Jitter the ray
+
+	vec3 OldPosition = ScreenSpacePosition + ScreenSpaceVector;
+	vec3 CurrentPosition = OldPosition + ScreenSpaceVector;
+	
+	//State
+	vec4 color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	int count = 0;
+	int NumRefinements = 0;
+	int depth = 0;
+
+	//Ray trace!
+	while(depth < MaxDepth) //doesnt do anything right now
+	{
+		while(count < 1000)
+		{
+			if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
+			   CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
+			   CurrentPosition.z < 0 || CurrentPosition.z > 1)
+			{
+				break;
+			}
+
+			//intersections
+			vec2 SamplePos = CurrentPosition.xy;
+			float CurrentDepth = linearizeDepth(CurrentPosition.z);
+			float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
+			float diff = CurrentDepth - SampleDepth;
+			float error = length(ScreenSpaceVector);
+
+			if(diff >= 0 && diff < error)
+			{
+				ScreenSpaceVector *= StepRefinementAmount;
+				CurrentPosition = OldPosition;
+				NumRefinements++;
+
+				if(NumRefinements >= MaxRefinements)
+				{
+					color = texture(u_ColorTexture, SamplePos);
+					break;
+				}
+			}
+
+			//Step ray
+			OldPosition = CurrentPosition;
+			CurrentPosition = OldPosition + ScreenSpaceVector;
+			count++;
+		}
+
+		depth++;
+	}
+
+	return color;
+}
+
+//Main
+void main()
+{
+	vec2 screenSpacePosition = v_TexCoords;
+	outputColor = texture(u_ColorTexture, screenSpacePosition).xyz;
+
+	if (texture(u_SSRMaskTexture, v_TexCoords).r == 1.0f)
+	{
+		vec3 ReflectionColor = ComputeReflection().rgb;
+
+		if (ReflectionColor == vec3(0.0f)) { ReflectionColor = outputColor;}
+
+		outputColor = mix(ReflectionColor, outputColor, 0.6f);
+	}
 }
