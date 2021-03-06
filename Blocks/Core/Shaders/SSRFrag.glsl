@@ -18,10 +18,16 @@ uniform mat4 u_ViewMatrix;
 uniform float u_zNear;
 uniform float u_zFar;
 
+//Tweakable variables
+const float InitialStepAmount = .01f;
+const float StepRefinementAmount = .7f;
+const int MaxRefinements = 3;
+const int MaxDepth = 1;
+
 // Basic random function used to jitter the ray
 float rand(vec2 co)
 {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
 }
 
 vec3 ViewPosFromDepth(float depth)
@@ -52,21 +58,14 @@ vec3 ViewSpaceToClipSpace(in vec3 view_space)
 }
 
 vec4 ComputeReflection()
-{
-	//Tweakable variables
-	const float InitialStepAmount = .01f;
-	const float StepRefinementAmount = .7f;
-	const int MaxRefinements = 3;
-	const int MaxDepth = 1;
-	
+{	
 	//Values from textures
 	vec2 ScreenSpacePosition2D = v_TexCoords;
 	vec3 ViewSpacePosition = ViewPosFromDepth(texture(u_DepthTexture, ScreenSpacePosition2D).r);
 	vec3 ViewSpaceNormal = vec3(u_ViewMatrix * vec4(texture(u_NormalTexture, ScreenSpacePosition2D).xyz, 0.0f));
 
 	//Screen space vector
-	vec3 ViewSpaceViewDir = normalize(ViewSpacePosition);
-	vec3 ViewSpaceVector = normalize(reflect(ViewSpaceViewDir, ViewSpaceNormal));
+	vec3 ViewSpaceVector = normalize(reflect(normalize(ViewSpacePosition), ViewSpaceNormal));
 	vec3 ScreenSpacePosition = ViewSpaceToClipSpace(ViewSpacePosition);
 	vec3 ViewSpaceVectorPosition = ViewSpacePosition + ViewSpaceVector;
 	vec3 ScreenSpaceVectorPosition = ViewSpaceToClipSpace(ViewSpaceVectorPosition);
@@ -89,7 +88,7 @@ vec4 ComputeReflection()
 	//Ray trace!
 	while(depth < MaxDepth) //doesnt do anything right now
 	{
-		while(count < 100)
+		for (int count = 0 ; count < 100 ; count++)
 		{
 			if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
 			   CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
@@ -103,9 +102,8 @@ vec4 ComputeReflection()
 			float CurrentDepth = linearizeDepth(CurrentPosition.z);
 			float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
 			float diff = CurrentDepth - SampleDepth;
-			float error = length(ScreenSpaceVector);
 
-			if(diff >= 0 && diff < error)
+			if(diff >= 0 && diff < 0.25f)
 			{
 				ScreenSpaceVector *= StepRefinementAmount;
 				CurrentPosition = OldPosition;
@@ -121,7 +119,6 @@ vec4 ComputeReflection()
 			//Step ray
 			OldPosition = CurrentPosition;
 			CurrentPosition = OldPosition + ScreenSpaceVector;
-			count++;
 		}
 
 		depth++;
