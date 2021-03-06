@@ -54,10 +54,10 @@ vec3 ViewSpaceToClipSpace(in vec3 view_space)
 vec4 ComputeReflection()
 {
 	//Tweakable variables
-	float InitialStepAmount = .01f;
-	float StepRefinementAmount = .7f;
-	int MaxRefinements = 6;
-	int MaxDepth = 1;
+	const float InitialStepAmount = .01f;
+	const float StepRefinementAmount = .7f;
+	const int MaxRefinements = 3;
+	const int MaxDepth = 1;
 	
 	//Values from textures
 	vec2 ScreenSpacePosition2D = v_TexCoords;
@@ -89,7 +89,7 @@ vec4 ComputeReflection()
 	//Ray trace!
 	while(depth < MaxDepth) //doesnt do anything right now
 	{
-		while(count < 1000)
+		while(count < 100)
 		{
 			if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
 			   CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
