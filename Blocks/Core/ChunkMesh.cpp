@@ -5,6 +5,22 @@ extern uint32_t _App_PolygonCount;
 namespace Blocks
 {
 	static glm::vec4 FrontFace[4], BackFace[4], TopFace[4], BottomFace[4], LeftFace[4], RightFace[4];
+	
+	// Possible AO Block Values
+	static glm::vec3 FrontFaceAO[4][2];
+	static glm::vec3 BackFaceAO[4][2];
+	static glm::vec3 LeftFaceAO[4][2];
+	static glm::vec3 RightFaceAO[4][2];
+	static glm::vec3 TopFaceAO[4][2];
+	static glm::vec3 BottomFaceAO[4][2];
+
+	// Normals
+	static glm::vec3 FrontFaceNormal = glm::vec3(0.0f, 0.0f, 1.0f);
+	static glm::vec3 BackFaceNormal = glm::vec3(0.0f, 0.0f, -1.0f);
+	static glm::vec3 LeftFaceNormal = glm::vec3(-1.0f, 0.0f, 0.0f);
+	static glm::vec3 RightFaceNormal = glm::vec3(1.0f, 0.0f, 0.0f);
+	static glm::vec3 TopFaceNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+	static glm::vec3 BottomFaceNormal = glm::vec3(0.0f, -1.0f, 0.0f);
 
 	static Block GetChunkBlock(const glm::ivec3& block_loc, std::array<Block, CHUNK_SIZE_X* CHUNK_SIZE_Y* CHUNK_SIZE_Z>& chunk_data)
 	{
@@ -64,6 +80,7 @@ namespace Blocks
 		FrontFace[1] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 		FrontFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		FrontFace[3] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+
 		
 		BackFace[0] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		BackFace[1] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);

@@ -7,6 +7,8 @@ namespace Blocks
 	int render_distance_z = 1;
 	int build_distance_x = render_distance_x + 1;
 	int build_distance_z = render_distance_z + 1;
+	int flora_build_distance_x = render_distance_x + 1;
+	int flora_build_distance_z = render_distance_z + 1;
 #else _RELEASE
 	int render_distance_x = 6;
 	int render_distance_z = 6;

@@ -209,7 +209,8 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR()
 {
-    float Shadow = CalculateSunShadow() * 0.64f;
+    float ShadowIntensity = 0.4f;
+    float Shadow = CalculateSunShadow() * ShadowIntensity;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
     vec3 L = normalize(u_LightDirection);
@@ -229,7 +230,7 @@ vec3 CalculateDirectionalLightPBR()
     kD *= 1.0 - g_Metalness;	
 
     float NdotL = max(dot(g_Normal, L), 0.0);
-	vec3 Result = (kD * g_Albedo / PI + (specular * 4.0f)) * radiance * NdotL;
+	vec3 Result = (kD * g_Albedo / PI + (specular)) * radiance * NdotL;
 
     return Result * (1.0f - Shadow);
 }
