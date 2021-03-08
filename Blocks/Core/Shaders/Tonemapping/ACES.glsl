@@ -32,7 +32,7 @@ void main()
 
     if (u_VolumetricEnabled)
     {
-         float volumetric_value = texture(u_VolumetricTexture, v_TexCoords).r;
+         float volumetric_value = textureBicubic(u_VolumetricTexture, v_TexCoords).r;
          Volumetric = (volumetric_value * SUN_COLOR);
     }
 

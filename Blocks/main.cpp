@@ -65,6 +65,8 @@ glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
 float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
 float RenderScale = 1.0f;
+float VolumetricRenderScale = 0.5f;
+float SSRRenderScale = 0.9f;
 
 bool VSync = 1;
 
@@ -115,6 +117,8 @@ public:
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
 			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
+			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
+			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.1f);
 			ImGui::End();
 		}
 
@@ -254,7 +258,7 @@ int main()
 		float wx = app.GetWidth() * RenderScale, wy = app.GetHeight() * RenderScale;
 
 		MainRenderFBO.SetDimensions(wx, wy);
-		VolumetricLightingFBO.SetSize(floor((float)wx / (float)1.5), floor((float)wy / (float)1.5));
+		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		AlternateFBO.SetSize(wx, wy);
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx, wy);
