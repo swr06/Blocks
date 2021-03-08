@@ -263,7 +263,7 @@ int main()
 
 		glfwSwapInterval(VSync);
 
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
 		app.OnUpdate();
@@ -458,6 +458,8 @@ int main()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, app.GetWidth(), app.GetHeight());
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 
 		PPShader.Use();
 		PPShader.SetInteger("u_FramebufferTexture", 0);
