@@ -56,6 +56,7 @@ namespace Blocks
 
 		Camera.OnUpdate();
 		Camera.Refresh();
+		PlayerViewFrustum.Update(Camera.GetViewProjection());
 
 		return moved;
 	}

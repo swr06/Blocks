@@ -113,7 +113,7 @@ void Blocks::WorldGenerator::GenerateChunkFlora(Chunk* chunk)
 
 			if (StructureGenerator.UnsignedInt(200) == 0)
 			{
-				FillInWorldStructure(&Tree, real_x, height - 1, real_z);
+				FillInWorldStructure(&Tree, real_x - 2, height - 1, real_z - 2);
 			}
 		}
 	}

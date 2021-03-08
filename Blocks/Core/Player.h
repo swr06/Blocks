@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "FPSCamera.h"
 #include "World.h"
+#include "ViewFrustum.h"
 
 namespace Blocks
 {
@@ -14,5 +15,6 @@ namespace Blocks
 		bool OnUpdate(GLFWwindow* window);
 
 		FPSCamera Camera;
+		ViewFrustum PlayerViewFrustum;
 	};
 }

@@ -327,7 +327,7 @@ int main()
 		RenderShader.SetInteger("u_BlueNoiseTexture", 4);
 		RenderShader.SetFloat("u_GraniteTexIndex", Blocks::BlockDatabase::GetBlockTexture("polished_granite", Blocks::BlockFaceType::Top));
 
-		MainWorld.Update(Player.Camera.GetPosition());
+		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);

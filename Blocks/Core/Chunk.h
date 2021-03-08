@@ -11,6 +11,7 @@
 #include "Macros.h"
 #include "Application/Logger.h"
 #include "ChunkMesh.h"
+#include "ViewFrustum.h"
 
 namespace Blocks
 {
@@ -34,7 +35,7 @@ namespace Blocks
 	{
 	public : 
 
-		Chunk(const glm::ivec2& position)
+		Chunk(const glm::ivec2& position) : m_ChunkAABB(glm::vec3(CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z), glm::vec3(position.x * CHUNK_SIZE_X, 0, position.y * CHUNK_SIZE_Z))
 		{
 			m_Position = position;
 			memset(&m_ChunkData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
@@ -89,18 +90,28 @@ namespace Blocks
 			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 		}
 
-		void RenderMeshes()
+		void RenderMeshes(const ViewFrustum& view_frustum, bool should_cull = true)
 		{
 			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
 			{
 				if (m_ChunkMeshes[i].m_ChunkMeshState == ChunkMeshState::Built)
 				{
-					m_ChunkMeshes[i].Render();
+					if (should_cull)
+					{
+						if (view_frustum.BoxInFrustum(m_ChunkAABB))
+						{
+							m_ChunkMeshes[i].Render();
+						}
+					}
+					
+					else
+					{
+						m_ChunkMeshes[i].Render();
+					}
 				}
 			}
 		}
 
-		
 
 	private :
 
@@ -110,6 +121,7 @@ namespace Blocks
 		glm::vec2 m_Position;
 
 		ChunkGenerationState m_ChunkGenerationState = ChunkGenerationState::Ungenerated;
+		FrustumAABB m_ChunkAABB;
 
 		friend class World;
 		friend void WorldGenerator::GenerateChunk(Chunk* chunk);

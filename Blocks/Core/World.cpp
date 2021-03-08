@@ -28,7 +28,7 @@ namespace Blocks
 		return std::fmodf((std::fmodf(a, b) + b), b);
 	}
 
-	void World::GenerateChunks(const glm::vec3& position)
+	void World::GenerateChunks(const glm::vec3& position, const ViewFrustum& view_frustum)
 	{
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
 		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
@@ -61,10 +61,27 @@ namespace Blocks
 		{
 			for (int j = player_chunk_z - render_distance_z; j < player_chunk_z + render_distance_z; j++)
 			{
-				if (ChunkExists(glm::ivec2(i, j)))
+				if (ChunkExists(glm::ivec2(i, j)) && view_frustum.BoxInFrustum(GetChunk(glm::ivec2(i, j))->m_ChunkAABB))
 				{
 					m_WorldChunks.at(std::pair<int, int>(i, j)).m_ChunkGenerationState = ChunkGenerationState::GeneratedAndPlanted;
 					m_WorldChunks.at(std::pair<int, int>(i, j)).GenerateMeshes();
+				}
+			}
+		}
+	}
+
+	void World::RenderChunks(const glm::vec3& position, const ViewFrustum& view_frustum)
+	{
+		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
+		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
+
+		for (int i = player_chunk_x - render_distance_x; i < player_chunk_x + render_distance_x; i++)
+		{
+			for (int j = player_chunk_z - render_distance_z; j < player_chunk_z + render_distance_z; j++)
+			{
+				if (ChunkExists(glm::ivec2(i, j)))
+				{
+					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes(view_frustum, true);
 				}
 			}
 		}
@@ -81,7 +98,7 @@ namespace Blocks
 			{
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
-					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes();
+					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes(ViewFrustum(), false);
 				}
 			}
 		}
@@ -192,11 +209,11 @@ namespace Blocks
 		}
 	}
 
-	void World::Update(const glm::vec3& position)
+	void World::Update(const glm::vec3& position, const ViewFrustum& view_frustum)
 	{
 		m_FirstUpdateDone = true;
-		GenerateChunks(position);
-		RenderChunks(position);
+		GenerateChunks(position, view_frustum);
+		RenderChunks(position, view_frustum);
 	}
 
 	Chunk* World::GetChunk(const glm::ivec2& chunk_loc)
