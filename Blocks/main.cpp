@@ -35,28 +35,40 @@
 #include "Core/GLClasses/Framebuffer.h"
 #include "Core/GLClasses/FramebufferRed.h"
 
+// World, Camera, Player..
 Blocks::Player Player;
 Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
 Blocks::World MainWorld;
 
-Blocks::BlocksRenderBuffer FBO(800, 600);
+// Framebuffers, Renderbuffers and depth buffers
+Blocks::BlocksRenderBuffer MainRenderFBO(800, 600);
 GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer AlternateFBO(800, 600, true);
+GLClasses::Framebuffer SSRFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
 
-glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
-
-float ShadowBias = 0.001f;
-float VolumetricScattering = 0.6f;
+// Flags 
+bool ShouldRenderSkybox = true;
+bool ShouldRenderVolumetrics = true;
+bool ShouldDoBloomPass = true;
+bool ShouldDoSSRPass = false;
 
 // Flags that change from frame to frame
 bool PlayerMoved = false;
 bool BlockModified = false;
 bool SunDirectionChanged = false;
 
+// Tweakable variables
+glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
+
+// ImGui Adjustable Variables
+float ShadowBias = 0.001f;
+float VolumetricScattering = 0.6f;
+float RenderScale = 1.0f;
+
 bool VSync = 1;
 
-extern uint32_t _App_PolygonCount;
+extern uint32_t _App_PolygonCount; // Internal! Do not touch.
 
 class BlocksApp : public Blocks::Application
 {
@@ -95,6 +107,15 @@ public:
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
 		}
 
+		if (ImGui::Begin("Settings"))
+		{
+			ImGui::Checkbox("Render Skybox?", &ShouldRenderSkybox);
+			ImGui::Checkbox("Render Volumetrics?", &ShouldRenderVolumetrics);
+			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
+			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
+			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
+		}
+
 		if (prevSunDirection != SunDirection)
 		{
 			SunDirectionChanged = true;
@@ -118,12 +139,6 @@ public:
 			OCamera.SetProjection(0.0f, e.wx, 0.0f, e.wy);
 			m_Width = e.wx;
 			m_Height = e.wy;
-
-			// Resize FBOs
-			FBO.SetDimensions(e.wx, e.wy);
-			VolumetricLightingFBO.SetSize(floor((float)e.wx / (float)1.5), floor((float)e.wy / (float)1.5));
-			AlternateFBO.SetSize(e.wx, e.wy);
-			BloomFBO.SetSize(floor((float)e.wx / (float)6.0f), floor((float)e.wy / (float)6.0f));
 
 			glViewport(0, 0, e.wx, e.wy);
 		}
@@ -176,12 +191,18 @@ int main()
 
 	Blocks::BlockDatabase::Initialize();
 	Blocks::Renderer2D Renderer2D;
+
+	// Textures
 	GLClasses::Texture Crosshair;
 	GLClasses::Texture BlueNoiseTexture;
+
+	// Shaders
 	GLClasses::Shader RenderShader;
 	GLClasses::Shader PPShader;
 	GLClasses::Shader VolumetricShader;
 	GLClasses::Shader BloomShader;
+	GLClasses::Shader SSRShader;
+
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
 	GLClasses::DepthBuffer ShadowMap(3056, 3056);
@@ -211,6 +232,8 @@ int main()
 	VolumetricShader.CompileShaders();
 	BloomShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BloomBrightFrag.glsl");
 	BloomShader.CompileShaders();
+	SSRShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/SSRFrag.glsl");
+	SSRShader.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -226,9 +249,21 @@ int main()
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
+		// Set MainRenderFBO Sizes
+
+		float wx = app.GetWidth() * RenderScale, wy = app.GetHeight() * RenderScale;
+
+		MainRenderFBO.SetDimensions(wx, wy);
+		VolumetricLightingFBO.SetSize(floor((float)wx / (float)1.5), floor((float)wy / (float)1.5));
+		AlternateFBO.SetSize(wx, wy);
+		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
+		SSRFBO.SetSize(wx, wy);
+
+		// -----------
+
 		glfwSwapInterval(VSync);
 
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
 		app.OnUpdate();
@@ -240,11 +275,16 @@ int main()
 		}
 
 		// Do the normal rendering
-		FBO.Bind();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, FBO.GetDimensions().first, FBO.GetDimensions().second);
 
-		skybox.RenderSkybox(&Player.Camera);
+		// Normal render pass
+		MainRenderFBO.Bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, MainRenderFBO.GetDimensions().first, MainRenderFBO.GetDimensions().second);
+
+		if (ShouldRenderSkybox)
+		{
+			skybox.RenderSkybox(&Player.Camera);
+		}
 
 		// Prepare to render the chunks
 		glEnable(GL_DEPTH_TEST);
@@ -285,94 +325,160 @@ int main()
 		RenderShader.SetMatrix4("u_LightProjectionMatrix", Blocks::ShadowMapRenderer::GetLightProjectionMatrix());
 		
 		RenderShader.SetInteger("u_BlueNoiseTexture", 4);
+		RenderShader.SetFloat("u_GraniteTexIndex", Blocks::BlockDatabase::GetBlockTexture("polished_granite", Blocks::BlockFaceType::Top));
 
 		MainWorld.Update(Player.Camera.GetPosition());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);
 
-		// Now, use the tonemapping shaders and write it to the screen
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
+		// ---------
+		// SSR pass
+
+		if (ShouldDoSSRPass)
+		{
+
+			SSRFBO.Bind();
+			glViewport(0, 0, SSRFBO.GetWidth(), SSRFBO.GetHeight());
+
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+
+			SSRShader.Use();
+
+			SSRShader.SetInteger("u_ColorTexture", 0);
+			SSRShader.SetInteger("u_NormalTexture", 1);
+			SSRShader.SetInteger("u_DepthTexture", 2);
+			SSRShader.SetInteger("u_SSRMaskTexture", 3);
+			SSRShader.SetInteger("u_NoiseTexture", 4);
+
+			SSRShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
+			SSRShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
+			SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+			SSRShader.SetFloat("u_zNear", 0.1f);
+			SSRShader.SetFloat("u_zFar", 1000.0f);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetColorTexture());
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetNormalTexture());
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetDepthTexture());
+
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetSSRMaskTexture());
+
+			glActiveTexture(GL_TEXTURE4);
+			glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glUseProgram(0);
+		}
 
 		// ----------
 		// Volumetric lighting pass
 
-		VolumetricLightingFBO.Bind();
+		if (ShouldRenderVolumetrics)
+		{
+			VolumetricLightingFBO.Bind();
 
-		glViewport(0, 0, VolumetricLightingFBO.GetWidth(), VolumetricLightingFBO.GetHeight());
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
+			glViewport(0, 0, VolumetricLightingFBO.GetWidth(), VolumetricLightingFBO.GetHeight());
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
 
-		VolumetricShader.Use();
+			VolumetricShader.Use();
 
-		VolumetricShader.SetInteger("u_DepthTexture", 0);
-		VolumetricShader.SetInteger("u_ShadowMap", 1);
-		VolumetricShader.SetInteger("u_NoiseTexture", 2);
+			VolumetricShader.SetInteger("u_DepthTexture", 0);
+			VolumetricShader.SetInteger("u_ShadowMap", 1);
+			VolumetricShader.SetInteger("u_NoiseTexture", 2);
 
-		VolumetricShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
-		VolumetricShader.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
-		VolumetricShader.SetMatrix4("u_LightViewProjection", Blocks::ShadowMapRenderer::GetLightProjectionMatrix() * Blocks::ShadowMapRenderer::GetLightViewMatrix());
-		VolumetricShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
-		VolumetricShader.SetVector3f("u_LightDirection", glm::normalize(SunDirection));
-		VolumetricShader.SetInteger("u_Width", VolumetricLightingFBO.GetWidth());
-		VolumetricShader.SetInteger("u_Height", VolumetricLightingFBO.GetHeight());
-		VolumetricShader.SetFloat("u_Scattering", VolumetricScattering);
+			VolumetricShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+			VolumetricShader.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
+			VolumetricShader.SetMatrix4("u_LightViewProjection", Blocks::ShadowMapRenderer::GetLightProjectionMatrix() * Blocks::ShadowMapRenderer::GetLightViewMatrix());
+			VolumetricShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
+			VolumetricShader.SetVector3f("u_LightDirection", glm::normalize(SunDirection));
+			VolumetricShader.SetInteger("u_Width", VolumetricLightingFBO.GetWidth());
+			VolumetricShader.SetInteger("u_Height", VolumetricLightingFBO.GetHeight());
+			VolumetricShader.SetFloat("u_Scattering", VolumetricScattering);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, FBO.GetDepthTexture());
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetDepthTexture());
 
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
 
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
 
-		FBOVAO.Bind();
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		FBOVAO.Unbind();
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glUseProgram(0);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glUseProgram(0);
+		}
 
+		// --------------
 		// B L O O M.. Pass
 
-		BloomFBO.Bind();
-		glViewport(0, 0, BloomFBO.GetWidth(), BloomFBO.GetHeight());
+		if (ShouldDoBloomPass)
+		{
+			BloomFBO.Bind();
+			glViewport(0, 0, BloomFBO.GetWidth(), BloomFBO.GetHeight());
 
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-		
-		BloomShader.Use();
-		BloomShader.SetInteger("u_Texture", 0);
-		BloomShader.SetInteger("u_DepthTexture", 1);
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
+			BloomShader.Use();
+			BloomShader.SetInteger("u_Texture", 0);
+			BloomShader.SetInteger("u_DepthTexture", 1);
 
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, FBO.GetDepthTexture());
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetColorTexture());
 
-		FBOVAO.Bind();
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		FBOVAO.Unbind();
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetDepthTexture());
 
-		glUseProgram(0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
 
+			glUseProgram(0);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+
+		// ----------
 		// After the rendering, do the tonemapping pass
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, app.GetWidth(), app.GetHeight());
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 
 		PPShader.Use();
 		PPShader.SetInteger("u_FramebufferTexture", 0);
 		PPShader.SetInteger("u_VolumetricTexture", 1);
 		PPShader.SetInteger("u_BloomTexture", 2);
+		PPShader.SetBool("u_BloomEnabled", ShouldDoBloomPass);
+		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, FBO.GetColorTexture());
+		if (ShouldDoSSRPass)
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
+		}
+		
+		else
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetColorTexture());
+		}
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());

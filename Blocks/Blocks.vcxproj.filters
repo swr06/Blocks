@@ -377,5 +377,8 @@
     <None Include="Core\Shaders\BilateralBlurFrag.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Core\Shaders\SSRFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

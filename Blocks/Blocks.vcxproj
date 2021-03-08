@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -251,6 +251,7 @@
     <None Include="Core\Shaders\SkyboxVertex.glsl" />
     <None Include="Core\Shaders\BlockFrag.glsl" />
     <None Include="Core\Shaders\BlockVert.glsl" />
+    <None Include="Core\Shaders\SSRFrag.glsl" />
     <None Include="Core\Shaders\Tonemapping\ACES.glsl" />
     <None Include="Core\Shaders\Tonemapping\filmic.glsl" />
     <None Include="Core\Shaders\Tonemapping\LICENSE.MD" />

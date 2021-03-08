@@ -16,22 +16,35 @@ layout(location = 0) out vec4 o_Color;
 uniform sampler2D u_FramebufferTexture;
 uniform sampler2D u_VolumetricTexture;
 uniform sampler2D u_BloomTexture;
-uniform float u_Exposure = 1.0f;
+//uniform float u_Exposure = 1.0f;
 
-const vec3 SUN_COLOR = vec3(133.0f / 255.0f, 223.0f / 255.0f, 240.0f / 255.0f);
+uniform bool u_BloomEnabled;
+uniform bool u_VolumetricEnabled;
+
+const vec3 SUN_COLOR = vec3(1.0);
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 
 void main()
 {
-    vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
-    float volumetric = texture(u_VolumetricTexture, v_TexCoords).r;
-    vec3 volumetric_col = (volumetric * SUN_COLOR);
+    vec3 Volumetric = vec3(0.0f);
+    vec3 Bloom = vec3(0.0f);
 
-    vec3 Bloom = textureBicubic(u_BloomTexture, v_TexCoords).xyz;
+    if (u_VolumetricEnabled)
+    {
+         float volumetric_value = texture(u_VolumetricTexture, v_TexCoords).r;
+         Volumetric = (volumetric_value * SUN_COLOR);
+    }
+
+    if (u_BloomEnabled)
+    {
+         Bloom = textureBicubic(u_BloomTexture, v_TexCoords).xyz;
+    }
+   
+    vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
 
     vec3 final_color;
-    final_color = HDR + Bloom + (volumetric_col * 0.1f);
+    final_color = HDR + Bloom + (Volumetric * 0.1f);
 
     o_Color = vec4(aces(final_color), 1.0);
 }

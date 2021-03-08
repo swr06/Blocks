@@ -6,6 +6,7 @@
 
 layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
+layout (location = 2) out float o_SSRMask;
 
 in vec2 v_TexCoord;
 in float v_TexIndex;
@@ -29,6 +30,9 @@ uniform float u_ShadowBias;
 
 // Noise 
 uniform sampler2D u_BlueNoiseTexture;
+
+// Misc
+uniform float u_GraniteTexIndex;
 
 vec3 g_Albedo;
 vec3 g_Normal;
@@ -104,7 +108,17 @@ void main()
     vec3 Ambient = 0.2f * g_Albedo;
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
-    o_Normal = g_Normal;
+    o_Normal = v_Normal;
+
+    if (v_TexIndex == u_GraniteTexIndex)
+    {
+        o_SSRMask = 1.0f;
+    }
+
+    else 
+    {
+        o_SSRMask = 0.0f;
+    }
 
     //o_Color = vec4(vec3(g_Metalness), 1.0f);
 }
@@ -195,7 +209,8 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR()
 {
-    float Shadow = CalculateSunShadow() * 0.64f;
+    float ShadowIntensity = 0.4f;
+    float Shadow = CalculateSunShadow() * ShadowIntensity;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
     vec3 L = normalize(u_LightDirection);
@@ -215,7 +230,7 @@ vec3 CalculateDirectionalLightPBR()
     kD *= 1.0 - g_Metalness;	
 
     float NdotL = max(dot(g_Normal, L), 0.0);
-	vec3 Result = (kD * g_Albedo / PI + (specular * 4.0f)) * radiance * NdotL;
+	vec3 Result = (kD * g_Albedo / PI + (specular)) * radiance * NdotL;
 
     return Result * (1.0f - Shadow);
 }
