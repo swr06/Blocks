@@ -105,6 +105,7 @@ public:
 			ImGui::SliderFloat3("Sun Direction", &SunDirection[0], -1.0f, 1.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
+			ImGui::End();
 		}
 
 		if (ImGui::Begin("Settings"))
@@ -114,14 +115,13 @@ public:
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
 			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
+			ImGui::End();
 		}
 
 		if (prevSunDirection != SunDirection)
 		{
 			SunDirectionChanged = true;
 		}
-
-		ImGui::End();
 	}
 
 	void OnEvent(Blocks::Event e) override

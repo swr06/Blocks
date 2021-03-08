@@ -179,6 +179,7 @@
     <ClCompile Include="Core\Renderer2D.cpp" />
     <ClCompile Include="Core\ShadowRenderer.cpp" />
     <ClCompile Include="Core\Skybox.cpp" />
+    <ClCompile Include="Core\ViewFrustum.cpp" />
     <ClCompile Include="Core\World.cpp" />
     <ClCompile Include="Core\WorldGenerator.cpp" />
     <ClCompile Include="Core\WorldStructures.cpp" />
@@ -226,6 +227,7 @@
     <ClInclude Include="Core\Utils\Random.h" />
     <ClInclude Include="Core\Utils\Timer.h" />
     <ClInclude Include="Core\Vertex.h" />
+    <ClInclude Include="Core\ViewFrustum.h" />
     <ClInclude Include="Core\World.h" />
     <ClInclude Include="Core\WorldGenerator.h" />
     <ClInclude Include="Core\WorldStructures.h" />

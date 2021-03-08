@@ -163,6 +163,9 @@
     <ClCompile Include="Core\WorldStructures.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\ViewFrustum.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -299,6 +302,9 @@
     </ClInclude>
     <ClInclude Include="Core\Utils\Timer.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ViewFrustum.h">
+      <Filter>Source Files\Blocks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
