@@ -1,6 +1,6 @@
 #include "WorldStructures.h"
 
-namespace Minecraft
+namespace Blocks
 {
 	
 }

@@ -31,7 +31,7 @@ namespace Blocks
 
 		void End(const std::string& output_text)
 		{
-			if (!m_TimerStarted) { throw "Glide3D::Timer()::End() called without the timer being started!"; return; }
+			if (!m_TimerStarted) { throw "Blocks::Timer()::End() called without the timer being started!"; return; }
 
 			m_EndTime = std::chrono::high_resolution_clock::now();
 			
@@ -76,7 +76,7 @@ namespace Blocks
 
 		long long End()
 		{
-			if (!m_TimerStarted) { throw "Glide3D::Timer()::End() called without the timer being started!"; return 0; }
+			if (!m_TimerStarted) { throw "Blocks::Timer()::End() called without the timer being started!"; return 0; }
 
 			m_EndTime = std::chrono::high_resolution_clock::now();
 
