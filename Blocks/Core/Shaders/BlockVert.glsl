@@ -5,6 +5,7 @@ layout (location = 2) in float a_TexIndex;
 layout (location = 3) in float a_NormalTexIndex;
 layout (location = 4) in float a_PBRTexIndex;
 layout (location = 5) in float a_NormalIndex;
+layout (location = 6) in float a_AO;
 
 vec3 Normals[6] = { vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f),
 					vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), 
@@ -33,11 +34,14 @@ out float v_PBRTexIndex;
 out mat3 v_TBNMatrix;
 out vec3 v_FragPosition;
 
+out float v_AO;
+
 void main()
 {
 	gl_Position = u_Projection * u_View * vec4(a_Position, 1.0);
 	v_TexCoord = a_TexCoords;
 	v_FragPosition = a_Position;
+	v_AO = a_AO;
 
 	v_Normal = Normals[int(a_NormalIndex)];
 	vec3 Tangent = Tangents[int(a_NormalIndex)];

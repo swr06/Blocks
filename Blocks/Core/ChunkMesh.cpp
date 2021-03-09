@@ -74,38 +74,38 @@ namespace Blocks
 		m_VBO.VertexAttribPointer(3, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, NormalTexIndex));
 		m_VBO.VertexAttribPointer(4, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, PBRTexIndex));
 		m_VBO.VertexAttribPointer(5, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+		m_VBO.VertexAttribPointer(6, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, AO));
 		m_VAO.Unbind();
 
-		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-		FrontFace[1] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
-		FrontFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		FrontFace[3] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
-
+		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); FrontFaceAO[0][0] = glm::vec3(-1.0f, 0.0f, 0.0f); FrontFaceAO[0][1] = glm::vec3(0.0f, -1.0f, 0.0f);
+		FrontFace[1] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); FrontFaceAO[1][0] = glm::vec3(1.0f, 0.0f, 0.0f);  FrontFaceAO[1][1] = glm::vec3(0.0f, -1.0f, 0.0f);
+		FrontFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); FrontFaceAO[2][0] = glm::vec3(1.0f, 0.0f, 0.0f);  FrontFaceAO[2][1] = glm::vec3(0.0f, 1.0f, 0.0f);
+		FrontFace[3] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f); FrontFaceAO[3][0] = glm::vec3(-1.0f, 0.0f, 0.0f);  FrontFaceAO[3][1] = glm::vec3(0.0f, 1.0f, 0.0f);
 		
-		BackFace[0] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		BackFace[1] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		BackFace[2] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-		BackFace[3] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		BackFace[0] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); BackFaceAO[0][0] = glm::vec3(-1.0f, 0.0f, 0.0f); BackFaceAO[0][1] = glm::vec3(0.0f, -1.0f, 0.0f);
+		BackFace[1] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); BackFaceAO[1][0] = glm::vec3(1.0f, 0.0f, 0.0f);  BackFaceAO[1][1] = glm::vec3(0.0f, -1.0f, 0.0f);
+		BackFace[2] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f); BackFaceAO[2][0] = glm::vec3(1.0f, 0.0f, 0.0f);  BackFaceAO[2][1] = glm::vec3(0.0f, 1.0f, 0.0f);
+		BackFace[3] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); BackFaceAO[3][0] = glm::vec3(-1.0f, 0.0f, 0.0f); BackFaceAO[3][1] = glm::vec3(0.0f, 1.0f, 0.0f);
 		
-		TopFace[0] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-		TopFace[1] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-		TopFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		TopFace[3] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+		TopFace[0] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); TopFaceAO[0][0] = glm::vec3(0.0f, 0.0f, -1.0f); TopFaceAO[0][1] = glm::vec3(-1.0f, 0.0f, 0.0f);
+		TopFace[1] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);	TopFaceAO[1][0] = glm::vec3(0.0f, 0.0f, -1.0f);  TopFaceAO[1][1] = glm::vec3(1.0f, 0.0f, 0.0f);
+		TopFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);	TopFaceAO[2][0] = glm::vec3(0.0f, 0.0f, 1.0f);  TopFaceAO[2][1] = glm::vec3(1.0f, 0.0f, 0.0f);
+		TopFace[3] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);	TopFaceAO[3][0] = glm::vec3(0.0f, 0.0f, 1.0f); TopFaceAO[3][1] = glm::vec3(-1.0f, 0.0f, 0.0f);
 		
-		BottomFace[0] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		BottomFace[1] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		BottomFace[2] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
-		BottomFace[3] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		BottomFace[0] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); BottomFaceAO[0][0] = glm::vec3(0.0f, 0.0f, -1.0f);  BottomFaceAO[0][1] = glm::vec3(-1.0f, 0.0f, 0.0f);
+		BottomFace[1] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); BottomFaceAO[1][0] = glm::vec3(0.0f, 0.0f, -1.0f);  BottomFaceAO[1][1] = glm::vec3(1.0f, 0.0f, 0.0f);
+		BottomFace[2] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); BottomFaceAO[2][0] = glm::vec3(0.0f, 0.0f, 1.0f);   BottomFaceAO[2][1] = glm::vec3(1.0f, 0.0f, 0.0f);
+		BottomFace[3] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); BottomFaceAO[3][0] = glm::vec3(0.0f, 0.0f, 1.0f);   BottomFaceAO[3][1] = glm::vec3(-1.0f, 0.0f, 0.0f);
 		
-		LeftFace[0] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
-		LeftFace[1] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-		LeftFace[2] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		LeftFace[3] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		LeftFace[0] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f); LeftFaceAO[0][0] = glm::vec3(0.0f, 0.0f, 1.0f);  LeftFaceAO[0][1] = glm::vec3(0.0f, 1.0f, 0.0f);
+		LeftFace[1] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f); LeftFaceAO[1][0] = glm::vec3(0.0f, 0.0f, -1.0f); LeftFaceAO[1][1] = glm::vec3(0.0f, 1.0f, 0.0f);
+		LeftFace[2] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); LeftFaceAO[2][0] = glm::vec3(0.0f, 0.0f, -1.0f);  LeftFaceAO[2][1] = glm::vec3(0.0f, -1.0f, 0.0f);
+		LeftFace[3] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); LeftFaceAO[3][0] = glm::vec3(0.0f, 0.0f, 1.0f);  LeftFaceAO[3][1] = glm::vec3(0.0f, -1.0f, 0.0f);
 		
-		RightFace[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		RightFace[1] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-		RightFace[2] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		RightFace[3] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+		RightFace[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); RightFaceAO[0][0] = glm::vec3(0.0f, 0.0f, 1.0f);  RightFaceAO[0][1] = glm::vec3(0.0f, 1.0f, 0.0f);
+		RightFace[1] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f); RightFaceAO[1][0] = glm::vec3(0.0f, 0.0f, -1.0f); RightFaceAO[1][1] = glm::vec3(0.0f, 1.0f, 0.0f);
+		RightFace[2] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); RightFaceAO[2][0] = glm::vec3(0.0f, 0.0f, -1.0f); RightFaceAO[2][1] = glm::vec3(0.0f, -1.0f, 0.0f);
+		RightFace[3] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); RightFaceAO[3][0] = glm::vec3(0.0f, 0.0f, 1.0f);  RightFaceAO[3][1] = glm::vec3(0.0f, -1.0f, 0.0f);
 	}
 
 	void ChunkMesh::GenerateMesh(std::array<Block, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z>& chunk_data, int section, const glm::vec2& chunk_pos)
@@ -195,6 +195,7 @@ namespace Blocks
 
 		Vertex v1, v2, v3, v4;
 		bool reverse_texcoords = false;
+		bool reverse_ao = false;
 		glm::vec4 translation = glm::vec4(position, 0.0f);
 		float tex_index = BlockDatabase::GetBlockTexture(block.ID, facetype);
 		float normaltex_index = (float)BlockDatabase::GetBlockNormalTexture(block.ID, facetype);
@@ -207,11 +208,11 @@ namespace Blocks
 		{
 			case BlockFaceType::Top:
 			{
-				v1.Position = translation + TopFace[0];
+				v1.Position = translation + TopFace[0]; 
 				v2.Position = translation + TopFace[1];
 				v3.Position = translation + TopFace[2];
 				v4.Position = translation + TopFace[3];
-				
+
 				break;
 			}
 
@@ -221,6 +222,7 @@ namespace Blocks
 				v2.Position = translation + BottomFace[2];
 				v3.Position = translation + BottomFace[1];
 				v4.Position = translation + BottomFace[0];
+				reverse_ao = true;
 
 				break;
 			}
@@ -231,6 +233,7 @@ namespace Blocks
 				v2.Position = translation + FrontFace[2];
 				v3.Position = translation + FrontFace[1];
 				v4.Position = translation + FrontFace[0];
+				reverse_ao = true;
 
 				break;
 			}
@@ -253,6 +256,7 @@ namespace Blocks
 				v3.Position = translation + LeftFace[1];
 				v4.Position = translation + LeftFace[0];
 				reverse_texcoords = true;
+				reverse_ao = true;
 
 				break;
 			}
@@ -289,6 +293,22 @@ namespace Blocks
 		v3.PBRTexIndex = pbrtex_index;
 		v4.PBRTexIndex = pbrtex_index;
 
+		if (reverse_ao)
+		{
+			v1.AO = GetAOValue(position, facetype, 3);
+			v2.AO = GetAOValue(position, facetype, 2);
+			v3.AO = GetAOValue(position, facetype, 1);
+			v4.AO = GetAOValue(position, facetype, 0);
+		}
+		
+		else
+		{
+			v1.AO = GetAOValue(position, facetype, 0);
+			v2.AO = GetAOValue(position, facetype, 1);
+			v3.AO = GetAOValue(position, facetype, 2);
+			v4.AO = GetAOValue(position, facetype, 3);
+		}
+
 		if (reverse_texcoords)
 		{
 			v1.TexCoords = glm::vec2(0.0f, 1.0f);
@@ -314,5 +334,69 @@ namespace Blocks
 		m_Vertices.push_back(v2);
 		m_Vertices.push_back(v3);
 		m_Vertices.push_back(v4);
+	}
+
+	uint8_t ChunkMesh::GetAOValue(const glm::vec3& position, BlockFaceType facetype, uint8_t vertex)
+	{
+		glm::vec3 Normal;
+		glm::vec3 AODirection1;
+		glm::vec3 AODirection2;
+
+		switch (facetype)
+		{
+			case BlockFaceType::Top: 
+			{ 
+				Normal = TopFaceNormal; 
+				AODirection1 = TopFaceAO[vertex][0]; 
+				AODirection2 = TopFaceAO[vertex][1]; 
+				break; 
+			}
+
+			case BlockFaceType::Bottom: 
+			{ 
+				Normal = BottomFaceNormal; 
+				AODirection1 = BottomFaceAO[vertex][0];
+				AODirection2 = BottomFaceAO[vertex][1];
+				break;
+			}
+
+			case BlockFaceType::Front: 
+			{ 
+				Normal = FrontFaceNormal; 
+				AODirection1 = FrontFaceAO[vertex][0];
+				AODirection2 = FrontFaceAO[vertex][1];
+				break; 
+			}
+
+			case BlockFaceType::Back: 
+			{
+				Normal = BackFaceNormal; 
+				AODirection1 = BackFaceAO[vertex][0];
+				AODirection2 = BackFaceAO[vertex][1];
+				break; 
+			}
+
+			case BlockFaceType::Left: 
+			{
+				Normal = LeftFaceNormal;  
+				AODirection1 = LeftFaceAO[vertex][0];
+				AODirection2 = LeftFaceAO[vertex][1];
+				break;
+			}
+
+			case BlockFaceType::Right: 
+			{
+				Normal = RightFaceNormal;
+				AODirection1 = RightFaceAO[vertex][0];
+				AODirection2 = RightFaceAO[vertex][1];
+				break;
+			}
+		}
+
+		bool b1 = !GetWorldBlock(position + Normal + AODirection1).ID == 0;
+		bool b2 = !GetWorldBlock(position + Normal + AODirection2).ID == 0;
+		bool b3 = !GetWorldBlock(position + Normal + AODirection1 + AODirection2).ID == 0;
+
+		return b1 + b2 + b3;
 	}
 }
