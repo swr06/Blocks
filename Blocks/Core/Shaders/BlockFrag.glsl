@@ -49,6 +49,7 @@ float g_Metalness = 0.1f;
 
 //const vec3 SUN_COLOR = vec3(252.0f / 255.0f, 212.0f / 255.0f, 64.0f / 255.0f);
 const vec3 SUN_COLOR = vec3(1.0f) * 2.5f;
+const vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
 vec3 CalculateDirectionalLightPBR();
 vec3 RandomPointInUnitSphere();
@@ -130,6 +131,8 @@ void main()
     {
         o_SSRMask = 0.0f;
     }
+
+    o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.065f);
 
     if (u_SSREnabled) 
     {
