@@ -61,7 +61,7 @@ namespace Blocks
 		{
 			for (int j = player_chunk_z - render_distance_z; j < player_chunk_z + render_distance_z; j++)
 			{
-				if (ChunkExists(glm::ivec2(i, j)) && view_frustum.BoxInFrustum(GetChunk(glm::ivec2(i, j))->m_ChunkAABB))
+				if (ChunkExists(glm::ivec2(i, j)))
 				{
 					m_WorldChunks.at(std::pair<int, int>(i, j)).m_ChunkGenerationState = ChunkGenerationState::GeneratedAndPlanted;
 					m_WorldChunks.at(std::pair<int, int>(i, j)).GenerateMeshes();

@@ -46,7 +46,7 @@ void Blocks::WorldGenerator::GenerateChunk(Chunk* chunk)
 {
 	chunk->m_ChunkGenerationState = ChunkGenerationState::Generated;
 
-	bool gen_type = 0;
+	bool gen_type = 1;
 
 	if (gen_type)
 	{

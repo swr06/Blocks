@@ -3,10 +3,9 @@
 in vec2 v_TexCoords;
 
 //Output
-out vec3 outputColor;
+out vec3 o_Color;
 
 //Uniforms
-uniform sampler2D u_ColorTexture;
 uniform sampler2D u_NormalTexture;
 uniform sampler2D u_DepthTexture;
 uniform sampler2D u_SSRMaskTexture;
@@ -57,7 +56,7 @@ vec3 ViewSpaceToClipSpace(in vec3 view_space)
 	return screenSpace;
 }
 
-vec4 ComputeReflection()
+vec2 ComputeReflection()
 {	
 	//Values from textures
 	vec2 ScreenSpacePosition2D = v_TexCoords;
@@ -72,15 +71,16 @@ vec4 ComputeReflection()
 	vec3 ScreenSpaceVector = InitialStepAmount * normalize(ScreenSpaceVectorPosition - ScreenSpacePosition);
 	
 	//Jitter the initial ray
-	float Offset1 = clamp(rand(gl_FragCoord.xy), 0.0f, 1.0f) / 6000.0f;
-	float Offset2 = clamp(rand(gl_FragCoord.yy), 0.0f, 1.0f) / 6000.0f;
-	ScreenSpaceVector += vec3(Offset1, Offset2, 0.0f); // Jitter the ray
+	//float Offset1 = clamp(rand(gl_FragCoord.xy), 0.0f, 1.0f) / 6000.0f;
+	//float Offset2 = clamp(rand(gl_FragCoord.yy), 0.0f, 1.0f) / 6000.0f;
+	//ScreenSpaceVector += vec3(Offset1, Offset2, 0.0f); // Jitter the ray
 
 	vec3 OldPosition = ScreenSpacePosition + ScreenSpaceVector;
 	vec3 CurrentPosition = OldPosition + ScreenSpaceVector;
 	
 	//State
 	vec4 color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	vec2 final_uv = vec2(-1.0f);
 	int count = 0;
 	int NumRefinements = 0;
 	int depth = 0;
@@ -111,7 +111,7 @@ vec4 ComputeReflection()
 
 				if(NumRefinements >= MaxRefinements)
 				{
-					color = texture(u_ColorTexture, SamplePos);
+					final_uv = SamplePos;
 					break;
 				}
 			}
@@ -124,21 +124,17 @@ vec4 ComputeReflection()
 		depth++;
 	}
 
-	return color;
+	return final_uv;
 }
 
 //Main
 void main()
 {
-	vec2 screenSpacePosition = v_TexCoords;
-	outputColor = texture(u_ColorTexture, screenSpacePosition).xyz;
+	o_Color = vec3(-1.0f);
 
 	if (texture(u_SSRMaskTexture, v_TexCoords).r == 1.0f)
 	{
-		vec3 ReflectionColor = ComputeReflection().rgb;
-
-		if (ReflectionColor == vec3(0.0f)) { ReflectionColor = outputColor;}
-
-		outputColor = mix(ReflectionColor, outputColor, 0.6f);
+		vec2 ReflectedUV = ComputeReflection();
+		o_Color = vec3(ReflectedUV, 0.0f);
 	}
 }

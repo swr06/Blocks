@@ -32,8 +32,14 @@ uniform float u_ShadowBias;
 // Noise 
 uniform sampler2D u_BlueNoiseTexture;
 
+// Reflections 
+uniform sampler2D u_SSRTexture;
+uniform sampler2D u_PreviousFrameColorTexture;
+uniform bool u_SSREnabled;
+
 // Misc
 uniform float u_GraniteTexIndex;
+uniform vec2 u_Dimensions;
 
 vec3 g_Albedo;
 vec3 g_Normal;
@@ -74,20 +80,22 @@ const vec2 PoissonDisk[32] =
     vec2(0.039766, -0.396100),  vec2(0.034211, 0.979980)
 };
 
+vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
+
 void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
-
-	g_Normal = v_Normal;
     vec4 SampledAlbedo = texture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex));
 
-	g_Albedo = SampledAlbedo.xyz ; 
-    g_F0 = vec3(0.05f);
+	g_Normal = v_Normal;
 
     if (SampledAlbedo.a < 0.1f) 
     { 
         discard; 
     } 
+
+	g_Albedo = SampledAlbedo.xyz ; 
+    g_F0 = vec3(0.05f);
 
 	if (v_NormalTexIndex >= 0.0f)
 	{
@@ -121,6 +129,17 @@ void main()
     else 
     {
         o_SSRMask = 0.0f;
+    }
+
+    if (u_SSREnabled) 
+    {
+        vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
+        vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
+
+        if (SSR_UV != vec2(-1.0f))
+        {
+            o_Color = mix(o_Color, vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.3); 
+        }
     }
 
     //o_Color = vec4(vec3(g_Metalness), 1.0f);
@@ -286,4 +305,51 @@ vec3 RandomPointInUnitSphere()
 	float z = r * cos(phi); 
 
 	return vec3(x, y, z);
+}
+
+// Upsampling methods
+
+vec4 cubic(float v){
+    vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;
+    vec4 s = n * n * n;
+    float x = s.x;
+    float y = s.y - 4.0 * s.x;
+    float z = s.z - 4.0 * s.y + 6.0 * s.x;
+    float w = 6.0 - x - y - z;
+    return vec4(x, y, z, w) * (1.0/6.0);
+}
+
+vec4 textureBicubic(sampler2D sampler, vec2 texCoords)
+{
+
+   vec2 texSize = textureSize(sampler, 0);
+   vec2 invTexSize = 1.0 / texSize;
+
+   texCoords = texCoords * texSize - 0.5;
+
+
+    vec2 fxy = fract(texCoords);
+    texCoords -= fxy;
+
+    vec4 xcubic = cubic(fxy.x);
+    vec4 ycubic = cubic(fxy.y);
+
+    vec4 c = texCoords.xxyy + vec2 (-0.5, +1.5).xyxy;
+
+    vec4 s = vec4(xcubic.xz + xcubic.yw, ycubic.xz + ycubic.yw);
+    vec4 offset = c + vec4 (xcubic.yw, ycubic.yw) / s;
+
+    offset *= invTexSize.xxyy;
+
+    vec4 sample0 = texture(sampler, offset.xz);
+    vec4 sample1 = texture(sampler, offset.yz);
+    vec4 sample2 = texture(sampler, offset.xw);
+    vec4 sample3 = texture(sampler, offset.yw);
+
+    float sx = s.x / (s.x + s.y);
+    float sy = s.z / (s.z + s.w);
+
+    return mix(
+       mix(sample3, sample2, sx), mix(sample1, sample0, sx)
+    , sy);
 }

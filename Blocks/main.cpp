@@ -42,8 +42,8 @@ Blocks::World MainWorld;
 
 // Framebuffers, Renderbuffers and depth buffers
 Blocks::BlocksRenderBuffer MainRenderFBO(800, 600);
+Blocks::BlocksRenderBuffer SecondaryRenderFBO(800, 600);
 GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
-GLClasses::Framebuffer AlternateFBO(800, 600, true);
 GLClasses::Framebuffer SSRFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
 
@@ -66,7 +66,7 @@ float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
 float RenderScale = 1.0f;
 float VolumetricRenderScale = 0.5f;
-float SSRRenderScale = 0.9f;
+float SSRRenderScale = 0.5f;
 
 bool VSync = 1;
 
@@ -209,7 +209,7 @@ int main()
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(3056, 3056);
+	GLClasses::DepthBuffer ShadowMap(4096, 4096);
 
 	// Setup the basic vao
 
@@ -258,12 +258,15 @@ int main()
 		float wx = app.GetWidth() * RenderScale, wy = app.GetHeight() * RenderScale;
 
 		MainRenderFBO.SetDimensions(wx, wy);
+		SecondaryRenderFBO.SetDimensions(wx, wy);
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
-		AlternateFBO.SetSize(wx, wy);
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
-		SSRFBO.SetSize(wx, wy);
+		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 
-		// -----------
+		// ----------------- //
+
+		Blocks::BlocksRenderBuffer& CurrentlyUsedFBO = (app.GetCurrentFrame() % 2 == 0) ? MainRenderFBO : SecondaryRenderFBO;
+		Blocks::BlocksRenderBuffer& PreviousFrameFBO = (app.GetCurrentFrame() % 2 == 0) ? SecondaryRenderFBO : MainRenderFBO;
 
 		glfwSwapInterval(VSync);
 
@@ -272,18 +275,77 @@ int main()
 
 		app.OnUpdate();
 
-		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged)
+		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged || 
+			app.GetCurrentFrame() % 30 == 0)
 		{
 			// Render the shadow map
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
 		}
 
+		// ---------
+		// SSR pass
+
+		if (ShouldDoSSRPass)
+		{
+			SSRFBO.Bind();
+			glViewport(0, 0, SSRFBO.GetWidth(), SSRFBO.GetHeight());
+
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+
+			SSRShader.Use();
+
+			SSRShader.SetInteger("u_NormalTexture", 1);
+			SSRShader.SetInteger("u_DepthTexture", 2);
+			SSRShader.SetInteger("u_SSRMaskTexture", 3);
+			SSRShader.SetInteger("u_NoiseTexture", 4);
+
+			SSRShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
+			SSRShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
+			SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+			SSRShader.SetFloat("u_zNear", 0.1f);
+			SSRShader.SetFloat("u_zFar", 1000.0f);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetNormalTexture());
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
+
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetSSRMaskTexture());
+
+			glActiveTexture(GL_TEXTURE4);
+			glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glUseProgram(0);
+		}
+
+		else
+		{
+			SSRFBO.Bind();
+			glViewport(0, 0, SSRFBO.GetWidth(), SSRFBO.GetHeight());
+
+			glClearColor(-1.0f, -1.0f, -1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glUseProgram(0);
+
+			glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
+		}
+
 		// Do the normal rendering
 
 		// Normal render pass
-		MainRenderFBO.Bind();
+		CurrentlyUsedFBO.Bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, MainRenderFBO.GetDimensions().first, MainRenderFBO.GetDimensions().second);
+		glViewport(0, 0, CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second);
 
 		if (ShouldRenderSkybox)
 		{
@@ -297,21 +359,6 @@ int main()
 		glFrontFace(GL_CW);
 
 		RenderShader.Use();
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetTextureArray());
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetNormalTextureArray());
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetPBRTextureArray());
-
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
-
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
 
 		RenderShader.SetMatrix4("u_Model", glm::mat4(1.0f));
 		RenderShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
@@ -328,62 +375,41 @@ int main()
 		RenderShader.SetMatrix4("u_LightViewMatrix", Blocks::ShadowMapRenderer::GetLightViewMatrix());
 		RenderShader.SetMatrix4("u_LightProjectionMatrix", Blocks::ShadowMapRenderer::GetLightProjectionMatrix());
 		
+		// Misc
 		RenderShader.SetInteger("u_BlueNoiseTexture", 4);
 		RenderShader.SetFloat("u_GraniteTexIndex", Blocks::BlockDatabase::GetBlockTexture("polished_granite", Blocks::BlockFaceType::Top));
+		RenderShader.SetInteger("u_PreviousFrameColorTexture", 5);
+		RenderShader.SetInteger("u_SSRTexture", 6);
+		RenderShader.SetVector2f("u_Dimensions", glm::vec2(app.GetWidth(), app.GetHeight()));
+		RenderShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
+
+		// Bind Textures
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetTextureArray());
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetNormalTextureArray());
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, Blocks::BlockDatabase::GetPBRTextureArray());
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());
+
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
 
 		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);
-
-		// ---------
-		// SSR pass
-
-		if (ShouldDoSSRPass)
-		{
-
-			SSRFBO.Bind();
-			glViewport(0, 0, SSRFBO.GetWidth(), SSRFBO.GetHeight());
-
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);
-
-			SSRShader.Use();
-
-			SSRShader.SetInteger("u_ColorTexture", 0);
-			SSRShader.SetInteger("u_NormalTexture", 1);
-			SSRShader.SetInteger("u_DepthTexture", 2);
-			SSRShader.SetInteger("u_SSRMaskTexture", 3);
-			SSRShader.SetInteger("u_NoiseTexture", 4);
-
-			SSRShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
-			SSRShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
-			SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
-			SSRShader.SetFloat("u_zNear", 0.1f);
-			SSRShader.SetFloat("u_zFar", 1000.0f);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetColorTexture());
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetNormalTexture());
-
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetDepthTexture());
-
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetSSRMaskTexture());
-
-			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
-
-			FBOVAO.Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			FBOVAO.Unbind();
-
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glUseProgram(0);
-		}
 
 		// ----------
 		// Volumetric lighting pass
@@ -412,7 +438,7 @@ int main()
 			VolumetricShader.SetFloat("u_Scattering", VolumetricScattering);
 
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetDepthTexture());
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, ShadowMap.GetDepthTexture());
@@ -444,10 +470,10 @@ int main()
 			BloomShader.SetInteger("u_DepthTexture", 1);
 
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetColorTexture());
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetDepthTexture());
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
 
 			FBOVAO.Bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -472,18 +498,9 @@ int main()
 		PPShader.SetBool("u_BloomEnabled", ShouldDoBloomPass);
 		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
 
-		if (ShouldDoSSRPass)
-		{
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
-		}
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
 		
-		else
-		{
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetColorTexture());
-		}
-
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
 
@@ -508,7 +525,7 @@ int main()
 	}
 }
 
-
+// Forward declarations 
 namespace Blocks
 {
 	Block GetWorldBlock(const glm::ivec3& block)
