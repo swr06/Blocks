@@ -13,5 +13,6 @@ namespace Blocks
 		float NormalTexIndex = -1;
 		float PBRTexIndex = -1;
 		float Normal = 0;
+		float AO = 0;
 	};
 }

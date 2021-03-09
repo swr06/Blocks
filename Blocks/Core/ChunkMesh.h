@@ -40,6 +40,7 @@ namespace Blocks
 	private :
 
 		void AddFace(const glm::vec3& position, BlockFaceType facetype);
+		uint8_t GetAOValue(const glm::vec3& position, BlockFaceType facetype, uint8_t vertex);
 
 		std::vector<Vertex> m_Vertices;
 		GLClasses::VertexBuffer m_VBO;

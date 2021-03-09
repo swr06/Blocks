@@ -15,6 +15,7 @@ in float v_PBRTexIndex;
 in vec3 v_Normal;
 in mat3 v_TBNMatrix;
 in vec3 v_FragPosition;
+in float v_AO;
 
 uniform vec3 u_ViewerPosition;
 uniform sampler2DArray u_BlockTextures;
@@ -105,7 +106,9 @@ void main()
 		g_F0 = mix(g_F0, g_Albedo, g_Metalness);
     }
 
-    vec3 Ambient = 0.2f * g_Albedo;
+
+    float VoxelAOValue = max(0.85f, (3.0f - v_AO) * 0.8f);
+    vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
     o_Normal = v_Normal;
@@ -209,7 +212,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR()
 {
-    float ShadowIntensity = 0.4f;
+    float ShadowIntensity = 0.5f;
     float Shadow = CalculateSunShadow() * ShadowIntensity;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
