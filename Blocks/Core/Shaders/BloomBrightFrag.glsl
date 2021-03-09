@@ -15,8 +15,7 @@ void main()
 
     vec3 Color = texture(u_Texture, v_TexCoords).rgb;
 	float Brightness = (Color.r * 0.2126f) + (Color.g * 0.7152f) + (Color.b * 0.722f);
-    Brightness *= 2.0f;
-    Brightness = sqrt(Brightness); // Delinearize the brightness
+    //Brightness = sqrt(Brightness); // Delinearize the brightness
     //Brightness = 2.0f * (1.0f - (1.0f / (Brightness + 1.0f)));
 
     // We want to avoid branching in shaders 

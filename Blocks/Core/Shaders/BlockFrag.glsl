@@ -107,7 +107,7 @@ void main()
     }
 
 
-    float VoxelAOValue = max(0.85f, (3.0f - v_AO) * 0.8f);
+    float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
     vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);

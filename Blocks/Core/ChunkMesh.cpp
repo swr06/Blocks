@@ -195,6 +195,7 @@ namespace Blocks
 
 		Vertex v1, v2, v3, v4;
 		bool reverse_texcoords = false;
+		bool reverse_ao = false;
 		glm::vec4 translation = glm::vec4(position, 0.0f);
 		float tex_index = BlockDatabase::GetBlockTexture(block.ID, facetype);
 		float normaltex_index = (float)BlockDatabase::GetBlockNormalTexture(block.ID, facetype);
@@ -221,6 +222,7 @@ namespace Blocks
 				v2.Position = translation + BottomFace[2];
 				v3.Position = translation + BottomFace[1];
 				v4.Position = translation + BottomFace[0];
+				reverse_ao = true;
 
 				break;
 			}
@@ -231,6 +233,7 @@ namespace Blocks
 				v2.Position = translation + FrontFace[2];
 				v3.Position = translation + FrontFace[1];
 				v4.Position = translation + FrontFace[0];
+				reverse_ao = true;
 
 				break;
 			}
@@ -253,6 +256,7 @@ namespace Blocks
 				v3.Position = translation + LeftFace[1];
 				v4.Position = translation + LeftFace[0];
 				reverse_texcoords = true;
+				reverse_ao = true;
 
 				break;
 			}
@@ -289,10 +293,21 @@ namespace Blocks
 		v3.PBRTexIndex = pbrtex_index;
 		v4.PBRTexIndex = pbrtex_index;
 
-		v1.AO = GetAOValue(position, facetype, 0);
-		v2.AO = GetAOValue(position, facetype, 1);
-		v3.AO = GetAOValue(position, facetype, 2);
-		v4.AO = GetAOValue(position, facetype, 3);
+		if (reverse_ao)
+		{
+			v1.AO = GetAOValue(position, facetype, 3);
+			v2.AO = GetAOValue(position, facetype, 2);
+			v3.AO = GetAOValue(position, facetype, 1);
+			v4.AO = GetAOValue(position, facetype, 0);
+		}
+		
+		else
+		{
+			v1.AO = GetAOValue(position, facetype, 0);
+			v2.AO = GetAOValue(position, facetype, 1);
+			v3.AO = GetAOValue(position, facetype, 2);
+			v4.AO = GetAOValue(position, facetype, 3);
+		}
 
 		if (reverse_texcoords)
 		{
@@ -380,7 +395,7 @@ namespace Blocks
 
 		bool b1 = !GetWorldBlock(position + Normal + AODirection1).ID == 0;
 		bool b2 = !GetWorldBlock(position + Normal + AODirection2).ID == 0;
-		bool b3 = !GetWorldBlock(position + Normal + AODirection1 - AODirection2).ID == 0;
+		bool b3 = !GetWorldBlock(position + Normal + AODirection1 + AODirection2).ID == 0;
 
 		return b1 + b2 + b3;
 	}

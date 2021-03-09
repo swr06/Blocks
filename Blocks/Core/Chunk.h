@@ -63,18 +63,19 @@ namespace Blocks
 
 		void GenerateMeshes()
 		{
-			auto t1 = std::chrono::high_resolution_clock::now();
-
 			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
 			{
 				if (m_ChunkMeshes[i].m_ChunkMeshState == ChunkMeshState::Unbuilt)
 				{
+					auto t1 = std::chrono::high_resolution_clock::now();
 					m_ChunkMeshes[i].GenerateMesh(m_ChunkData, i, m_Position);
+					auto t2 = std::chrono::high_resolution_clock::now();
+					auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+					std::cout << "\nCHUNK MESHING TOOK : " << duration << " ms";
 				}
 			}
 
-			auto t2 = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 		}
 
 		void ForceRegenerateMeshes()
