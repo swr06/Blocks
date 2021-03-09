@@ -125,17 +125,19 @@ namespace Blocks
 					float world_x = x + (chunk_pos.x * CHUNK_SIZE_X);
 					float world_z = z + (chunk_pos.y * CHUNK_SIZE_Z);
 
-					if (GetWorldBlock(glm::vec3(world_x - 1, y, world_z)).IsTransparent())
+					Block temp_block;
+
+					if (temp_block = GetWorldBlock(glm::vec3(world_x - 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Left);
 					}
 
-					if (GetWorldBlock(glm::vec3(world_x + 1, y, world_z)).IsTransparent())
+					if (temp_block = GetWorldBlock(glm::vec3(world_x + 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Right);
 					}
 
-					if (y > 0 && GetWorldBlock(glm::vec3(world_x, y - 1, world_z)).IsTransparent())
+					if (temp_block = GetWorldBlock(glm::vec3(world_x, y - 1, world_z)); y > 0 && temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
 					}
@@ -145,7 +147,7 @@ namespace Blocks
 						//AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
 					}
 
-					if (y < CHUNK_SIZE_Y - 1 && GetWorldBlock(glm::vec3(world_x, y + 1, world_z)).IsTransparent())
+					if (temp_block = GetWorldBlock(glm::vec3(world_x, y + 1, world_z)); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top);
 					}
@@ -155,12 +157,12 @@ namespace Blocks
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top);
 					}
 
-					if (GetWorldBlock(glm::vec3(world_x, y, world_z + 1)).IsTransparent())
+					if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z + 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Front);
 					}
 
-					if (GetWorldBlock(glm::vec3(world_x, y, world_z - 1)).IsTransparent())
+					if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z - 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Back);
 					}

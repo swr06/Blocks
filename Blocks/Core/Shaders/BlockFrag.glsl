@@ -132,7 +132,7 @@ void main()
         o_SSRMask = 0.0f;
     }
 
-    o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.065f);
+    o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.05f);
 
     if (u_SSREnabled) 
     {
