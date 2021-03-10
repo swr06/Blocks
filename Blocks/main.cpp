@@ -49,7 +49,7 @@ GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
 
 // Flags 
 bool ShouldRenderSkybox = true;
-bool ShouldRenderVolumetrics = true;
+bool ShouldRenderVolumetrics = false;
 bool ShouldDoBloomPass = true;
 bool ShouldDoSSRPass = false;
 
@@ -206,6 +206,7 @@ int main()
 	GLClasses::Shader VolumetricShader;
 	GLClasses::Shader BloomShader;
 	GLClasses::Shader SSRShader;
+	GLClasses::Shader WaterShader;
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -238,6 +239,8 @@ int main()
 	BloomShader.CompileShaders();
 	SSRShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/SSRFrag.glsl");
 	SSRShader.CompileShaders();
+	WaterShader.CreateShaderProgramFromFile("Core/Shaders/WaterVert.glsl", "Core/Shaders/WaterFrag.glsl");
+	WaterShader.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -274,6 +277,7 @@ int main()
 		glEnable(GL_DEPTH_TEST);
 
 		app.OnUpdate();
+		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
 		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged || 
 			app.GetCurrentFrame() % 30 == 0)
@@ -342,6 +346,7 @@ int main()
 
 		// Do the normal rendering
 
+		// ---------------------
 		// Normal render pass
 		CurrentlyUsedFBO.Bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -406,12 +411,26 @@ int main()
 		glActiveTexture(GL_TEXTURE6);
 		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
 
-		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
+		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
+
+		// ----------------
+		// Water rendering
+
+		WaterShader.Use();
+
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		WaterShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
+		WaterShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
+
+		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);
 
-		// ----------
+		// ----------------
 		// Volumetric lighting pass
 
 		if (ShouldRenderVolumetrics)

@@ -3,6 +3,8 @@
 static FastNoise NoiseGenerator(2384); // World generator
 static Random StructureGenerator;
 
+const int MAX_WATER_Y = 32;
+
 void Blocks::WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int y_level)
 {
 	for (int y = 0; y < y_level; y++)
@@ -72,6 +74,22 @@ void Blocks::WorldGenerator::GenerateChunk(Chunk* chunk)
 				SetVerticalBlocks(chunk, x, z, height);
 			}
 		}
+
+		// Set water blocks
+
+		for (int x = 0; x < CHUNK_SIZE_X; x++)
+		{
+			for (int y = 0; y < MAX_WATER_Y; y++)
+			{
+				for (int z = 0; z < CHUNK_SIZE_Z; z++)
+				{
+					if (chunk->GetBlock(x, y, z).ID == 0)
+					{
+						chunk->SetBlock(x, y, z, WATER_BLOCK_RESERVED_ID);
+					}
+				}
+			}
+		}
 	}
 
 	else
@@ -111,7 +129,7 @@ void Blocks::WorldGenerator::GenerateChunkFlora(Chunk* chunk)
 
 			uint8_t height = chunk->m_Heightmap[x][z];
 
-			if (StructureGenerator.UnsignedInt(200) == 0)
+			if (StructureGenerator.UnsignedInt(200) == 0 && height > MAX_WATER_Y + 2)
 			{
 				FillInWorldStructure(&Tree, real_x - 2, height - 1, real_z - 2);
 			}

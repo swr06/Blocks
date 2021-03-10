@@ -83,12 +83,12 @@ void main()
 		
 		if ((CurrentDepth - bias) < SampledDepth)
 		{
-			TotalFog += ComputeScattering(dot(RayDirection, -u_LightDirection)) * vec3(5.2f);
+			TotalFog += ComputeScattering(dot(RayDirection, -u_LightDirection)) * vec3(2.0f);
 		}
 
 		CurrentPosition += step_sz;
 	}
 
 	TotalFog /= NB_STEPS;
-	o_VolumetricFog = TotalFog.r;
+	o_VolumetricFog = TotalFog.r * 25.0f;
 }

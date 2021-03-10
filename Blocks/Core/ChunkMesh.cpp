@@ -77,6 +77,18 @@ namespace Blocks
 		m_VBO.VertexAttribPointer(6, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, AO));
 		m_VAO.Unbind();
 
+		m_WaterVAO.Bind();
+		m_WaterVBO.Bind();
+		IBO.Bind();
+		m_WaterVBO.VertexAttribPointer(0, 3, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Position));
+		m_WaterVBO.VertexAttribPointer(1, 2, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+		m_WaterVBO.VertexAttribPointer(2, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, AlbedoTexIndex));
+		m_WaterVBO.VertexAttribPointer(3, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, NormalTexIndex));
+		m_WaterVBO.VertexAttribPointer(4, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, PBRTexIndex));
+		m_WaterVBO.VertexAttribPointer(5, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+		m_WaterVBO.VertexAttribPointer(6, 1, GL_FLOAT, 0, sizeof(Vertex), (void*)offsetof(Vertex, AO));
+		m_WaterVAO.Unbind();
+
 		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); FrontFaceAO[0][0] = glm::vec3(-1.0f, 0.0f, 0.0f); FrontFaceAO[0][1] = glm::vec3(0.0f, -1.0f, 0.0f);
 		FrontFace[1] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); FrontFaceAO[1][0] = glm::vec3(1.0f, 0.0f, 0.0f);  FrontFaceAO[1][1] = glm::vec3(0.0f, -1.0f, 0.0f);
 		FrontFace[2] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); FrontFaceAO[2][0] = glm::vec3(1.0f, 0.0f, 0.0f);  FrontFaceAO[2][1] = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -110,6 +122,9 @@ namespace Blocks
 
 	void ChunkMesh::GenerateMesh(std::array<Block, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z>& chunk_data, int section, const glm::vec2& chunk_pos)
 	{
+		m_PolygonCount = 0;
+		m_WaterPolygonCount = 0;
+
 		int start_y = section * RENDER_CHUNK_SIZE_Y;
 		int end_y = (section * RENDER_CHUNK_SIZE_Y) + RENDER_CHUNK_SIZE_Y;
 
@@ -129,17 +144,17 @@ namespace Blocks
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x - 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Left);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Left, block);
 					}
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x + 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Right);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Right, block);
 					}
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x, y - 1, world_z)); y > 0 && temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom, block);
 					}
 
 					else if (y == 0)
@@ -149,22 +164,22 @@ namespace Blocks
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x, y + 1, world_z)); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top, block);
 					}
 
 					else if (y == CHUNK_SIZE_Y - 1)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top, block);
 					}
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z + 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Front);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Front, block);
 					}
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z - 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Back);
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Back, block);
 					}
 				}
 			}
@@ -174,6 +189,12 @@ namespace Blocks
 		{
 			m_VBO.BufferData(this->m_Vertices.size() * sizeof(Vertex), &this->m_Vertices.front(), GL_STATIC_DRAW);
 			m_Vertices.clear();
+		}
+
+		if (m_WaterVertices.size() > 0)
+		{
+			m_WaterVBO.BufferData(this->m_WaterVertices.size() * sizeof(Vertex), &this->m_WaterVertices.front(), GL_STATIC_DRAW);
+			m_WaterVertices.clear();
 		}
 
 		m_ChunkMeshState = ChunkMeshState::Built;
@@ -189,21 +210,30 @@ namespace Blocks
 		}
 	}
 
-	void ChunkMesh::AddFace(const glm::vec3& position, BlockFaceType facetype)
+	void Blocks::ChunkMesh::RenderWaterMesh()
 	{
-		Block block = GetWorldBlock(position);
+		if (m_WaterPolygonCount > 0)
+		{
+			m_WaterVAO.Bind();
+			glDrawElements(GL_TRIANGLES, m_WaterPolygonCount * 6, GL_UNSIGNED_INT, NULL);
+			m_WaterVAO.Unbind();
+		}
+	}
 
+	void ChunkMesh::AddFace(const glm::vec3& position, BlockFaceType facetype, Block& block)
+	{
 		if (block.ID == 0) { return;  }
+
+		bool isliquid = block.ID == WATER_BLOCK_RESERVED_ID;
 
 		Vertex v1, v2, v3, v4;
 		bool reverse_texcoords = false;
 		bool reverse_ao = false;
 		glm::vec4 translation = glm::vec4(position, 0.0f);
-		float tex_index = BlockDatabase::GetBlockTexture(block.ID, facetype);
-		float normaltex_index = (float)BlockDatabase::GetBlockNormalTexture(block.ID, facetype);
-		float pbrtex_index = BlockDatabase::GetBlockPBRTexture(block.ID, facetype);
+		float tex_index = isliquid ? 0 : BlockDatabase::GetBlockTexture(block.ID, facetype);
+		float normaltex_index = isliquid ? 0 : (float)BlockDatabase::GetBlockNormalTexture(block.ID, facetype);
+		float pbrtex_index = isliquid ? 0 : BlockDatabase::GetBlockPBRTexture(block.ID, facetype);
 
-		m_PolygonCount++;
 		_App_PolygonCount += 1;
 
 		switch (facetype)
@@ -332,10 +362,23 @@ namespace Blocks
 		v3.Normal = (float)facetype;
 		v4.Normal = (float)facetype;
 		
-		m_Vertices.push_back(v1);
-		m_Vertices.push_back(v2);
-		m_Vertices.push_back(v3);
-		m_Vertices.push_back(v4);
+		if (isliquid)
+		{
+			m_WaterPolygonCount++;
+			m_WaterVertices.push_back(v1);
+			m_WaterVertices.push_back(v2);
+			m_WaterVertices.push_back(v3);
+			m_WaterVertices.push_back(v4);
+		}
+
+		else
+		{
+			m_PolygonCount++;
+			m_Vertices.push_back(v1);
+			m_Vertices.push_back(v2);
+			m_Vertices.push_back(v3);
+			m_Vertices.push_back(v4);
+		}
 	}
 
 	uint8_t ChunkMesh::GetAOValue(const glm::vec3& position, BlockFaceType facetype, uint8_t vertex)

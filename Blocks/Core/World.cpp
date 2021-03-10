@@ -87,6 +87,23 @@ namespace Blocks
 		}
 	}
 
+	void World::RenderWaterChunks(const glm::vec3& position, const ViewFrustum& view_frustum)
+	{
+		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
+		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
+
+		for (int i = player_chunk_x - render_distance_x; i < player_chunk_x + render_distance_x; i++)
+		{
+			for (int j = player_chunk_z - render_distance_z; j < player_chunk_z + render_distance_z; j++)
+			{
+				if (ChunkExists(glm::ivec2(i, j)))
+				{
+					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderWaterMeshes(view_frustum, true);
+				}
+			}
+		}
+	}
+
 	void World::RenderChunks(const glm::vec3& position)
 	{
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
@@ -141,7 +158,7 @@ namespace Blocks
 					floor(position.y),
 					floor(position.z)));
 
-				if (ray_block.ID != 0)
+				if (ray_block.IsSolid())
 				{
 					glm::vec3 normal;
 
@@ -213,7 +230,6 @@ namespace Blocks
 	{
 		m_FirstUpdateDone = true;
 		GenerateChunks(position, view_frustum);
-		RenderChunks(position, view_frustum);
 	}
 
 	Chunk* World::GetChunk(const glm::ivec2& chunk_loc)

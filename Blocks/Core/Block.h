@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 
+#include "Macros.h"
+
 namespace Blocks
 {
 	namespace BlockDatabase
@@ -31,7 +33,7 @@ namespace Blocks
 
 		inline bool IsTransparent()
 		{
-			if (ID != 0)
+			if (ID != 0 && ID != WATER_BLOCK_RESERVED_ID)
 			{
 				return BlockDatabase::IsBlockTransparent(this->ID);
 			}
@@ -40,6 +42,16 @@ namespace Blocks
 			{
 				return true;
 			}
+		}
+
+		inline bool IsSolid()
+		{
+			if (ID == 0 || ID == WATER_BLOCK_RESERVED_ID)
+			{
+				return false;
+			}
+
+			return true;
 		}
 	};
 

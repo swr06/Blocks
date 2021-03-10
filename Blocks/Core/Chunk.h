@@ -113,6 +113,27 @@ namespace Blocks
 			}
 		}
 
+		void RenderWaterMeshes(const ViewFrustum& view_frustum, bool should_cull = true)
+		{
+			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
+			{
+				if (m_ChunkMeshes[i].m_ChunkMeshState == ChunkMeshState::Built)
+				{
+					if (should_cull)
+					{
+						if (view_frustum.BoxInFrustum(m_ChunkAABB))
+						{
+							m_ChunkMeshes[i].RenderWaterMesh();
+						}
+					}
+
+					else
+					{
+						m_ChunkMeshes[i].RenderWaterMesh();
+					}
+				}
+			}
+		}
 
 	private :
 

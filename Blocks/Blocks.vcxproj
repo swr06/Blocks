@@ -266,6 +266,8 @@
     <None Include="Core\Shaders\Tonemapping\unreal.glsl" />
     <None Include="Core\Shaders\VolumetricLightingFrag.glsl" />
     <None Include="Core\Shaders\VolumetricLightingVert.glsl" />
+    <None Include="Core\Shaders\WaterFrag.glsl" />
+    <None Include="Core\Shaders\WaterVert.glsl" />
     <None Include="Dependencies\fast_noise\LICENSE" />
     <None Include="Dependencies\fast_noise\README.md" />
   </ItemGroup>

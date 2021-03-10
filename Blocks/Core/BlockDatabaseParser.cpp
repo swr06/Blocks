@@ -1,4 +1,5 @@
 #include "BlockDatabaseParser.h"
+#include "Macros.h"
 
 namespace Blocks
 {
@@ -8,6 +9,8 @@ namespace Blocks
 	{
 		static uint8_t v = 0;
 		v++;
+
+		if (v == WATER_BLOCK_RESERVED_ID) { v++; }
 
 		if (v == 255)
 		{
