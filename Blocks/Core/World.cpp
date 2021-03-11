@@ -12,8 +12,8 @@ namespace Blocks
 #else _RELEASE
 	int render_distance_x = 6;
 	int render_distance_z = 6;
-	int build_distance_x = render_distance_x + 2;
-	int build_distance_z = render_distance_z + 2;
+	int build_distance_x = render_distance_x + 3;
+	int build_distance_z = render_distance_z + 3;
 	int flora_build_distance_x = render_distance_x + 1;
 	int flora_build_distance_z = render_distance_z + 1;
 #endif
@@ -53,6 +53,7 @@ namespace Blocks
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
 					WorldGenerator::GenerateChunkFlora(&m_WorldChunks.at(std::pair<int, int>(i, j)));
+					m_WorldChunks.at(std::pair<int, int>(i, j)).m_ChunkGenerationState = ChunkGenerationState::GeneratedAndPlanted;
 				}
 			}
 		}
@@ -63,7 +64,6 @@ namespace Blocks
 			{
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
-					m_WorldChunks.at(std::pair<int, int>(i, j)).m_ChunkGenerationState = ChunkGenerationState::GeneratedAndPlanted;
 					m_WorldChunks.at(std::pair<int, int>(i, j)).GenerateMeshes();
 				}
 			}

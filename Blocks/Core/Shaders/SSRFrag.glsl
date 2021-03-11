@@ -103,7 +103,7 @@ vec2 ComputeReflection()
 			float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
 			float diff = CurrentDepth - SampleDepth;
 
-			if(diff >= 0 && diff < 0.25f)
+			if(diff >= 0 && diff < 0.5f)
 			{
 				ScreenSpaceVector *= StepRefinementAmount;
 				CurrentPosition = OldPosition;

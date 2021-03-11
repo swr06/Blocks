@@ -427,12 +427,14 @@ int main()
 		WaterShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
 		WaterShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
 
-		// SSR
 		WaterShader.SetInteger("u_PreviousFrameColorTexture", 0);
 		WaterShader.SetInteger("u_SSRTexture", 1);
 		WaterShader.SetInteger("u_NoiseTexture", 2);
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(app.GetWidth(), app.GetHeight()));
 		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
+		WaterShader.SetFloat("u_Time", glfwGetTime());
+		WaterShader.SetVector3f("u_SunDirection", glm::normalize(-SunDirection));
+		WaterShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());
