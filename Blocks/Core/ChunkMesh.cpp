@@ -152,22 +152,22 @@ namespace Blocks
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Right, block);
 					}
 
-					if (temp_block = GetWorldBlock(glm::vec3(world_x, y - 1, world_z)); y > 0 && temp_block.IsTransparent() && temp_block.ID != block.ID)
-					{
-						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom, block);
-					}
-
-					else if (y == 0)
+					if (y == 0)
 					{
 						//AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
 					}
 
-					if (temp_block = GetWorldBlock(glm::vec3(world_x, y + 1, world_z)); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && temp_block.ID != block.ID)
+					else if (temp_block = GetWorldBlock(glm::vec3(world_x, y - 1, world_z)); y > 0 && temp_block.IsTransparent() && temp_block.ID != block.ID)
+					{
+						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom, block);
+					}
+
+					if (y == CHUNK_SIZE_Y - 1)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top, block);
 					}
 
-					else if (y == CHUNK_SIZE_Y - 1)
+					else if (temp_block = GetWorldBlock(glm::vec3(world_x, y + 1, world_z)); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
 						AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Top, block);
 					}

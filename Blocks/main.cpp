@@ -200,6 +200,7 @@ int main()
 	GLClasses::Texture Crosshair;
 	GLClasses::Texture BlueNoiseTexture;
 	GLClasses::Texture PerlinNoiseTexture;
+	GLClasses::Texture PerlinNoiseNormalTexture;
 
 	// Shaders
 	GLClasses::Shader RenderShader;
@@ -247,6 +248,7 @@ int main()
 	Crosshair.CreateTexture("Res/crosshair.png", false);
 	BlueNoiseTexture.CreateTexture("Res/Misc/blue_noise.png", false);
 	PerlinNoiseTexture.CreateTexture("Res/Misc/perlin_noise.png", false);
+	PerlinNoiseNormalTexture.CreateTexture("Res/Misc/perlin_noise_normal.png", false);
 
 	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
@@ -430,6 +432,7 @@ int main()
 		WaterShader.SetInteger("u_PreviousFrameColorTexture", 0);
 		WaterShader.SetInteger("u_SSRTexture", 1);
 		WaterShader.SetInteger("u_NoiseTexture", 2);
+		WaterShader.SetInteger("u_NoiseNormalTexture", 3);
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(app.GetWidth(), app.GetHeight()));
 		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
 		WaterShader.SetFloat("u_Time", glfwGetTime());
@@ -444,6 +447,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, PerlinNoiseTexture.GetTextureID());
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, PerlinNoiseNormalTexture.GetTextureID());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
