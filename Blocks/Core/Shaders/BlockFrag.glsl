@@ -141,7 +141,7 @@ void main()
 
         if (SSR_UV != vec2(-1.0f))
         {
-            o_Color = mix(o_Color, vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.3); 
+            o_Color = mix(o_Color, vec4(textureBicubic(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.3); 
         }
     }
 
