@@ -20,6 +20,11 @@ vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 
 void main()
 {
+    vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
+    vec2 NoiseSampleCoords = vec2(v_TexCoord);
+
+    float noise_value = texture(u_NoiseTexture, v_FragPosition.xz).r;
+
 	o_Color = vec4(vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f), 0.4f);
     o_SSRMask = 1.0f;
     o_Normal = v_Normal;
@@ -27,7 +32,6 @@ void main()
     // Mix reflection color 
 	if (u_SSREnabled) 
     {
-        vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
 
         if (SSR_UV != vec2(-1.0f))
@@ -35,6 +39,8 @@ void main()
             o_Color = mix(o_Color, vec4(textureBicubic(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.6f); 
         }
     }
+
+    o_Color = vec4(vec3(noise_value), 1.0f);
 }
 
 // Upsampling methods

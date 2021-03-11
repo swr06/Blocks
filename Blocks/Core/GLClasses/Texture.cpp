@@ -43,7 +43,7 @@ namespace GLClasses
 			glTexParameteri(type, GL_TEXTURE_WRAP_S, texwrap_s);
 			glTexParameteri(type, GL_TEXTURE_WRAP_T, texwrap_t);
 
-			glTexParameteri(type, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(type, GL_TEXTURE_MIN_FILTER, min_filter);
 			glTexParameteri(type, GL_TEXTURE_MAG_FILTER, mag_filter);
 
 			unsigned char* image = stbi_load(path.c_str(), &m_width, &m_height, &m_BPP, 0);
@@ -84,7 +84,7 @@ namespace GLClasses
 				}
 
 				glTexImage2D(type, 0, _internalformat, m_width, m_height, 0, internalformat, GL_UNSIGNED_BYTE, image);
-				glGenerateMipmap(type);
+				//glGenerateMipmap(type);
 
 				if (clean_up)
 				{

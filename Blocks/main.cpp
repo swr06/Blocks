@@ -199,6 +199,7 @@ int main()
 	// Textures
 	GLClasses::Texture Crosshair;
 	GLClasses::Texture BlueNoiseTexture;
+	GLClasses::Texture PerlinNoiseTexture;
 
 	// Shaders
 	GLClasses::Shader RenderShader;
@@ -245,6 +246,7 @@ int main()
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
 	BlueNoiseTexture.CreateTexture("Res/Misc/blue_noise.png", false);
+	PerlinNoiseTexture.CreateTexture("Res/Misc/perlin_noise.png", false);
 
 	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
@@ -437,6 +439,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, PerlinNoiseTexture.GetTextureID());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
