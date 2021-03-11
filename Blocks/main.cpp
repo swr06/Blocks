@@ -66,7 +66,7 @@ float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
 float RenderScale = 1.0f;
 float VolumetricRenderScale = 0.5f;
-float SSRRenderScale = 0.5f;
+float SSRRenderScale = 0.3f;
 
 bool VSync = 1;
 
@@ -425,6 +425,19 @@ int main()
 		WaterShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
 		WaterShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
 
+		// SSR
+		WaterShader.SetInteger("u_PreviousFrameColorTexture", 0);
+		WaterShader.SetInteger("u_SSRTexture", 1);
+		WaterShader.SetInteger("u_NoiseTexture", 2);
+		WaterShader.SetVector2f("u_Dimensions", glm::vec2(app.GetWidth(), app.GetHeight()));
+		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
+
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -502,7 +515,7 @@ int main()
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
 
-		// ----------
+		// --------------
 		// After the rendering, do the tonemapping pass
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
