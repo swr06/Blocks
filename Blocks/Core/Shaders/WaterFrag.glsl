@@ -12,34 +12,188 @@ in vec3 v_FragPosition;
 uniform sampler2D u_SSRTexture;
 uniform sampler2D u_PreviousFrameColorTexture;
 uniform sampler2D u_NoiseTexture;
+uniform sampler2D u_NoiseNormalTexture;
+uniform sampler2D u_RefractionTexture;
+
 uniform bool u_SSREnabled;
+uniform bool u_FakeRefractions;
+uniform float u_Time;
 
 uniform vec2 u_Dimensions;
+uniform vec3 u_SunDirection;
+uniform vec3 u_ViewerPosition;
 
+// Prototypes
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
+
+// Globals
+vec3 g_Normal;
+vec3 g_ViewDirection;
+vec3 g_WaterColor;
+float g_SpecularStrength;
+
+const float freq = 0.6f;
+
+// This is heavily based on SEUS V10.1
+float CalculateWaves2D(in vec2 coords) 
+{
+    float AnimationTime = u_Time * 0.9f;
+    
+    coords *= freq;
+    coords += 10.0f;
+    float waves = 0.0f;
+    coords += AnimationTime / 40.0f;
+    
+    float weight;
+    float weights;
+    
+    weight = 1.0f;
+    waves += texture(u_NoiseTexture, coords * vec2(1.9f, 1.2f) + vec2(0.0f, coords.x * 1.856f)).r * weight;
+    weights += weight;
+    coords /= 1.8f;
+    coords.x -= AnimationTime / 55.0f;
+    coords.y -= AnimationTime / 45.0f;
+
+    weight = 2.24f;
+    waves += texture(u_NoiseTexture, coords * vec2(1.5f, 1.3f) + vec2(0.0f,coords.x * -1.96f)).r * weight;
+    weights += weight;
+    coords.x += AnimationTime / 20.0f;     
+    coords.y += AnimationTime / 25.0f;
+    coords /= 1.3f;
+
+    weight = 6.2f;
+    waves += texture(u_NoiseTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * 1.265f)).r * weight;
+    weights += weight;
+    coords /= 2.2f;
+
+    coords -= AnimationTime / 22.50f;
+    weight = 8.34f;
+    waves += texture(u_NoiseTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * -1.8454f)).r * weight;
+    weights += weight;
+    
+    return waves / weights;
+}
+
+vec3 CalculateWavesNormal2D(in vec2 coords) 
+{
+    float AnimationTime = u_Time * 0.9f;
+    
+    coords *= freq;
+    coords += 10.0f;
+    vec3 waves = vec3(0.0f);
+    coords += AnimationTime / 40.0f;
+    
+    float weight;
+    float weights;
+    
+    weight = 1.0f;
+    waves += texture(u_NoiseNormalTexture, coords * vec2(1.9f, 1.2f) + vec2(0.0f, coords.x * 1.856f)).xyz * weight;
+    weights += weight;
+    coords /= 1.8f;
+    coords.x -= AnimationTime / 55.0f;
+    coords.y -= AnimationTime / 45.0f;
+
+    weight = 2.24f;
+    waves += texture(u_NoiseNormalTexture, coords * vec2(1.5f, 1.3f) + vec2(0.0f,coords.x * -1.96f)).xyz * weight;
+    weights += weight;
+    coords.x += AnimationTime / 20.0f;     
+    coords.y += AnimationTime / 25.0f;
+    coords /= 1.3f;
+
+    weight = 6.2f;
+    waves += texture(u_NoiseNormalTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * 1.265f)).xyz * weight;
+    weights += weight;
+    coords /= 2.2f;
+
+    coords -= AnimationTime / 22.50f;
+    weight = 8.34f;
+    waves += texture(u_NoiseNormalTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * -1.8454f)).xyz * weight;
+    weights += weight;
+    
+    return waves / weights;
+}
+
+float CalculateOverlayedWaves2D(in vec2 coords)
+{
+    float waves0 = CalculateWaves2D(coords);
+    float waves1 = CalculateWaves2D(-coords);
+    return sqrt(waves0 * waves1); // take geometric mean of both values
+} 
+
+vec3 CalculateOverlayedWavesNormal2D(in vec2 coords)
+{
+    vec3 waves0 = CalculateWavesNormal2D(coords);
+    vec3 waves1 = CalculateWavesNormal2D(-coords);
+    return sqrt(waves0 * waves1); // take geometric mean of both values
+} 
+
+vec3 CalculateSunLight()
+{
+	vec3 LightDirection = u_SunDirection;
+
+	float Diffuse = max(dot(g_Normal, LightDirection), 0.0f);
+
+	float Specular;
+
+    // Blinn-phong lighting
+	vec3 ReflectDir = reflect(-LightDirection, g_Normal);		
+	Specular = pow(max(dot(g_ViewDirection, ReflectDir), 0.0f), 16);
+	
+	vec3 DiffuseColor = Diffuse * g_WaterColor; 
+	vec3 SpecularColor = g_SpecularStrength * Specular * vec3(g_WaterColor) ; // To be also sampled with specular map
+
+	return vec3(vec3(0.3f * g_WaterColor) + DiffuseColor + SpecularColor);  
+}
 
 void main()
 {
-	o_Color = vec4(vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f), 0.4f);
-    o_SSRMask = 1.0f;
-    o_Normal = v_Normal;
+    vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
+    //float WaterNoiseValue = CalculateOverlayedWaves2D(v_FragPosition.xz * 0.25);
+    float WaterNoiseValue = texture(u_NoiseTexture, v_FragPosition.xz * 0.25 * u_Time * 0.0064f).r;
+
+    // Set globals
+    g_Normal = v_TBNMatrix * CalculateOverlayedWavesNormal2D(v_FragPosition.xz * 0.25f);
+
+    g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
+    g_SpecularStrength = 4000.0f;
+    g_WaterColor = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
+    
+    o_Color = vec4(CalculateSunLight() * 0.25f, 1.0f);
 
     // Mix reflection color 
 	if (u_SSREnabled) 
     {
-        vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
 
         if (SSR_UV != vec2(-1.0f))
         {
-            o_Color = mix(o_Color, vec4(textureBicubic(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.6f); 
+            vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
+            o_Color = mix(o_Color, ReflectionColor, 0.25f); 
         }
     }
+
+    if (u_FakeRefractions)
+    {
+        vec3 Refract = texture(u_RefractionTexture, ScreenSpaceCoordinates + 0.035f * WaterNoiseValue).rgb;
+        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.075f);
+        o_Color.a = 1.0f;
+    }
+
+    else 
+    {
+        o_Color.a = 0.925f;
+    }
+
+    // Output values
+    o_SSRMask = 1.0f;
+    o_Normal = v_Normal + vec3(0.05f * (WaterNoiseValue)) ;
 }
 
-// Upsampling methods
 
-vec4 cubic(float v){
+// Bicubic upsampling
+
+vec4 cubic(float v)
+{
     vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;
     vec4 s = n * n * n;
     float x = s.x;
@@ -51,12 +205,10 @@ vec4 cubic(float v){
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords)
 {
+    vec2 texSize = textureSize(sampler, 0);
+    vec2 invTexSize = 1.0 / texSize;
 
-   vec2 texSize = textureSize(sampler, 0);
-   vec2 invTexSize = 1.0 / texSize;
-
-   texCoords = texCoords * texSize - 0.5;
-
+    texCoords = texCoords * texSize - 0.5;
 
     vec2 fxy = fract(texCoords);
     texCoords -= fxy;
@@ -80,6 +232,6 @@ vec4 textureBicubic(sampler2D sampler, vec2 texCoords)
     float sy = s.z / (s.z + s.w);
 
     return mix(
-       mix(sample3, sample2, sx), mix(sample1, sample0, sx)
+        mix(sample3, sample2, sx), mix(sample1, sample0, sx)
     , sy);
 }

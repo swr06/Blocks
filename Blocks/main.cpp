@@ -43,6 +43,8 @@ Blocks::World MainWorld;
 // Framebuffers, Renderbuffers and depth buffers
 Blocks::BlocksRenderBuffer MainRenderFBO(800, 600);
 Blocks::BlocksRenderBuffer SecondaryRenderFBO(800, 600);
+GLClasses::Framebuffer TempFBO(800, 600, false, true);
+
 GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer SSRFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
@@ -52,6 +54,7 @@ bool ShouldRenderSkybox = true;
 bool ShouldRenderVolumetrics = false;
 bool ShouldDoBloomPass = true;
 bool ShouldDoSSRPass = false;
+bool ShouldDoFakeRefractions = true;
 
 // Flags that change from frame to frame
 bool PlayerMoved = false;
@@ -116,6 +119,7 @@ public:
 			ImGui::Checkbox("Render Volumetrics?", &ShouldRenderVolumetrics);
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
 			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
+			ImGui::Checkbox("Fake Refractions?", &ShouldDoFakeRefractions);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
 			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
 			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.1f);
@@ -199,6 +203,8 @@ int main()
 	// Textures
 	GLClasses::Texture Crosshair;
 	GLClasses::Texture BlueNoiseTexture;
+	GLClasses::Texture PerlinNoiseTexture;
+	GLClasses::Texture PerlinNoiseNormalTexture;
 
 	// Shaders
 	GLClasses::Shader RenderShader;
@@ -245,6 +251,8 @@ int main()
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
 	BlueNoiseTexture.CreateTexture("Res/Misc/blue_noise.png", false);
+	PerlinNoiseTexture.CreateTexture("Res/Misc/perlin_noise.png", false);
+	PerlinNoiseNormalTexture.CreateTexture("Res/Misc/perlin_noise_normal.png", false);
 
 	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
@@ -262,6 +270,7 @@ int main()
 
 		MainRenderFBO.SetDimensions(wx, wy);
 		SecondaryRenderFBO.SetDimensions(wx, wy);
+		TempFBO.SetSize(wx, wy);
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
@@ -413,30 +422,64 @@ int main()
 
 		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 
+		// ---------------	
+		// Blit the fbo to a temporary one for fake refractions
+
+		if (ShouldDoFakeRefractions)
+		{
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+
+			CurrentlyUsedFBO.Bind();
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, TempFBO.GetFramebuffer());
+			glBlitFramebuffer(0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), 0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+		
 		// ----------------
 		// Water rendering
 
+		CurrentlyUsedFBO.Bind();
 		WaterShader.Use();
 
+		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		if (!ShouldDoFakeRefractions)
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
 
 		WaterShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
 		WaterShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
 
-		// SSR
 		WaterShader.SetInteger("u_PreviousFrameColorTexture", 0);
 		WaterShader.SetInteger("u_SSRTexture", 1);
 		WaterShader.SetInteger("u_NoiseTexture", 2);
+		WaterShader.SetInteger("u_NoiseNormalTexture", 3);
+		WaterShader.SetInteger("u_RefractionTexture", 5);
+
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(app.GetWidth(), app.GetHeight()));
 		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
+		WaterShader.SetBool("u_FakeRefractions", ShouldDoFakeRefractions);
+		WaterShader.SetFloat("u_Time", glfwGetTime());
+		WaterShader.SetVector3f("u_SunDirection", glm::normalize(-SunDirection));
+		WaterShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, PerlinNoiseTexture.GetTextureID());
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, PerlinNoiseNormalTexture.GetTextureID());
+
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, TempFBO.GetTexture());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 

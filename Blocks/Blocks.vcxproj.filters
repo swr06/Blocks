@@ -166,9 +166,6 @@
     <ClCompile Include="Core\ViewFrustum.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
-    <ClCompile Include="Core\NoiseTextureGenerator.cpp">
-      <Filter>Source Files\Blocks</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -309,9 +306,6 @@
     <ClInclude Include="Core\ViewFrustum.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
-    <ClInclude Include="Core\NoiseTextureGenerator.h">
-      <Filter>Source Files\Blocks</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">
@@ -396,6 +390,9 @@
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Core\Shaders\WaterVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\FBOFrag.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>
