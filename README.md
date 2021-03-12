@@ -23,6 +23,8 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Atmospheric Scattering
 - Day/Night cycle
 - Weather
+- CSM
+- VSM Shadows
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
