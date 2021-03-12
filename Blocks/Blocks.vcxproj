@@ -248,6 +248,7 @@
     <None Include="Core\Shaders\BloomBrightFrag.glsl" />
     <None Include="Core\Shaders\DepthFrag.glsl" />
     <None Include="Core\Shaders\DepthVert.glsl" />
+    <None Include="Core\Shaders\FBOFrag.glsl" />
     <None Include="Core\Shaders\FBOVert.glsl" />
     <None Include="Core\Shaders\SkyboxFrag.glsl" />
     <None Include="Core\Shaders\SkyboxVertex.glsl" />

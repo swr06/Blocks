@@ -13,7 +13,10 @@ uniform sampler2D u_SSRTexture;
 uniform sampler2D u_PreviousFrameColorTexture;
 uniform sampler2D u_NoiseTexture;
 uniform sampler2D u_NoiseNormalTexture;
+uniform sampler2D u_RefractionTexture;
+
 uniform bool u_SSREnabled;
+uniform bool u_FakeRefractions;
 uniform float u_Time;
 
 uniform vec2 u_Dimensions;
@@ -169,11 +172,21 @@ void main()
         }
     }
 
-    o_Color.a = 0.95f;
+    if (u_FakeRefractions)
+    {
+        vec3 Refract = texture(u_RefractionTexture, ScreenSpaceCoordinates + 0.035f * WaterNoiseValue).rgb;
+        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.075f);
+        o_Color.a = 1.0f;
+    }
+
+    else 
+    {
+        o_Color.a = 0.925f;
+    }
 
     // Output values
     o_SSRMask = 1.0f;
-    o_Normal = v_Normal + vec3(0.1f * (WaterNoiseValue));
+    o_Normal = v_Normal + vec3(0.05f * (WaterNoiseValue)) ;
 }
 
 
