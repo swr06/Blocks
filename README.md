@@ -3,29 +3,33 @@ A Voxel Engine that has emphasis on graphics and performance.
 
 # Planned Features
 - Greedy Meshing
-- Procedural Terrain Generation
-- Efficient Chunk Renderer
-- PBR Lighting
-- Normal Mapping
-- SSR
-- Sun casting
-- Shadow Mapping 
-- Water with reflections
-- Volumetric Lighting
+- Procedural Terrain Generation ✓   
+- Efficient Chunk Renderer ✓
+- PBR Lighting ✓
+- Normal Mapping ✓
+- SSR ✓
+- Sun casting ✓
+- Shadow Mapping ✓
+- Water with reflections ✓
+- Volumetric Lighting ✓
+- Skybox ✓
+- Alpha Blending ✓
+- Ambient Occlusion ✓
+- Bloom ✓ 
+- Voxel Lighting
+- Voxel GI
 - Depth of Field
 - Motion Blur
-- Skybox
-- Alpha Blending
-- Ambient Occlusion
-- Bloom
+- Atmospheric Scattering
+- Day/Night cycle
+- Weather
+- CSM
+- VSM Shadows
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
 - Global illumination
 - Atmospheric effect 
-
-# Note 
-This project is purely educational (To Learn more about Computer Graphics). I own none of the assets. </br>
 
 # Test Environment <br>
 CPU : Ryzen 3 2200G <br>
@@ -37,5 +41,8 @@ Target FPS : 60 FPS <br>
 - Dekrain
 - Kiroma
 - g h o s t
-- UglySwedishFish
+- UglySwedishFish (WorldTeller)
 - ShadaxStack (fuzdex)
+
+# Note 
+This project is purely educational (To Learn more about Computer Graphics). I own none of the assets. </br>
