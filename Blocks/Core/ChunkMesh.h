@@ -40,7 +40,7 @@ namespace Blocks
 
 	private :
 
-		void AddFace(const glm::vec3& position, BlockFaceType facetype, Block& block);
+		void AddFace(const glm::vec3& position, const glm::ivec3& chunk_position, BlockFaceType facetype, Block& block);
 		uint8_t GetAOValue(const glm::vec3& position, BlockFaceType facetype, uint8_t vertex);
 
 		std::vector<Vertex> m_Vertices;
@@ -58,5 +58,6 @@ namespace Blocks
 		friend class Chunk;
 
 		ChunkMeshState m_ChunkMeshState = ChunkMeshState::Unbuilt;
+		glm::vec3 m_ChunkMeshPosition = glm::vec3(0.0f);
 	};
 }

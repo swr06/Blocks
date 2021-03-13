@@ -12,6 +12,7 @@
 #include "Block.h"
 #include "Macros.h"
 #include "WorldGenerator.h"
+#include "GLClasses/Shader.h"
 
 namespace Blocks
 {
@@ -27,9 +28,9 @@ namespace Blocks
 		glm::ivec3 WorldToChunkCoords(const glm::ivec3& world_loc);
 
 		void Update(const glm::vec3& position, const ViewFrustum& view_frustum);
-		void RenderChunks(const glm::vec3& position, const ViewFrustum& view_frustum);
-		void RenderWaterChunks(const glm::vec3& position, const ViewFrustum& view_frustum);
-		void RenderChunks(const glm::vec3& position);
+		void RenderChunks(const glm::vec3& position, const ViewFrustum& view_frustum, GLClasses::Shader& shader);
+		void RenderWaterChunks(const glm::vec3& position, const ViewFrustum& view_frustum, GLClasses::Shader& shader);
+		void RenderChunks(const glm::vec3& position, GLClasses::Shader& shader);
 		void RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir);
 		void ChangeCurrentBlock();
 

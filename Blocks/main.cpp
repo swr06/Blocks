@@ -420,7 +420,7 @@ int main()
 		glActiveTexture(GL_TEXTURE6);
 		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
 
-		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
+		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, RenderShader);
 
 		// ---------------	
 		// Blit the fbo to a temporary one for fake refractions
@@ -481,7 +481,7 @@ int main()
 		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_2D, TempFBO.GetTexture());
 
-		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
+		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);

@@ -12,6 +12,7 @@
 #include "Application/Logger.h"
 #include "ChunkMesh.h"
 #include "ViewFrustum.h"
+#include "GLClasses/Shader.h"
 
 namespace Blocks
 {
@@ -91,7 +92,7 @@ namespace Blocks
 			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 		}
 
-		void RenderMeshes(const ViewFrustum& view_frustum, bool should_cull = true)
+		void RenderMeshes(const ViewFrustum& view_frustum, GLClasses::Shader& shader, bool should_cull = true)
 		{
 			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
 			{
@@ -101,19 +102,21 @@ namespace Blocks
 					{
 						if (view_frustum.BoxInFrustum(m_ChunkAABB))
 						{
+							shader.SetVector3f("u_ChunkPosition", m_ChunkMeshes[i].m_ChunkMeshPosition);
 							m_ChunkMeshes[i].Render();
 						}
 					}
 					
 					else
 					{
+						shader.SetVector3f("u_ChunkPosition", m_ChunkMeshes[i].m_ChunkMeshPosition);
 						m_ChunkMeshes[i].Render();
 					}
 				}
 			}
 		}
 
-		void RenderWaterMeshes(const ViewFrustum& view_frustum, bool should_cull = true)
+		void RenderWaterMeshes(const ViewFrustum& view_frustum, GLClasses::Shader& shader, bool should_cull = true)
 		{
 			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
 			{
@@ -123,12 +126,14 @@ namespace Blocks
 					{
 						if (view_frustum.BoxInFrustum(m_ChunkAABB))
 						{
+							shader.SetVector3f("u_ChunkPosition", m_ChunkMeshes[i].m_ChunkMeshPosition);
 							m_ChunkMeshes[i].RenderWaterMesh();
 						}
 					}
 
 					else
 					{
+						shader.SetVector3f("u_ChunkPosition", m_ChunkMeshes[i].m_ChunkMeshPosition);
 						m_ChunkMeshes[i].RenderWaterMesh();
 					}
 				}

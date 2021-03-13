@@ -70,7 +70,7 @@ namespace Blocks
 		}
 	}
 
-	void World::RenderChunks(const glm::vec3& position, const ViewFrustum& view_frustum)
+	void World::RenderChunks(const glm::vec3& position, const ViewFrustum& view_frustum, GLClasses::Shader& shader)
 	{
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
 		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
@@ -81,13 +81,13 @@ namespace Blocks
 			{
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
-					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes(view_frustum, true);
+					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes(view_frustum, shader, true);
 				}
 			}
 		}
 	}
 
-	void World::RenderWaterChunks(const glm::vec3& position, const ViewFrustum& view_frustum)
+	void World::RenderWaterChunks(const glm::vec3& position, const ViewFrustum& view_frustum, GLClasses::Shader& shader)
 	{
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
 		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
@@ -98,13 +98,13 @@ namespace Blocks
 			{
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
-					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderWaterMeshes(view_frustum, true);
+					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderWaterMeshes(view_frustum, shader, true);
 				}
 			}
 		}
 	}
 
-	void World::RenderChunks(const glm::vec3& position)
+	void World::RenderChunks(const glm::vec3& position, GLClasses::Shader& shader)
 	{
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
 		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
@@ -115,7 +115,7 @@ namespace Blocks
 			{
 				if (ChunkExists(glm::ivec2(i, j)))
 				{
-					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes(ViewFrustum(), false);
+					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes(ViewFrustum(), shader, false);
 				}
 			}
 		}

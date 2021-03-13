@@ -156,9 +156,9 @@ void main()
 
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
     g_SpecularStrength = 4000.0f;
-    g_WaterColor = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
+    g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     
-    o_Color = vec4(CalculateSunLight() * 0.25f, 1.0f);
+    o_Color = vec4(CalculateSunLight(), 1.0f);
 
     // Mix reflection color 
 	if (u_SSREnabled) 
@@ -175,7 +175,7 @@ void main()
     if (u_FakeRefractions)
     {
         vec3 Refract = texture(u_RefractionTexture, ScreenSpaceCoordinates + 0.035f * WaterNoiseValue).rgb;
-        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.075f);
+        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.1f);
         o_Color.a = 1.0f;
     }
 
