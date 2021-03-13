@@ -128,7 +128,7 @@ namespace Blocks
 		int start_y = section * RENDER_CHUNK_SIZE_Y;
 		int end_y = (section * RENDER_CHUNK_SIZE_Y) + RENDER_CHUNK_SIZE_Y;
 
-		m_ChunkMeshPosition = glm::vec3(chunk_pos.x, section, chunk_pos.y);
+		m_ChunkMeshPosition = glm::vec3(chunk_pos.x, 0.0f, chunk_pos.y);
 
 		for (int x = 0; x < CHUNK_SIZE_X; x++)
 		{

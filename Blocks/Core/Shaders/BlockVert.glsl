@@ -49,7 +49,7 @@ out float v_AO;
 void main()
 {
 	vec3 RealPosition;
-	RealPosition = vec3(a_Position.x + (u_ChunkPosition.x * RENDER_CHUNK_SIZE_X), a_Position.y + (u_ChunkPosition.y * RENDER_CHUNK_SIZE_Y), 
+	RealPosition = vec3(a_Position.x + (u_ChunkPosition.x * RENDER_CHUNK_SIZE_X), a_Position.y, 
 	a_Position.z + (u_ChunkPosition.z * RENDER_CHUNK_SIZE_Z)); 
 
 	gl_Position = u_Projection * u_View * vec4(RealPosition, 1.0);
