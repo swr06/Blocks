@@ -47,6 +47,7 @@ vec3 g_Normal;
 vec3 g_F0;
 float g_Roughness = 0.1f;
 float g_Metalness = 0.1f;
+float g_Emissive = 0.0f;
 
 //const vec3 SUN_COLOR = vec3(252.0f / 255.0f, 212.0f / 255.0f, 64.0f / 255.0f);
 const vec3 SUN_COLOR = vec3(1.0f) * 2.5f;
@@ -111,6 +112,7 @@ void main()
         vec3 PBR_Color = texture(u_BlockPBRTextures, vec3(v_TexCoord, v_PBRTexIndex)).xyz;
         g_Roughness = 1.0f - PBR_Color.x;
         g_Metalness = max(0.01f, PBR_Color.z);
+        g_Emissive = PBR_Color.y;
 
         g_F0 = vec3(0.04f); 
 		g_F0 = mix(g_F0, g_Albedo, g_Metalness);
@@ -133,8 +135,9 @@ void main()
         o_SSRMask = 0.0f;
     }
 
-    o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.05f);
-    o_Color.xyz *= max(v_LampLightValue, 0.4f);
+    o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.025f);
+    o_Color.xyz *= max(v_LampLightValue, 0.8f);
+    o_Color.xyz *= max(1.0f, g_Emissive * 3.5f);
 
     if (u_SSREnabled) 
     {
