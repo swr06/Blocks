@@ -111,6 +111,13 @@
 }
 
 {
+	Name : redstone_lamp_on
+	Albedo : Res/redstone_lamp_on.png
+	Normal : Res/redstone_lamp_on_n.png
+	PBR : Res/redstone_lamp_on_s.png
+}
+
+{
 	Name : blue_wool
 	Albedo : Res/blue_wool.png
 	Normal : Res/blue_wool_n.png

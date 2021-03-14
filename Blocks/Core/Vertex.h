@@ -34,9 +34,9 @@ namespace Blocks
 		uint8_t PBRTexIndex = -1;
 		uint8_t Normal = 0;
 		uint8_t AO = 0;
+		uint8_t Light = 0;
 
 		// Padding
-		uint8_t T1 = 0;
 		uint8_t T2 = 0;
 		uint8_t T3 = 0;
 	};

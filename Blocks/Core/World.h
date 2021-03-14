@@ -7,12 +7,15 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <utility>
+#include <stack>
+#include <queue>
 
 #include "Chunk.h"
 #include "Block.h"
 #include "Macros.h"
 #include "WorldGenerator.h"
 #include "GLClasses/Shader.h"
+#include "LightNode.h"
 
 namespace Blocks
 {
@@ -23,9 +26,12 @@ namespace Blocks
 		World() {};
 
 		Block GetWorldBlock(const glm::ivec3& block_loc);
+		uint8_t GetWorldBlockLightValue(const glm::ivec3& block_loc);
+		void SetWorldBlockLightValue(const glm::ivec3& block_loc, uint8_t light);
 		Block* GetWorldBlockPtr(const glm::ivec3& block_loc);
 		std::pair<Block*, Chunk*> GetWorldBlockProps(const glm::ivec3& block_loc);
 		glm::ivec3 WorldToChunkCoords(const glm::ivec3& world_loc);
+		Chunk* GetWorldBlockChunk(const glm::ivec3& block_loc);
 
 		void Update(const glm::vec3& position, const ViewFrustum& view_frustum);
 		void RenderChunks(const glm::vec3& position, const ViewFrustum& view_frustum, GLClasses::Shader& shader);
@@ -44,5 +50,10 @@ namespace Blocks
 
 		int m_CurrentBlock = 1;
 		bool m_FirstUpdateDone = false;
+
+		// Voxel Lighting
+
+		void PropogateLight();
+		std::queue<LightNode> m_LightBFS;
 	};
 }

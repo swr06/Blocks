@@ -612,4 +612,9 @@ namespace Blocks
 	{
 		return MainWorld.GetWorldBlockPtr(block);
 	}
+
+	uint8_t GetWorldBlockLight(const glm::ivec3& block)
+	{
+		return MainWorld.GetWorldBlockLightValue(block);
+	}
 }

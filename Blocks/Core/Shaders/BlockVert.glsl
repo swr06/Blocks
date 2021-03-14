@@ -11,6 +11,7 @@ layout (location = 3) in uint a_NormalTexIndex;
 layout (location = 4) in uint a_PBRTexIndex;
 layout (location = 5) in uint a_NormalIndex;
 layout (location = 6) in uint a_AO;
+layout (location = 7) in uint a_LampLightValue;
 
 vec3 Normals[6] = { vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f),
 					vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), 
@@ -43,8 +44,8 @@ out float v_NormalTexIndex;
 out float v_PBRTexIndex;
 out mat3 v_TBNMatrix;
 out vec3 v_FragPosition;
-
 out float v_AO;
+out float v_LampLightValue;
 
 void main()
 {
@@ -71,4 +72,5 @@ void main()
 	v_TexIndex = float(a_TexIndex);
 	v_NormalTexIndex = float(a_NormalTexIndex);
 	v_PBRTexIndex = float(a_PBRTexIndex);
+	v_LampLightValue = float(a_LampLightValue) / 8.0f;
 }

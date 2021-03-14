@@ -16,6 +16,7 @@ in vec3 v_Normal;
 in mat3 v_TBNMatrix;
 in vec3 v_FragPosition;
 in float v_AO;
+in float v_LampLightValue;
 
 uniform vec3 u_ViewerPosition;
 uniform sampler2DArray u_BlockTextures;
@@ -133,6 +134,7 @@ void main()
     }
 
     o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.05f);
+    o_Color *= max(v_LampLightValue, 0.4f);
 
     if (u_SSREnabled) 
     {

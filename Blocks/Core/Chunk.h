@@ -40,11 +40,22 @@ namespace Blocks
 		{
 			m_Position = position;
 			memset(&m_ChunkData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
+			memset(&m_ChunkLightData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
 		}
 
 		inline const Block& GetBlock(uint8_t x, uint8_t y, uint8_t z) const noexcept
 		{
 			return m_ChunkData[(z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (y * CHUNK_SIZE_X) + x];
+		}
+
+		inline uint8_t GetLightLevelAt(uint8_t x, uint8_t y, uint8_t z) 
+		{
+			return m_ChunkLightData[(z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (y * CHUNK_SIZE_X) + x];
+		}
+
+		inline void SetLightLevelAt(uint8_t x, uint8_t y, uint8_t z, uint8_t light) 
+		{
+			m_ChunkLightData[(z * CHUNK_SIZE_X * CHUNK_SIZE_Y) + (y * CHUNK_SIZE_X) + x] = light;
 		}
 
 		inline void SetBlock(uint8_t x, uint8_t y, uint8_t z, const Block& block)
@@ -77,6 +88,14 @@ namespace Blocks
 				}
 			}
 
+		}
+
+		void SetChunkMeshGenerationState(ChunkMeshState state)
+		{
+			for (int i = 0; i < CHUNK_RENDER_MESH_COUNT; i++)
+			{
+				m_ChunkMeshes[i].m_ChunkMeshState = state;
+			}
 		}
 
 		void ForceRegenerateMeshes()
@@ -143,6 +162,7 @@ namespace Blocks
 	private :
 
 		std::array<Block, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z> m_ChunkData;
+		std::array<uint8_t, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z> m_ChunkLightData;
 		std::array<ChunkMesh, CHUNK_RENDER_MESH_COUNT> m_ChunkMeshes;
 		std::array<std::array<uint8_t, CHUNK_SIZE_X>, CHUNK_SIZE_Z> m_Heightmap;
 		glm::vec2 m_Position;

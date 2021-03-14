@@ -75,6 +75,7 @@ namespace Blocks
 		m_VBO.VertexAttribIPointer(4, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, PBRTexIndex));
 		m_VBO.VertexAttribIPointer(5, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 		m_VBO.VertexAttribIPointer(6, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, AO));
+		m_VBO.VertexAttribIPointer(7, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Light));
 		m_VAO.Unbind();
 
 		m_WaterVAO.Bind();
@@ -87,6 +88,7 @@ namespace Blocks
 		m_WaterVBO.VertexAttribIPointer(4, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, PBRTexIndex));
 		m_WaterVBO.VertexAttribIPointer(5, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 		m_WaterVBO.VertexAttribIPointer(6, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, AO));
+		m_WaterVBO.VertexAttribIPointer(7, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Light));
 		m_WaterVAO.Unbind();
 
 		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); FrontFaceAO[0][0] = glm::vec3(-1.0f, 0.0f, 0.0f); FrontFaceAO[0][1] = glm::vec3(0.0f, -1.0f, 0.0f);
@@ -146,12 +148,12 @@ namespace Blocks
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x - 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Left, block);
+						AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x - 1, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Left, block);
 					}
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x + 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Right, block);
+						AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x + 1, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Right, block);
 					}
 
 					if (y == 0)
@@ -161,27 +163,27 @@ namespace Blocks
 
 					else if (temp_block = GetWorldBlock(glm::vec3(world_x, y - 1, world_z)); y > 0 && temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Bottom, block);
+						AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y - 1, world_z), glm::ivec3(x, y, z), BlockFaceType::Bottom, block);
 					}
 
 					if (y == CHUNK_SIZE_Y - 1)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Top, block);
+						AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Top, block);
 					}
 
 					else if (temp_block = GetWorldBlock(glm::vec3(world_x, y + 1, world_z)); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Top, block);
+						AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y + 1, world_z), glm::ivec3(x, y, z), BlockFaceType::Top, block);
 					}
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z + 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Front, block);
+						AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z + 1), glm::ivec3(x, y, z), BlockFaceType::Front, block);
 					}
 
 					if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z - 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
 					{
-						AddFace(glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Back, block);
+						AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z - 1), glm::ivec3(x, y, z), BlockFaceType::Back, block);
 					}
 				}
 			}
@@ -219,15 +221,16 @@ namespace Blocks
 		{
 			m_WaterVAO.Bind();
 			glDrawElements(GL_TRIANGLES, m_WaterPolygonCount * 6, GL_UNSIGNED_INT, NULL);
-			m_WaterVAO.Unbind();
+			m_WaterVAO.Unbind(); 
 		}
 	}
 
-	void ChunkMesh::AddFace(const glm::vec3& position, const glm::ivec3& chunk_position, BlockFaceType facetype, Block& block)
+	void ChunkMesh::AddFace(const glm::vec3& position, const glm::vec3& neighbouring_block, const glm::ivec3& chunk_position, BlockFaceType facetype, Block& block)
 	{
 		if (block.ID == 0) { return;  }
 
 		bool isliquid = block.ID == WATER_BLOCK_RESERVED_ID;
+		uint8_t light_val = GetWorldBlockLight(neighbouring_block);
 
 		Vertex v1, v2, v3, v4;
 		bool reverse_texcoords = false;
@@ -327,6 +330,11 @@ namespace Blocks
 		v2.PBRTexIndex = pbrtex_index;
 		v3.PBRTexIndex = pbrtex_index;
 		v4.PBRTexIndex = pbrtex_index;
+
+		v1.Light = light_val;
+		v2.Light = light_val;
+		v3.Light = light_val;
+		v4.Light = light_val;
 
 		if (reverse_ao)
 		{

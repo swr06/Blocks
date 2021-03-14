@@ -131,6 +131,86 @@ namespace Blocks
 		return true;
 	}
 
+	void World::ChangeCurrentBlock()
+	{
+		m_CurrentBlock += 1;
+
+		if (m_CurrentBlock == BlockDatabase::GetNumberOfBlocksInDatabase() + 1)
+		{
+			m_CurrentBlock = 1;
+		}
+	}
+
+	void World::Update(const glm::vec3& position, const ViewFrustum& view_frustum)
+	{
+		m_FirstUpdateDone = true;
+		GenerateChunks(position, view_frustum);
+	}
+
+	Chunk* World::GetChunk(const glm::ivec2& chunk_loc)
+	{
+		if (!ChunkExists(chunk_loc)) { throw "A chunk that does not exist was trying to be accessed!"; }
+
+		return &m_WorldChunks.at({ chunk_loc.x, chunk_loc.y });
+	}
+
+	void World::PropogateLight()
+	{
+		while (!m_LightBFS.empty())
+		{
+			LightNode node = m_LightBFS.front();
+			m_LightBFS.pop();
+
+			glm::ivec3 pos = node.m_Position;
+
+			uint8_t current_light = GetWorldBlockLightValue(pos);
+			glm::ivec3 temp_pos = glm::vec3(0.0f);
+
+			if (temp_pos = glm::vec3(pos.x + 1, pos.y, pos.z); GetWorldBlock(temp_pos).ID == 0 && GetWorldBlockLightValue(temp_pos) + 2 < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, current_light - 1);
+				GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			if (temp_pos = glm::vec3(pos.x - 1, pos.y, pos.z); GetWorldBlock(temp_pos).ID == 0 && GetWorldBlockLightValue(temp_pos) + 2 < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, current_light - 1);
+				GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			if (temp_pos = glm::vec3(pos.x, pos.y + 1, pos.z); GetWorldBlock(temp_pos).ID == 0 && GetWorldBlockLightValue(temp_pos) + 2 < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, current_light - 1);
+				GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			if (temp_pos = glm::vec3(pos.x, pos.y - 1, pos.z); GetWorldBlock(temp_pos).ID == 0 && GetWorldBlockLightValue(temp_pos) + 2 < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, current_light - 1);
+				GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			if (temp_pos = glm::vec3(pos.x, pos.y, pos.z - 1); GetWorldBlock(temp_pos).ID == 0 && GetWorldBlockLightValue(temp_pos) + 2 < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, current_light - 1);
+				GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			if (temp_pos = glm::vec3(pos.x, pos.y, pos.z + 1); GetWorldBlock(temp_pos).ID == 0 && GetWorldBlockLightValue(temp_pos) + 2 < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, current_light - 1);
+				GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+		}
+	}
+
+	// (Block editing) voxel traversal algorithm
 	void World::RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir)
 	{
 		if (!m_FirstUpdateDone) { return; }
@@ -177,7 +257,7 @@ namespace Blocks
 						position = position + normal;
 					}
 
-					auto edit_block = GetWorldBlockProps(glm::vec3(
+					auto edit_block = GetWorldBlockProps(glm::ivec3(
 						floor(position.x),
 						floor(position.y),
 						floor(position.z)));
@@ -185,6 +265,19 @@ namespace Blocks
 					if (place)
 					{
 						edit_block.first->ID = m_CurrentBlock;
+
+						if (m_CurrentBlock == BlockDatabase::GetBlockID("redstone_lamp_on"))
+						{
+							SetWorldBlockLightValue(glm::ivec3(
+								floor(position.x),
+								floor(position.y),
+								floor(position.z)), 16);
+							m_LightBFS.push(LightNode(glm::vec3(
+								floor(position.x),
+								floor(position.y),
+								floor(position.z))));
+							PropogateLight();
+						}
 					}
 
 					else
@@ -216,38 +309,44 @@ namespace Blocks
 		}
 	}
 
-	void World::ChangeCurrentBlock()
-	{
-		m_CurrentBlock += 1;
 
-		if (m_CurrentBlock == BlockDatabase::GetNumberOfBlocksInDatabase())
-		{
-			m_CurrentBlock = 1;
-		}
-	}
-
-	void World::Update(const glm::vec3& position, const ViewFrustum& view_frustum)
-	{
-		m_FirstUpdateDone = true;
-		GenerateChunks(position, view_frustum);
-	}
-
-	Chunk* World::GetChunk(const glm::ivec2& chunk_loc)
-	{
-		return &m_WorldChunks.at({ chunk_loc.x, chunk_loc.y });
-	}
+	// Utility
 
 	Block World::GetWorldBlock(const glm::ivec3& block_loc)
 	{
 		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
 		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
 		int bx = block_loc.x & (CHUNK_SIZE_X - 1);
-		int by = block_loc.y; 
+		int by = block_loc.y;
 		int bz = block_loc.z & (CHUNK_SIZE_Z - 1);
 
 		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
 
 		return chunk->GetBlock(bx, by, bz);
+	}
+
+	uint8_t World::GetWorldBlockLightValue(const glm::ivec3& block_loc)
+	{
+		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
+		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
+		int bx = block_loc.x & (CHUNK_SIZE_X - 1);
+		int by = block_loc.y;
+		int bz = block_loc.z & (CHUNK_SIZE_Z - 1);
+
+		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
+		return chunk->GetLightLevelAt(bx, by, bz);
+	}
+
+	void World::SetWorldBlockLightValue(const glm::ivec3& block_loc, uint8_t light)
+	{
+		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
+		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
+		int bx = block_loc.x & (CHUNK_SIZE_X - 1);
+		int by = block_loc.y;
+		int bz = block_loc.z & (CHUNK_SIZE_Z - 1);
+
+		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
+		chunk->SetLightLevelAt(bx, by, bz, light);
 	}
 
 	Block* World::GetWorldBlockPtr(const glm::ivec3& block_loc)
@@ -286,4 +385,12 @@ namespace Blocks
 		return glm::ivec3(bx, by, bz);
 	}
 
+	Chunk* World::GetWorldBlockChunk(const glm::ivec3& block_loc)
+	{
+		int block_chunk_x = floor((float)block_loc.x / (float)CHUNK_SIZE_X);
+		int block_chunk_z = floor((float)block_loc.z / (float)CHUNK_SIZE_Z);
+
+		Chunk* chunk = GetChunk(glm::ivec2(block_chunk_x, block_chunk_z));
+		return chunk;
+	}
 }

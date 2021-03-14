@@ -218,6 +218,7 @@
     <ClInclude Include="Core\GLClasses\TextureArray.h" />
     <ClInclude Include="Core\GLClasses\VertexArray.h" />
     <ClInclude Include="Core\GLClasses\VertexBuffer.h" />
+    <ClInclude Include="Core\LightNode.h" />
     <ClInclude Include="Core\Macros.h" />
     <ClInclude Include="Core\OrthographicCamera.h" />
     <ClInclude Include="Core\Player.h" />
