@@ -210,6 +210,129 @@ namespace Blocks
 		}
 	}
 
+	void World::DepropogateLight()
+	{
+		while (!m_LightRemovalBFS.empty())
+		{
+			LightRemovalNode node = m_LightRemovalBFS.front();
+			m_LightRemovalBFS.pop();
+
+			glm::ivec3 pos = node.m_Position;
+
+			uint8_t current_light = node.m_LightValue;
+			glm::ivec3 temp_pos = glm::vec3(0.0f);
+			uint8_t neighbouring_light;
+
+			// x + 1
+			temp_pos = glm::vec3(pos.x + 1, pos.y, pos.z);
+			neighbouring_light = GetWorldBlockLightValue(temp_pos);
+
+			if (neighbouring_light != 0 && neighbouring_light < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, 0);
+				m_LightRemovalBFS.push(LightRemovalNode(temp_pos, neighbouring_light));
+			}
+
+			else if (neighbouring_light >= current_light)
+			{
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+
+			// x - 1
+
+			temp_pos = glm::vec3(pos.x - 1, pos.y, pos.z);
+			neighbouring_light = GetWorldBlockLightValue(temp_pos);
+
+			if (neighbouring_light != 0 && neighbouring_light < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, 0);
+				m_LightRemovalBFS.push(LightRemovalNode(temp_pos, neighbouring_light));
+			}
+
+			else if (neighbouring_light >= current_light)
+			{
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+
+			// y + 1
+
+			temp_pos = glm::vec3(pos.x, pos.y + 1, pos.z);
+			neighbouring_light = GetWorldBlockLightValue(temp_pos);
+
+			if (neighbouring_light != 0 && neighbouring_light < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, 0);
+				m_LightRemovalBFS.push(LightRemovalNode(temp_pos, neighbouring_light));
+			}
+
+			else if (neighbouring_light >= current_light)
+			{
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+
+			// y - 1
+
+			temp_pos = glm::vec3(pos.x, pos.y - 1, pos.z);
+			neighbouring_light = GetWorldBlockLightValue(temp_pos);
+
+			if (neighbouring_light != 0 && neighbouring_light < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, 0);
+				m_LightRemovalBFS.push(LightRemovalNode(temp_pos, neighbouring_light));
+			}
+
+			else if (neighbouring_light >= current_light)
+			{
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+
+			// z + 1
+
+			temp_pos = glm::vec3(pos.x, pos.y, pos.z + 1);
+			neighbouring_light = GetWorldBlockLightValue(temp_pos);
+
+			if (neighbouring_light != 0 && neighbouring_light < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, 0);
+				m_LightRemovalBFS.push(LightRemovalNode(temp_pos, neighbouring_light));
+			}
+
+			else if (neighbouring_light >= current_light)
+			{
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+
+			// z - 1
+
+			temp_pos = glm::vec3(pos.x, pos.y, pos.z - 1);
+			neighbouring_light = GetWorldBlockLightValue(temp_pos);
+
+			if (neighbouring_light != 0 && neighbouring_light < current_light)
+			{
+				SetWorldBlockLightValue(temp_pos, 0);
+				m_LightRemovalBFS.push(LightRemovalNode(temp_pos, neighbouring_light));
+			}
+
+			else if (neighbouring_light >= current_light)
+			{
+				m_LightBFS.push(LightNode(temp_pos));
+			}
+
+			GetWorldBlockChunk(temp_pos)->SetChunkMeshGenerationState(ChunkMeshState::Unbuilt);
+
+		}
+	}
+
 	// (Block editing) voxel traversal algorithm
 	void World::RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir)
 	{
@@ -266,6 +389,48 @@ namespace Blocks
 					{
 						edit_block.first->ID = m_CurrentBlock;
 
+						m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+							floor(position.x),
+							floor(position.y),
+							floor(position.z)),
+							GetWorldBlockLightValue(glm::vec3(floor(position.x), floor(position.y), floor(position.z)))));
+
+						m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+							floor(position.x + 1),
+							floor(position.y),
+							floor(position.z)),
+							GetWorldBlockLightValue(glm::vec3(floor(position.x + 1), floor(position.y), floor(position.z)))));
+
+						m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+							floor(position.x - 1),
+							floor(position.y),
+							floor(position.z)),
+							GetWorldBlockLightValue(glm::vec3(floor(position.x - 1), floor(position.y), floor(position.z)))));
+
+						m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+							floor(position.x),
+							floor(position.y + 1),
+							floor(position.z)),
+							GetWorldBlockLightValue(glm::vec3(floor(position.x), floor(position.y + 1), floor(position.z)))));
+
+						m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+							floor(position.x),
+							floor(position.y - 1),
+							floor(position.z)),
+							GetWorldBlockLightValue(glm::vec3(floor(position.x), floor(position.y - 1), floor(position.z)))));
+
+						m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+							floor(position.x),
+							floor(position.y),
+							floor(position.z + 1)),
+							GetWorldBlockLightValue(glm::vec3(floor(position.x), floor(position.y), floor(position.z + 1)))));
+
+						m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+							floor(position.x),
+							floor(position.y),
+							floor(position.z - 1)),
+							GetWorldBlockLightValue(glm::vec3(floor(position.x), floor(position.y), floor(position.z - 1)))));
+
 						if (m_CurrentBlock == BlockDatabase::GetBlockID("redstone_lamp_on"))
 						{
 							SetWorldBlockLightValue(glm::ivec3(
@@ -276,13 +441,55 @@ namespace Blocks
 								floor(position.x),
 								floor(position.y),
 								floor(position.z))));
-							PropogateLight();
 						}
 					}
-
+					
 					else
 					{
+						if (edit_block.first->ID == BlockDatabase::GetBlockID("redstone_lamp_on"))
+						{
+							m_LightRemovalBFS.push(LightRemovalNode(glm::vec3(
+								floor(position.x),
+								floor(position.y),
+								floor(position.z)),
+								GetWorldBlockLightValue(glm::vec3(floor(position.x), floor(position.y), floor(position.z)))));
+
+							SetWorldBlockLightValue(glm::ivec3(
+								floor(position.x),
+								floor(position.y),
+								floor(position.z)), 0);
+						}
+
 						edit_block.first->ID = 0;
+						m_LightBFS.push(LightNode(glm::vec3(
+							floor(position.x + 1),
+							floor(position.y),
+							floor(position.z))));
+
+						m_LightBFS.push(LightNode(glm::vec3(
+							floor(position.x - 1),
+							floor(position.y),
+							floor(position.z))));
+
+						m_LightBFS.push(LightNode(glm::vec3(
+							floor(position.x),
+							floor(position.y + 1),
+							floor(position.z))));
+
+						m_LightBFS.push(LightNode(glm::vec3(
+							floor(position.x),
+							floor(position.y - 1),
+							floor(position.z))));
+
+						m_LightBFS.push(LightNode(glm::vec3(
+							floor(position.x),
+							floor(position.y),
+							floor(position.z + 1))));
+
+						m_LightBFS.push(LightNode(glm::vec3(
+							floor(position.x),
+							floor(position.y),
+							floor(position.z - 1))));
 					}
 
 					edit_block.second->ForceRegenerateMeshes();
@@ -302,6 +509,12 @@ namespace Blocks
 						chunk = GetChunk(glm::ivec2(chunk_pos.x, chunk_pos.y - 1));
 						chunk->ForceRegenerateMeshes();
 					}
+
+					// Propogate and depropogate lights
+					DepropogateLight();
+					PropogateLight();
+					DepropogateLight();
+					PropogateLight();
 
 					return;
 				}

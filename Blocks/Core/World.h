@@ -54,6 +54,8 @@ namespace Blocks
 		// Voxel Lighting
 
 		void PropogateLight();
+		void DepropogateLight();
 		std::queue<LightNode> m_LightBFS;
+		std::queue<LightRemovalNode> m_LightRemovalBFS;
 	};
 }

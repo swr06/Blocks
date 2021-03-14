@@ -22,7 +22,8 @@ namespace Blocks
 	class LightRemovalNode
 	{
 	public:
-		LightRemovalNode(const glm::vec3& position, int light, Chunk* chunk) : m_Position(position), m_LightValue(light), m_Chunk(chunk)
+
+		LightRemovalNode(const glm::vec3& position, int light) : m_Position(position), m_LightValue(light)
 		{
 
 		}
