@@ -394,7 +394,7 @@ int main()
 		RenderShader.SetFloat("u_GraniteTexIndex", Blocks::BlockDatabase::GetBlockTexture("polished_granite", Blocks::BlockFaceType::Top));
 		RenderShader.SetInteger("u_PreviousFrameColorTexture", 5);
 		RenderShader.SetInteger("u_SSRTexture", 6);
-		RenderShader.SetVector2f("u_Dimensions", glm::vec2(app.GetWidth(), app.GetHeight()));
+		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
 
 		// Bind Textures
@@ -459,7 +459,7 @@ int main()
 		WaterShader.SetInteger("u_NoiseNormalTexture", 3);
 		WaterShader.SetInteger("u_RefractionTexture", 5);
 
-		WaterShader.SetVector2f("u_Dimensions", glm::vec2(app.GetWidth(), app.GetHeight()));
+		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
 		WaterShader.SetBool("u_FakeRefractions", ShouldDoFakeRefractions);
 		WaterShader.SetFloat("u_Time", glfwGetTime());
