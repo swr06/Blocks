@@ -136,7 +136,7 @@ void main()
     }
 
     o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.025f);
-    o_Color.xyz *= max(v_LampLightValue, 0.8f);
+    o_Color.xyz *= max(v_LampLightValue * 1.2f, 1.0f);
     o_Color.xyz *= max(1.0f, g_Emissive * 3.5f);
 
     if (u_SSREnabled) 
