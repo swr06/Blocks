@@ -37,6 +37,9 @@ uniform mat4 u_Projection;
 
 uniform vec3 u_ChunkPosition;
 
+uniform mat4 u_LightViewMatrix;
+uniform mat4 u_LightProjectionMatrix;
+
 out vec2 v_TexCoord;
 out vec3 v_Normal;
 out float v_TexIndex;
@@ -46,6 +49,7 @@ out mat3 v_TBNMatrix;
 out vec3 v_FragPosition;
 out float v_AO;
 out float v_LampLightValue;
+out vec4 v_LightFragProjectionPos;
 
 void main()
 {
@@ -67,6 +71,10 @@ void main()
 	vec3 B = normalize(Bitangent);
 	vec3 N = normalize(v_Normal);
 	v_TBNMatrix = mat3(T, B, N);
+
+	v_LightFragProjectionPos = u_LightProjectionMatrix * u_LightViewMatrix * vec4(RealPosition, 1.0f);
+	v_LightFragProjectionPos.xyz = v_LightFragProjectionPos.xyz / v_LightFragProjectionPos.w; // Perspective division is not really needed for orthagonal projection but whatever
+    v_LightFragProjectionPos = v_LightFragProjectionPos * 0.5f + 0.5f;
 
 	// Texture indexes
 	v_TexIndex = float(a_TexIndex);

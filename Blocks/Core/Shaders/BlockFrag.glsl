@@ -1,7 +1,7 @@
 #version 330 core
 #define PI 3.141592653589
 #define USE_PCF
-#define PCF_COUNT 12
+#define PCF_COUNT 8
 #pragma optionNV (unroll all) // fixes loop unrolling bug on nvidia cards
 
 layout (location = 0) out vec4 o_Color;
@@ -18,6 +18,9 @@ in vec3 v_FragPosition;
 in float v_AO;
 in float v_LampLightValue;
 
+// Shadows
+in vec4 v_LightFragProjectionPos;
+
 uniform vec3 u_ViewerPosition;
 uniform sampler2DArray u_BlockTextures;
 uniform sampler2DArray u_BlockNormalTextures;
@@ -25,8 +28,7 @@ uniform sampler2DArray u_BlockPBRTextures;
 
 // Shadowing and light info
 uniform sampler2D u_LightShadowMap;
-uniform mat4 u_LightViewMatrix;
-uniform mat4 u_LightProjectionMatrix;
+
 uniform vec3 u_LightDirection;
 uniform float u_ShadowBias;
 
@@ -155,18 +157,14 @@ void main()
 
 float CalculateSunShadow()
 {
-    vec4 light_fragpos = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f);
-
-    vec3 ProjectionCoordinates = light_fragpos.xyz / light_fragpos.w; // Perspective division is not really needed for orthagonal projection but whatever
-    ProjectionCoordinates = ProjectionCoordinates * 0.5f + 0.5f;
 	float shadow = 0.0;
 
-	if (ProjectionCoordinates.z > 1.0)
+	if (v_LightFragProjectionPos.z > 1.0)
 	{
 		return 0.0f;
 	}
 
-    float Depth = ProjectionCoordinates.z;
+    float Depth = v_LightFragProjectionPos.z;
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
@@ -184,13 +182,13 @@ float CalculateSunShadow()
 	    	vec2 jitter_value;
             jitter_value = PoissonDisk[x] * dither;
 
-            float pcf = texture(u_LightShadowMap, ProjectionCoordinates.xy + jitter_value * TexelSize).r; 
+            float pcf = texture(u_LightShadowMap, v_LightFragProjectionPos.xy + jitter_value * TexelSize).r; 
 	    	shadow += (Depth - u_ShadowBias) > pcf ? 1.0 : 0.0;        
 	    }
 
 	    shadow /= float(PCF_COUNT);
     #else
-        float ClosestDepth = texture(u_LightShadowMap, ProjectionCoordinates.xy).r; 
+        float ClosestDepth = texture(u_LightShadowMap, v_LightFragProjectionPos.xy).r; 
 	    shadow = Depth - u_ShadowBias > ClosestDepth ? 1.0 : 0.0;    
     #endif
 
