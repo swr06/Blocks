@@ -52,7 +52,7 @@ float g_Metalness = 0.1f;
 float g_Emissive = 0.0f;
 
 //const vec3 SUN_COLOR = vec3(252.0f / 255.0f, 212.0f / 255.0f, 64.0f / 255.0f);
-const vec3 SUN_COLOR = vec3(1.0f * 4.0f, 1.0f * 4.0f, 0.8f * 3.5f);
+const vec3 SUN_COLOR = vec3(1.0f * 4.25f, 1.0f * 4.25f, 0.8f * 3.5f);
 const vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
 vec3 CalculateDirectionalLightPBR();
