@@ -148,8 +148,6 @@ vec3 CalculateSunLight()
 void main()
 {
     vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
-    //float WaterNoiseValue = CalculateOverlayedWaves2D(v_FragPosition.xz * 0.25);
-    float WaterNoiseValue = texture(u_NoiseTexture, v_FragPosition.xz * 0.25 * u_Time * 0.0064f).r;
 
     // Set globals
     g_Normal = v_TBNMatrix * CalculateOverlayedWavesNormal2D(v_FragPosition.xz * 0.25f);
@@ -174,19 +172,19 @@ void main()
 
     if (u_FakeRefractions)
     {
-        vec3 Refract = texture(u_RefractionTexture, ScreenSpaceCoordinates + 0.035f * WaterNoiseValue).rgb;
-        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.1f);
+        vec3 Refract = texture(u_RefractionTexture, ScreenSpaceCoordinates + (0.1 * g_Normal.xz)).rgb;
+        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.125f);
         o_Color.a = 1.0f;
     }
 
     else 
     {
-        o_Color.a = 0.925f;
+        o_Color.a = 0.85f;
     }
 
     // Output values
     o_SSRMask = 1.0f;
-    o_Normal = v_Normal + vec3(0.05f * (WaterNoiseValue)) ;
+    o_Normal = v_Normal + vec3(0.075f * (g_Normal)) ;
 }
 
 

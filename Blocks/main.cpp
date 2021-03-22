@@ -218,7 +218,7 @@ int main()
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
 	GLClasses::DepthBuffer ShadowMap(4096, 4096);
-	GLClasses::CubeReflectionMap ReflectionMap(512);
+	GLClasses::CubeReflectionMap ReflectionMap(256);
 
 	// Setup the basic vao
 
@@ -300,7 +300,7 @@ int main()
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
 		}
 
-		if ((PlayerMoved && (app.GetCurrentFrame() % 4 == 0)))
+		if (PlayerMoved && app.GetCurrentFrame() % 4 == 0)
 		{
 			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &skybox, &MainWorld);
 		}
@@ -465,6 +465,7 @@ int main()
 		WaterShader.SetInteger("u_NoiseTexture", 2);
 		WaterShader.SetInteger("u_NoiseNormalTexture", 3);
 		WaterShader.SetInteger("u_RefractionTexture", 5);
+		//WaterShader.SetInteger("u_FallbackReflectionTexture", 6);
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
@@ -487,6 +488,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_2D, TempFBO.GetTexture());
+
+		//glActiveTexture(GL_TEXTURE6);
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectionMap.GetTexture());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 

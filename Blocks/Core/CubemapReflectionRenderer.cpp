@@ -16,7 +16,7 @@ namespace Blocks
 
 		reflection_map.Bind();
 
-		glm::mat4 projection_matrix = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 64.0f);
+		glm::mat4 projection_matrix = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 128.0f);
 
 		std::array<glm::mat4, 6> view_matrices =
 		{
