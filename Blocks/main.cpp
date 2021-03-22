@@ -423,17 +423,14 @@ int main()
 		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, RenderShader);
 
 		// ---------------	
-		// Blit the fbo to a temporary one for fake refractions
+		// Blit the fbo to a temporary one for fake refractions and for bloom
 
-		if (ShouldDoFakeRefractions)
-		{
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
 
-			CurrentlyUsedFBO.Bind();
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, TempFBO.GetFramebuffer());
-			glBlitFramebuffer(0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), 0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		}
+		CurrentlyUsedFBO.Bind();
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, TempFBO.GetFramebuffer());
+		glBlitFramebuffer(0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), 0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		
 		// ----------------
 		// Water rendering
@@ -545,7 +542,7 @@ int main()
 			BloomShader.SetInteger("u_DepthTexture", 1);
 
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
+			glBindTexture(GL_TEXTURE_2D, TempFBO.GetTexture());
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
