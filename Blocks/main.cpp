@@ -300,7 +300,8 @@ int main()
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
 		}
 
-		if (PlayerMoved && app.GetCurrentFrame() % 4 == 0)
+		if ((PlayerMoved && app.GetCurrentFrame() % 4 == 0) || BlockModified || 
+			app.GetCurrentFrame() % 24 == 0)
 		{
 			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &skybox, &MainWorld);
 		}
