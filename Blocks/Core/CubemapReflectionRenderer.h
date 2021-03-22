@@ -11,12 +11,13 @@
 #include "GLClasses/CubeReflectionMap.h"
 #include "World.h"
 #include "ViewFrustum.h"
+#include "Skybox.h"
 
 namespace Blocks
 {
 	namespace CubemapReflectionRenderer
 	{
 		void Initialize();
-		void Render(GLClasses::CubeReflectionMap& reflection_map, const glm::vec3& center, const glm::vec3& light_dir, World* world);
+		void Render(GLClasses::CubeReflectionMap& reflection_map, const glm::vec3& center, const glm::vec3& light_dir, Skybox* skybox, World* world);
 	}
 }

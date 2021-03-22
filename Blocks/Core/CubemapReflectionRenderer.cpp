@@ -11,9 +11,8 @@ namespace Blocks
 		ReflectionShader->CompileShaders();
 	}
 
-	void CubemapReflectionRenderer::Render(GLClasses::CubeReflectionMap& reflection_map, const glm::vec3& center, const glm::vec3& light_dir, World* world)
+	void CubemapReflectionRenderer::Render(GLClasses::CubeReflectionMap& reflection_map, const glm::vec3& center, const glm::vec3& light_dir, Skybox* skybox, World* world)
 	{
-		ReflectionShader->Use();
 
 		reflection_map.Bind();
 
@@ -29,9 +28,6 @@ namespace Blocks
 			glm::lookAt(center, center + glm::vec3(0.0f, 0.0f,-1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 		};
 
-		ReflectionShader->SetMatrix4("u_Projection", projection_matrix);
-		ReflectionShader->SetInteger("u_BlockTextures", 0);
-
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, BlockDatabase::GetTextureArray());
 
@@ -40,9 +36,14 @@ namespace Blocks
 			ViewFrustum frustum;
 			frustum.Update(projection_matrix * view_matrices[i]);
 
-			ReflectionShader->SetMatrix4("u_View", view_matrices[i]);
-
 			reflection_map.BindFace(i);
+			skybox->RenderSkybox(projection_matrix, view_matrices[i]);
+
+			ReflectionShader->Use();
+			ReflectionShader->SetMatrix4("u_Projection", projection_matrix);
+			ReflectionShader->SetInteger("u_BlockTextures", 0);
+			ReflectionShader->SetMatrix4("u_View", view_matrices[i]);
+			ReflectionShader->SetVector3f("u_LightDirection", light_dir);
 
 			glEnable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
