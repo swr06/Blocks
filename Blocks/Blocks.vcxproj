@@ -159,8 +159,10 @@
     <ClCompile Include="Core\Camera.cpp" />
     <ClCompile Include="Core\Chunk.cpp" />
     <ClCompile Include="Core\ChunkMesh.cpp" />
+    <ClCompile Include="Core\CubemapReflectionRenderer.cpp" />
     <ClCompile Include="Core\CubeRenderer.cpp" />
     <ClCompile Include="Core\FpsCamera.cpp" />
+    <ClCompile Include="Core\GLClasses\CubeReflectionMap.cpp" />
     <ClCompile Include="Core\GLClasses\CubeTextureMap.cpp" />
     <ClCompile Include="Core\GLClasses\DepthBuffer.cpp" />
     <ClCompile Include="Core\GLClasses\Fps.cpp" />
@@ -203,8 +205,10 @@
     <ClInclude Include="Core\Camera.h" />
     <ClInclude Include="Core\Chunk.h" />
     <ClInclude Include="Core\ChunkMesh.h" />
+    <ClInclude Include="Core\CubemapReflectionRenderer.h" />
     <ClInclude Include="Core\CubeRenderer.h" />
     <ClInclude Include="Core\FpsCamera.h" />
+    <ClInclude Include="Core\GLClasses\CubeReflectionMap.h" />
     <ClInclude Include="Core\GLClasses\CubeTextureMap.h" />
     <ClInclude Include="Core\GLClasses\DepthBuffer.h" />
     <ClInclude Include="Core\GLClasses\Fps.h" />
@@ -247,6 +251,8 @@
     <None Include="Core\Shaders\2DElementShaderVert.glsl" />
     <None Include="Core\Shaders\BilateralBlurFrag.glsl" />
     <None Include="Core\Shaders\BloomBrightFrag.glsl" />
+    <None Include="Core\Shaders\CubemapReflectionFrag.glsl" />
+    <None Include="Core\Shaders\CubemapReflectionVert.glsl" />
     <None Include="Core\Shaders\DepthFrag.glsl" />
     <None Include="Core\Shaders\DepthVert.glsl" />
     <None Include="Core\Shaders\FBOFrag.glsl" />

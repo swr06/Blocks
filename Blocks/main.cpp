@@ -34,6 +34,7 @@
 #include "Core/BlocksRenderBuffer.h"
 #include "Core/GLClasses/Framebuffer.h"
 #include "Core/GLClasses/FramebufferRed.h"
+#include "Core/CubemapReflectionRenderer.h"
 
 // World, Camera, Player..
 Blocks::Player Player;
@@ -217,6 +218,7 @@ int main()
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
 	GLClasses::DepthBuffer ShadowMap(4096, 4096);
+	GLClasses::CubeReflectionMap ReflectionMap(512);
 
 	// Setup the basic vao
 
@@ -262,6 +264,9 @@ int main()
 	Blocks::ShadowMapRenderer::InitializeShadowRenderer();
 	ShadowMap.Create();
 
+	// Setup reflection map renderer
+	Blocks::CubemapReflectionRenderer::Initialize();
+
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		// Set MainRenderFBO Sizes
@@ -293,6 +298,11 @@ int main()
 		{
 			// Render the shadow map
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
+		}
+
+		//if ((PlayerMoved && (app.GetCurrentFrame() % 4 == 0)))
+		{
+			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
 		}
 
 		// ---------
