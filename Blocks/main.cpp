@@ -57,6 +57,9 @@ bool ShouldDoBloomPass = true;
 bool ShouldDoSSRPass = false;
 bool ShouldDoFakeRefractions = true;
 
+bool _Bloom = true;
+bool _SSR = true;
+
 // Flags that change from frame to frame
 bool PlayerMoved = false;
 bool BlockModified = false;
@@ -94,7 +97,7 @@ public:
 
 	void OnUserUpdate(double ts) override
 	{
-		PlayerMoved = Player.OnUpdate(m_Window);
+
 	}
 
 	void OnImguiRender(double ts) override
@@ -282,6 +285,9 @@ int main()
 
 		// ----------------- //
 
+		_SSR = ShouldDoSSRPass && (!Player.InWater);
+		_Bloom = ShouldDoBloomPass && (!Player.InWater);
+
 		Blocks::BlocksRenderBuffer& CurrentlyUsedFBO = (app.GetCurrentFrame() % 2 == 0) ? MainRenderFBO : SecondaryRenderFBO;
 		Blocks::BlocksRenderBuffer& PreviousFrameFBO = (app.GetCurrentFrame() % 2 == 0) ? SecondaryRenderFBO : MainRenderFBO;
 
@@ -292,6 +298,7 @@ int main()
 
 		app.OnUpdate();
 		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
+		PlayerMoved = Player.OnUpdate(app.GetWindow());
 
 		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged || 
 			app.GetCurrentFrame() % 30 == 0)
@@ -302,13 +309,14 @@ int main()
 
 		if (app.GetCurrentFrame() % 4 == 0)
 		{
+			// Render the reflection map
 			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &skybox, &MainWorld);
 		}
 
 		// ---------
 		// SSR pass
 
-		if (ShouldDoSSRPass)
+		if (_SSR)
 		{
 			SSRFBO.Bind();
 			glViewport(0, 0, SSRFBO.GetWidth(), SSRFBO.GetHeight());
@@ -407,7 +415,7 @@ int main()
 		RenderShader.SetInteger("u_SSRTexture", 6);
 		RenderShader.SetInteger("u_ReflectionCubemap", 7);
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
-		RenderShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
+		RenderShader.SetBool("u_SSREnabled", _SSR);
 
 		// Bind Textures
 
@@ -473,7 +481,7 @@ int main()
 		WaterShader.SetInteger("u_FallbackReflectionTexture", 6);
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
-		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
+		WaterShader.SetBool("u_SSREnabled", _SSR);
 		WaterShader.SetBool("u_FakeRefractions", ShouldDoFakeRefractions);
 		WaterShader.SetFloat("u_Time", glfwGetTime());
 		WaterShader.SetVector3f("u_SunDirection", glm::normalize(-SunDirection));
@@ -548,7 +556,7 @@ int main()
 		// --------------
 		// B L O O M.. Pass
 
-		if (ShouldDoBloomPass)
+		if (_Bloom)
 		{
 			BloomFBO.Bind();
 			glViewport(0, 0, BloomFBO.GetWidth(), BloomFBO.GetHeight());
@@ -586,8 +594,9 @@ int main()
 		PPShader.SetInteger("u_FramebufferTexture", 0);
 		PPShader.SetInteger("u_VolumetricTexture", 1);
 		PPShader.SetInteger("u_BloomTexture", 2);
-		PPShader.SetBool("u_BloomEnabled", ShouldDoBloomPass);
+		PPShader.SetBool("u_BloomEnabled", _Bloom);
 		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
+		PPShader.SetBool("u_PlayerInWater", Player.InWater);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());

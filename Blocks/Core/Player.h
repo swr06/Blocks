@@ -20,5 +20,8 @@ namespace Blocks
 		FPSCamera Camera;
 		ViewFrustum PlayerViewFrustum;
 		bool TestBlockCollision(const glm::vec3& position);
+
+
+		bool InWater = false;
 	};
 }

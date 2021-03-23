@@ -81,6 +81,19 @@ namespace Blocks
 		Camera.Refresh();
 		PlayerViewFrustum.Update(Camera.GetViewProjection());
 
+		glm::ivec3 player_block = {
+			(int)floor(Camera.GetPosition().x),
+			(int)floor(Camera.GetPosition().y),
+			(int)floor(Camera.GetPosition().z)
+		};
+
+		if (GetWorldBlockPtr(player_block)->ID == WATER_BLOCK_RESERVED_ID)
+		{
+			InWater = true;
+		}
+
+		else { InWater = false; }
+
 		return moved;
 	}
 

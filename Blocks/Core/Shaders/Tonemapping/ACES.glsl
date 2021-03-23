@@ -20,6 +20,7 @@ uniform sampler2D u_BloomTexture;
 
 uniform bool u_BloomEnabled;
 uniform bool u_VolumetricEnabled;
+uniform bool u_PlayerInWater;
 
 const vec3 SUN_COLOR = vec3(1.0);
 
@@ -42,6 +43,11 @@ void main()
     }
    
     vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
+
+    if (u_PlayerInWater)
+    {
+        HDR = HDR * vec3(76.0f / 255.0f, 100.0f / 255.0f, 156.0f / 255.0f);
+    }
 
     vec3 final_color;
     final_color = HDR + Bloom + (Volumetric * 0.1f);
