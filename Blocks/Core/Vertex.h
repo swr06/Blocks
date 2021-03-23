@@ -35,9 +35,9 @@ namespace Blocks
 		uint8_t Normal = 0;
 		uint8_t AO = 0;
 		uint8_t Light = 0;
+		uint8_t IsUnderwater = 0;
 
 		// Padding
-		uint8_t T2 = 0;
-		uint8_t T3 = 0;
+		uint8_t T1 = 0;
 	};
 }

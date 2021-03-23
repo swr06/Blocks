@@ -402,6 +402,7 @@ int main()
 		// Misc
 		RenderShader.SetInteger("u_BlueNoiseTexture", 4);
 		RenderShader.SetFloat("u_GraniteTexIndex", Blocks::BlockDatabase::GetBlockTexture("polished_granite", Blocks::BlockFaceType::Top));
+		RenderShader.SetFloat("u_Time", glfwGetTime());
 		RenderShader.SetInteger("u_PreviousFrameColorTexture", 5);
 		RenderShader.SetInteger("u_SSRTexture", 6);
 		RenderShader.SetInteger("u_ReflectionCubemap", 7);

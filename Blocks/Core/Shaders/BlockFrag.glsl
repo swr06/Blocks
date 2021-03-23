@@ -1,5 +1,6 @@
 #version 330 core
 #define PI 3.141592653589
+#define TAU 6.28318530718
 #define USE_PCF
 #define PCF_COUNT 8
 #pragma optionNV (unroll all) // fixes loop unrolling bug on nvidia cards
@@ -17,6 +18,7 @@ in mat3 v_TBNMatrix;
 in vec3 v_FragPosition;
 in float v_AO;
 in float v_LampLightValue;
+in flat int v_IsUnderwater;
 
 // Shadows
 in vec4 v_LightFragProjectionPos;
@@ -46,6 +48,8 @@ uniform samplerCube u_ReflectionCubemap;
 uniform float u_GraniteTexIndex;
 uniform vec2 u_Dimensions;
 
+uniform float u_Time;
+
 vec3 g_Albedo;
 vec3 g_Normal;
 vec3 g_F0;
@@ -62,6 +66,7 @@ vec3 RandomPointInUnitSphere();
 float nextFloat(inout int seed);
 float nextFloat(inout int seed, in float max);
 float nextFloat(inout int seed, in float min, in float max);
+vec3 CalculateCaustics();
 
 int MIN = -2147483648;
 int MAX = 2147483647;
@@ -92,7 +97,17 @@ vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
-    vec4 SampledAlbedo = texture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex));
+    vec4 SampledAlbedo;
+
+    if (v_IsUnderwater == 1)
+    {
+        SampledAlbedo = vec4(CalculateCaustics(), 1.0f);
+    }
+
+    else
+    {
+        SampledAlbedo = texture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex));
+    }
 
 	g_Normal = v_Normal;
 
@@ -198,6 +213,42 @@ float CalculateSunShadow()
     #endif
 
     return shadow;
+}
+
+
+// Caustics!
+
+vec3 CalculateCaustics()
+{
+    vec3 col;
+
+    float time = u_Time * 0.5f + 23.0f;
+	vec2 uv = v_FragPosition.xz / v_FragPosition.y; // check
+    vec2 p = mod(uv * TAU, TAU) - 250.0f;
+	vec2 i = vec2(p);
+	float c = 1.0f;
+	float inten = .005f;
+
+	for (int n = 0; n < 5; n++) 
+	{
+		float t = time * (1.0 - (3.5 / float(n+1)));
+		i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
+		c += 1.0f / length(vec2(p.x / (sin(i.x+t)/inten),p.y / (cos(i.y+t)/inten)));
+	}
+
+	c /= float(5);
+	c = 1.17 - pow(c, 1.4);
+	vec3 colour = vec3(pow(abs(c), 8.0));
+    colour = clamp((colour + vec3(0.0, 0.35, 0.5)) * 1.2, 0.0, 1.0);
+    
+	vec2 coord = v_TexCoord;    
+    vec2 tc = vec2(cos(c) - 0.75f, sin(c) - 0.75f) * 0.09f; // Distort the UV
+    coord = clamp(coord + tc, 0.0, 1.0);
+
+    col = texture(u_BlockTextures, vec3(coord, v_TexIndex)).rgb;
+    col *= vec3(colour);
+
+    return col;
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)

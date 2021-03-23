@@ -41,7 +41,7 @@ namespace Blocks
 
 	private :
 
-		void AddFace(const glm::vec3& position, const glm::vec3& neighbouring_block, const glm::ivec3& chunk_position, BlockFaceType facetype, Block& block);
+		void AddFace(const glm::vec3& position, const glm::vec3& neighbouring_block, const glm::ivec3& chunk_position, BlockFaceType facetype, Block& block, const Block& neighbouring_block_retrieved);
 		uint8_t GetAOValue(const glm::vec3& position, BlockFaceType facetype, uint8_t vertex);
 
 		std::vector<Vertex> m_Vertices;

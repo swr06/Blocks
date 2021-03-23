@@ -12,6 +12,7 @@ layout (location = 4) in uint a_PBRTexIndex;
 layout (location = 5) in uint a_NormalIndex;
 layout (location = 6) in uint a_AO;
 layout (location = 7) in uint a_LampLightValue;
+layout (location = 8) in uint a_IsUnderwater;
 
 vec3 Normals[6] = { vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f),
 					vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), 
@@ -42,6 +43,7 @@ uniform mat4 u_LightProjectionMatrix;
 
 out vec2 v_TexCoord;
 out vec3 v_Normal;
+out vec4 v_ProjectedPosition;
 out float v_TexIndex;
 out float v_NormalTexIndex;
 out float v_PBRTexIndex;
@@ -50,6 +52,7 @@ out vec3 v_FragPosition;
 out float v_AO;
 out float v_LampLightValue;
 out vec4 v_LightFragProjectionPos;
+out flat int v_IsUnderwater;
 
 void main()
 {
@@ -58,6 +61,7 @@ void main()
 	a_Position.z + (u_ChunkPosition.z * RENDER_CHUNK_SIZE_Z)); 
 
 	gl_Position = u_Projection * u_View * vec4(RealPosition, 1.0);
+
 
 	v_TexCoord = TexCoords[a_TexCoords];
 	v_FragPosition = RealPosition;
@@ -81,4 +85,6 @@ void main()
 	v_NormalTexIndex = float(a_NormalTexIndex);
 	v_PBRTexIndex = float(a_PBRTexIndex);
 	v_LampLightValue = float(a_LampLightValue) / 8.0f;
+
+	v_IsUnderwater = int(a_IsUnderwater);
 }
