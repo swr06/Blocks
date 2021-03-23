@@ -16,7 +16,8 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Alpha Blending ✓
 - Ambient Occlusion ✓
 - Bloom ✓ 
-- Voxel Lighting
+- Voxel Lighting ✓
+- Water Caustics ✓
 - Voxel GI
 - Depth of Field
 - Motion Blur
