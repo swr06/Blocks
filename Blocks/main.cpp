@@ -300,8 +300,7 @@ int main()
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
 		}
 
-		if ((PlayerMoved && app.GetCurrentFrame() % 4 == 0) || BlockModified || 
-			app.GetCurrentFrame() % 24 == 0)
+		if (app.GetCurrentFrame() % 4 == 0)
 		{
 			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &skybox, &MainWorld);
 		}
@@ -405,6 +404,7 @@ int main()
 		RenderShader.SetFloat("u_GraniteTexIndex", Blocks::BlockDatabase::GetBlockTexture("polished_granite", Blocks::BlockFaceType::Top));
 		RenderShader.SetInteger("u_PreviousFrameColorTexture", 5);
 		RenderShader.SetInteger("u_SSRTexture", 6);
+		RenderShader.SetInteger("u_ReflectionCubemap", 7);
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
 
@@ -430,6 +430,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE6);
 		glBindTexture(GL_TEXTURE_2D, SSRFBO.GetTexture());
+
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectionMap.GetTexture());
 
 		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, RenderShader);
 
@@ -466,7 +469,7 @@ int main()
 		WaterShader.SetInteger("u_NoiseTexture", 2);
 		WaterShader.SetInteger("u_NoiseNormalTexture", 3);
 		WaterShader.SetInteger("u_RefractionTexture", 5);
-		//WaterShader.SetInteger("u_FallbackReflectionTexture", 6);
+		WaterShader.SetInteger("u_FallbackReflectionTexture", 6);
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", ShouldDoSSRPass);
@@ -490,8 +493,8 @@ int main()
 		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_2D, TempFBO.GetTexture());
 
-		//glActiveTexture(GL_TEXTURE6);
-		//glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectionMap.GetTexture());
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectionMap.GetTexture());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 

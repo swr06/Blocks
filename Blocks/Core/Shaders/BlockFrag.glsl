@@ -40,6 +40,8 @@ uniform sampler2D u_SSRTexture;
 uniform sampler2D u_PreviousFrameColorTexture;
 uniform bool u_SSREnabled;
 
+uniform samplerCube u_ReflectionCubemap;
+
 // Misc
 uniform float u_GraniteTexIndex;
 uniform vec2 u_Dimensions;
@@ -127,21 +129,15 @@ void main()
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
     o_Normal = v_Normal;
 
-    if (v_TexIndex == u_GraniteTexIndex)
-    {
-        o_SSRMask = 1.0f;
-    }
+    bool reflective_block = v_TexIndex == u_GraniteTexIndex;
 
-    else 
-    {
-        o_SSRMask = 0.0f;
-    }
+    o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled);
 
     o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.025f);
     o_Color.xyz *= max(v_LampLightValue * 1.2f, 1.0f);
     o_Color.xyz *= max(1.0f, g_Emissive * 3.5f);
 
-    if (u_SSREnabled) 
+    if (u_SSREnabled && reflective_block) 
     {
         vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
@@ -150,6 +146,15 @@ void main()
         {
             o_Color = mix(o_Color, vec4(textureBicubic(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.3); 
         }
+    }
+
+    else if (reflective_block)
+    {
+        vec3 I = normalize(v_FragPosition - u_ViewerPosition);
+        vec3 R = normalize(reflect(I, v_Normal + (0.1f * g_Normal)));
+        vec3 ReflectedColor = texture(u_ReflectionCubemap, R).rgb;
+
+        o_Color = mix(o_Color, vec4(ReflectedColor, 1.0f), 0.3); 
     }
 
     //o_Color = vec4(vec3(g_Metalness), 1.0f);
