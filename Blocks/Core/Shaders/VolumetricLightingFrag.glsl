@@ -90,5 +90,5 @@ void main()
 	}
 
 	TotalFog /= NB_STEPS;
-	o_VolumetricFog = TotalFog.r * 25.0f;
+	o_VolumetricFog = TotalFog.r * 8.0f;
 }
