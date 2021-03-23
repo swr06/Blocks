@@ -7,6 +7,9 @@
 
 namespace Blocks
 {
+	Block GetWorldBlock(const glm::ivec3& block);
+	Block* GetWorldBlockPtr(const glm::ivec3& block);
+
 	class Player
 	{
 	public :
@@ -16,5 +19,6 @@ namespace Blocks
 
 		FPSCamera Camera;
 		ViewFrustum PlayerViewFrustum;
+		bool TestBlockCollision(const glm::vec3& position);
 	};
 }
