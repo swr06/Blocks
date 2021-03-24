@@ -152,9 +152,11 @@ vec3 CalculateSunLight()
 void main()
 {
     vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
+    ScreenSpaceCoordinates.x = clamp(ScreenSpaceCoordinates.x, 0.0f, 1.0f);
+    ScreenSpaceCoordinates.y = clamp(ScreenSpaceCoordinates.y, 0.0f, 1.0f);
 
     float perlin_noise = texture(u_NoiseTexture, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).r;
-    vec3 DetailNormal = texture(u_WaterDetailNormalMap, v_FragPosition.xz * 0.25f + (0.25 * u_Time) + (perlin_noise * 0.75f)).xyz;
+    vec3 DetailNormal = texture(u_WaterDetailNormalMap, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).xyz;
    
     // Set globals
     DetailNormal = v_TBNMatrix * DetailNormal;
@@ -184,7 +186,11 @@ void main()
 
     if (u_FakeRefractions)
     {
-        vec3 Refract = texture(u_RefractionTexture, ScreenSpaceCoordinates + (0.1 * g_Normal.xz)).rgb;
+        vec2 RefractTexCoords;
+        RefractTexCoords.x = ScreenSpaceCoordinates.x + ((distance(ScreenSpaceCoordinates.x, 1.0f) * 0.25f) * g_Normal.x);
+        RefractTexCoords.y = ScreenSpaceCoordinates.y + ((distance(ScreenSpaceCoordinates.y, 1.0f) * 0.25f) * g_Normal.z);
+
+        vec3 Refract = texture(u_RefractionTexture, RefractTexCoords).rgb;
         o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.125f);
         o_Color.a = 1.0f;
     }
