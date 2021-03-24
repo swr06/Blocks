@@ -46,7 +46,9 @@ void main()
 
     if (u_PlayerInWater)
     {
-        HDR = HDR * vec3(76.0f / 255.0f, 100.0f / 255.0f, 156.0f / 255.0f);
+        vec3 water_col = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
+        water_col *= 1.4f;
+        HDR = HDR * water_col;
     }
 
     vec3 final_color;

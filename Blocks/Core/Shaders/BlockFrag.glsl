@@ -223,7 +223,7 @@ vec3 CalculateCaustics()
     vec3 col;
 
     float time = u_Time * 0.5f + 23.0f;
-	vec2 uv = v_FragPosition.xz / v_FragPosition.y; // check
+	vec2 uv = v_FragPosition.xz / 10.0f; // check
     vec2 p = mod(uv * TAU, TAU) - 250.0f;
 	vec2 i = vec2(p);
 	float c = 1.0f;

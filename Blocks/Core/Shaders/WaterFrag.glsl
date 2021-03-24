@@ -14,6 +14,7 @@ uniform sampler2D u_PreviousFrameColorTexture;
 uniform sampler2D u_NoiseTexture;
 uniform sampler2D u_NoiseNormalTexture;
 uniform sampler2D u_RefractionTexture;
+uniform sampler2D u_WaterDetailNormalMap;
 
 uniform bool u_SSREnabled;
 uniform bool u_FakeRefractions;
@@ -31,6 +32,7 @@ vec3 g_Normal;
 vec3 g_ViewDirection;
 vec3 g_WaterColor;
 float g_SpecularStrength;
+vec3 g_F0;
 
 const float freq = 0.6f;
 
@@ -127,37 +129,46 @@ vec3 CalculateOverlayedWavesNormal2D(in vec2 coords)
     return sqrt(waves0 * waves1); // take geometric mean of both values
 } 
 
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
 vec3 CalculateSunLight()
 {
 	vec3 LightDirection = u_SunDirection;
-
-	float Diffuse = max(dot(g_Normal, LightDirection), 0.0f);
-
 	float Specular;
 
     // Blinn-phong lighting
 	vec3 ReflectDir = reflect(-LightDirection, g_Normal);		
 	vec3 Halfway = normalize(LightDirection + g_ViewDirection);  
-    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 8);
-	
-	vec3 DiffuseColor = Diffuse * g_WaterColor; 
-	vec3 SpecularColor = g_SpecularStrength * Specular * vec3(g_WaterColor) ; // To be also sampled with specular map
+    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 84);
 
-	return vec3(vec3(0.3f * g_WaterColor) + DiffuseColor + SpecularColor);  
+	vec3 SpecularColor = (g_SpecularStrength * Specular) * vec3(g_WaterColor) ; // To be also sampled with specular map
+
+	return vec3(vec3(0.3f * g_WaterColor) + SpecularColor);  
 }
 
 void main()
 {
     vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
 
+    float perlin_noise = texture(u_NoiseTexture, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).r;
+    vec3 DetailNormal = texture(u_WaterDetailNormalMap, v_FragPosition.xz * 0.25f + (0.25 * u_Time) + (perlin_noise * 0.75f)).xyz;
+   
     // Set globals
+    DetailNormal = v_TBNMatrix * DetailNormal;
     g_Normal = v_TBNMatrix * CalculateOverlayedWavesNormal2D(v_FragPosition.xz * 0.25f);
+    g_Normal = normalize((DetailNormal * 0.5f) + g_Normal);
 
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
-    g_SpecularStrength = 16.0f;
+    g_SpecularStrength = 2.25f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
+    g_WaterColor *= 1.4f;
     
     o_Color = vec4(CalculateSunLight(), 1.0f);
+    g_F0 = vec3(0.02f);
+    g_F0 = mix(g_F0, g_WaterColor, 0.025f);
 
     // Mix reflection color 
 	if (u_SSREnabled) 
