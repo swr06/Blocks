@@ -56,6 +56,7 @@ vec3 g_F0;
 float g_Roughness = 0.1f;
 float g_Metalness = 0.1f;
 float g_Emissive = 0.0f;
+float g_Shadow = 0.0f;
 
 //const vec3 SUN_COLOR = vec3(252.0f / 255.0f, 212.0f / 255.0f, 64.0f / 255.0f);
 const vec3 SUN_COLOR = vec3(1.0f * 4.25f, 1.0f * 4.25f, 0.8f * 3.5f);
@@ -93,10 +94,13 @@ const vec2 PoissonDisk[32] = vec2[]
 );
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
+float CalculateSunShadow();
 
 void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
+    g_Shadow = CalculateSunShadow();
+
     vec4 SampledAlbedo;
 
     if (v_IsUnderwater == 1)
@@ -239,14 +243,13 @@ vec3 CalculateCaustics()
 	c /= float(5);
 	c = 1.17 - pow(c, 1.4);
 	vec3 colour = vec3(pow(abs(c), 8.0));
-    colour = clamp((colour + vec3(0.0, 0.35, 0.5)) * 1.2, 0.0, 1.0);
+    colour = clamp((colour + vec3(0.0, 0.45, 0.57)) * 1.2, 0.0, 1.0);
     
 	vec2 coord = v_TexCoord;    
-    vec2 tc = vec2(cos(c) - 0.75f, sin(c) - 0.75f) * 0.09f; // Distort the UV
-    coord = clamp(coord + tc, 0.0, 1.0);
+    coord = clamp(coord, 0.0, 1.0);
 
     col = texture(u_BlockTextures, vec3(coord, v_TexIndex)).rgb;
-    col *= vec3(colour);
+    col *= vec3(colour) * (1.0f - (g_Shadow * 0.32f));
 
     return col;
 }
@@ -294,7 +297,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 vec3 CalculateDirectionalLightPBR()
 {
     float ShadowIntensity = 0.5f;
-    float Shadow = CalculateSunShadow() * ShadowIntensity;
+    float Shadow = g_Shadow * ShadowIntensity;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
     vec3 L = normalize(u_LightDirection);
