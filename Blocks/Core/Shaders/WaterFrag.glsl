@@ -138,7 +138,7 @@ vec3 CalculateSunLight()
     // Blinn-phong lighting
 	vec3 ReflectDir = reflect(-LightDirection, g_Normal);		
 	vec3 Halfway = normalize(LightDirection + g_ViewDirection);  
-    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 24);
+    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 8);
 	
 	vec3 DiffuseColor = Diffuse * g_WaterColor; 
 	vec3 SpecularColor = g_SpecularStrength * Specular * vec3(g_WaterColor) ; // To be also sampled with specular map
@@ -154,7 +154,7 @@ void main()
     g_Normal = v_TBNMatrix * CalculateOverlayedWavesNormal2D(v_FragPosition.xz * 0.25f);
 
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
-    g_SpecularStrength = 2500.0f;
+    g_SpecularStrength = 16.0f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     
     o_Color = vec4(CalculateSunLight(), 1.0f);

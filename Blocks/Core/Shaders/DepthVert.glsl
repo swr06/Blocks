@@ -17,8 +17,8 @@ uniform mat4 u_ViewMatrix;
 uniform mat4 u_ProjectionMatrix;
 uniform mat4 u_ViewProjectionMatrix;
 
-vec2 TexCoords[4] = { vec2(0.0f, 1.0f), vec2(1.0f, 1.0f),
-					  vec2(1.0f, 0.0f), vec2(0.0f, 0.0f) };
+vec2 TexCoords[4] = vec2[]( vec2(0.0f, 1.0f), vec2(1.0f, 1.0f),
+					  vec2(1.0f, 0.0f), vec2(0.0f, 0.0f) );
 
 void main()
 {

@@ -18,7 +18,7 @@ in mat3 v_TBNMatrix;
 in vec3 v_FragPosition;
 in float v_AO;
 in float v_LampLightValue;
-in flat int v_IsUnderwater;
+flat in int v_IsUnderwater;
 
 // Shadows
 in vec4 v_LightFragProjectionPos;
@@ -72,8 +72,8 @@ int MIN = -2147483648;
 int MAX = 2147483647;
 int RNG_SEED;
 
-const vec2 PoissonDisk[32] = 
-{
+const vec2 PoissonDisk[32] = vec2[]
+(
     vec2(-0.613392, 0.617481),  vec2(0.751946, 0.453352),
     vec2(0.170019, -0.040254),  vec2(0.078707, -0.715323),
     vec2(-0.299417, 0.791925),  vec2(-0.075838, -0.529344),
@@ -90,7 +90,7 @@ const vec2 PoissonDisk[32] =
     vec2(-0.885922, 0.215369),  vec2(-0.696890, -0.549791),
     vec2(0.566637, 0.605213),   vec2(-0.149693, 0.605762),
     vec2(0.039766, -0.396100),  vec2(0.034211, 0.979980)
-};
+);
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 

@@ -14,23 +14,23 @@ layout (location = 6) in uint a_AO;
 layout (location = 7) in uint a_LampLightValue;
 layout (location = 8) in uint a_IsUnderwater;
 
-vec3 Normals[6] = { vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f),
+vec3 Normals[6] = vec3[]( vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f),
 					vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), 
-					vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), 
-			      };
+					vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f)
+			      );
 
-vec3 Tangents[6] = { vec3(1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f),
+vec3 Tangents[6] = vec3[]( vec3(1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f),
 					 vec3(1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f),
 					 vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 0.0f, -1.0f)
-				   };
+				   );
 
-vec3 BiTangents[6] = { vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f),
+vec3 BiTangents[6] = vec3[]( vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f),
 				     vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 1.0f),
 					 vec3(0.0f, -1.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f)
-};
+);
 
-vec2 TexCoords[4] = { vec2(0.0f, 1.0f), vec2(1.0f, 1.0f),
-					  vec2(1.0f, 0.0f), vec2(0.0f, 0.0f) };
+vec2 TexCoords[4] = vec2[]( vec2(0.0f, 1.0f), vec2(1.0f, 1.0f),
+					  vec2(1.0f, 0.0f), vec2(0.0f, 0.0f) );
 
 uniform mat4 u_Model;
 uniform mat4 u_View;
@@ -52,7 +52,7 @@ out vec3 v_FragPosition;
 out float v_AO;
 out float v_LampLightValue;
 out vec4 v_LightFragProjectionPos;
-out flat int v_IsUnderwater;
+flat out int v_IsUnderwater;
 
 void main()
 {
