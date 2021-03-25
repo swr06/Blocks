@@ -210,6 +210,7 @@ int main()
 	GLClasses::Texture PerlinNoiseTexture;
 	GLClasses::Texture PerlinNoiseNormalTexture;
 	GLClasses::Texture WaterDetailNormalMap;
+	GLClasses::Texture WaterMaps[100];
 
 	// Shaders
 	GLClasses::Shader RenderShader;
@@ -260,6 +261,16 @@ int main()
 	PerlinNoiseTexture.CreateTexture("Res/Misc/perlin_noise.png", false);
 	PerlinNoiseNormalTexture.CreateTexture("Res/Misc/perlin_noise_normal.png", false);
 	WaterDetailNormalMap.CreateTexture("Res/Misc/water_detail_normal_map.png", false);
+
+	// Create the water textures
+
+	for (int i = 0; i <= 99; i++)
+	{
+		std::string name = "Res/Misc/water/Water_" + std::to_string(i) + ".png";
+		WaterMaps[i].CreateTexture(name, false);
+	}
+
+	std::cout << "Created Water Textures!";
 
 	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
@@ -482,11 +493,14 @@ int main()
 		WaterShader.SetInteger("u_RefractionTexture", 5);
 		WaterShader.SetInteger("u_FallbackReflectionTexture", 6);
 		WaterShader.SetInteger("u_WaterDetailNormalMap", 7);
+		WaterShader.SetInteger("u_WaterMap[0]", 8);
+		WaterShader.SetInteger("u_WaterMap[1]", 9);
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", _SSR);
 		WaterShader.SetBool("u_FakeRefractions", ShouldDoFakeRefractions);
 		WaterShader.SetFloat("u_Time", glfwGetTime());
+		WaterShader.SetFloat("u_MixAmount", (float)(app.GetCurrentFrame() % 4) / (float)(32.0f));
 		WaterShader.SetVector3f("u_SunDirection", -SunDirection);
 		WaterShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 
@@ -510,6 +524,15 @@ int main()
 
 		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_2D, WaterDetailNormalMap.GetTextureID());
+
+		unsigned int idx = (((app.GetCurrentFrame() / 4)) % 100 + 100) % 100;
+		unsigned int idx_1 = (((app.GetCurrentFrame() / 4) - 1) % 100 + 100) % 100;
+
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_2D, WaterMaps[idx].GetTextureID());
+
+		glActiveTexture(GL_TEXTURE9);
+		glBindTexture(GL_TEXTURE_2D, WaterMaps[idx_1].GetTextureID());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 

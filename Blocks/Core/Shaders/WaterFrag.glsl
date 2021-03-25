@@ -15,10 +15,12 @@ uniform sampler2D u_NoiseTexture;
 uniform sampler2D u_NoiseNormalTexture;
 uniform sampler2D u_RefractionTexture;
 uniform sampler2D u_WaterDetailNormalMap;
+uniform sampler2D u_WaterMap[2];
 
 uniform bool u_SSREnabled;
 uniform bool u_FakeRefractions;
 uniform float u_Time;
+uniform float u_MixAmount;
 
 uniform vec2 u_Dimensions;
 uniform vec3 u_SunDirection;
@@ -36,99 +38,6 @@ vec3 g_F0;
 
 const float freq = 0.6f;
 
-// This is heavily based on SEUS V10.1
-float CalculateWaves2D(in vec2 coords) 
-{
-    float AnimationTime = u_Time * 0.9f;
-    
-    coords *= freq;
-    coords += 10.0f;
-    float waves = 0.0f;
-    coords += AnimationTime / 40.0f;
-    
-    float weight;
-    float weights;
-    
-    weight = 1.0f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.9f, 1.2f) + vec2(0.0f, coords.x * 1.856f)).r * weight;
-    weights += weight;
-    coords /= 1.8f;
-    coords.x -= AnimationTime / 55.0f;
-    coords.y -= AnimationTime / 45.0f;
-
-    weight = 2.24f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.5f, 1.3f) + vec2(0.0f,coords.x * -1.96f)).r * weight;
-    weights += weight;
-    coords.x += AnimationTime / 20.0f;     
-    coords.y += AnimationTime / 25.0f;
-    coords /= 1.3f;
-
-    weight = 6.2f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * 1.265f)).r * weight;
-    weights += weight;
-    coords /= 2.2f;
-
-    coords -= AnimationTime / 22.50f;
-    weight = 8.34f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * -1.8454f)).r * weight;
-    weights += weight;
-    
-    return waves / weights;
-}
-
-vec3 CalculateWavesNormal2D(in vec2 coords) 
-{
-    float AnimationTime = u_Time * 0.9f;
-    
-    coords *= freq;
-    coords += 10.0f;
-    vec3 waves = vec3(0.0f);
-    coords += AnimationTime / 40.0f;
-    
-    float weight;
-    float weights;
-    
-    weight = 1.0f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.9f, 1.2f) + vec2(0.0f, coords.x * 1.856f)).xyz * weight;
-    weights += weight;
-    coords /= 1.8f;
-    coords.x -= AnimationTime / 55.0f;
-    coords.y -= AnimationTime / 45.0f;
-
-    weight = 2.24f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.5f, 1.3f) + vec2(0.0f,coords.x * -1.96f)).xyz * weight;
-    weights += weight;
-    coords.x += AnimationTime / 20.0f;     
-    coords.y += AnimationTime / 25.0f;
-    coords /= 1.3f;
-
-    weight = 6.2f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * 1.265f)).xyz * weight;
-    weights += weight;
-    coords /= 2.2f;
-
-    coords -= AnimationTime / 22.50f;
-    weight = 8.34f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * -1.8454f)).xyz * weight;
-    weights += weight;
-    
-    return waves / weights;
-}
-
-float CalculateOverlayedWaves2D(in vec2 coords)
-{
-    float waves0 = CalculateWaves2D(coords);
-    float waves1 = CalculateWaves2D(-coords);
-    return sqrt(waves0 * waves1); // take geometric mean of both values
-} 
-
-vec3 CalculateOverlayedWavesNormal2D(in vec2 coords)
-{
-    vec3 waves0 = CalculateWavesNormal2D(coords);
-    vec3 waves1 = CalculateWavesNormal2D(-coords);
-    return sqrt(waves0 * waves1); // take geometric mean of both values
-} 
-
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -142,7 +51,7 @@ vec3 CalculateSunLight()
     // Blinn-phong lighting
 	vec3 ReflectDir = reflect(-LightDirection, g_Normal);		
 	vec3 Halfway = normalize(LightDirection + g_ViewDirection);  
-    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 84);
+    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 64);
 
 	vec3 SpecularColor = (g_SpecularStrength * Specular) * vec3(g_WaterColor) ; // To be also sampled with specular map
 
@@ -156,15 +65,16 @@ void main()
     ScreenSpaceCoordinates.y = clamp(ScreenSpaceCoordinates.y, 0.0f, 1.0f);
 
     float perlin_noise = texture(u_NoiseTexture, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).r;
-    vec3 DetailNormal = texture(u_WaterDetailNormalMap, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).xyz;
    
     // Set globals
-    DetailNormal = v_TBNMatrix * DetailNormal;
-    g_Normal = v_TBNMatrix * CalculateOverlayedWavesNormal2D(v_FragPosition.xz * 0.25f);
-    g_Normal = normalize((DetailNormal * 0.5f) + g_Normal);
+    vec3 WaterMapValue = mix(texture(u_WaterMap[1], v_FragPosition.xz * 0.075f).xyz,
+                             texture(u_WaterMap[0], v_FragPosition.xz * 0.075f).xyz, u_Time * 0.005f);
+
+    g_Normal = v_TBNMatrix * vec3(WaterMapValue.x, 1.0f, WaterMapValue.y);
+    g_Normal = normalize(g_Normal);
 
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
-    g_SpecularStrength = 2.25f;
+    g_SpecularStrength = 12800.5f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     g_WaterColor *= 1.4f;
     
@@ -202,7 +112,8 @@ void main()
 
     // Output values
     o_SSRMask = 1.0f;
-    o_Normal = v_Normal + vec3(0.075f * (g_Normal)) ;
+    o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
+    o_Normal.y = v_Normal.y;
 }
 
 
