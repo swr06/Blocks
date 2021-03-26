@@ -20,7 +20,7 @@ uniform sampler2D u_WaterMap[2];
 uniform sampler2D u_RefractionUVTexture;
 
 uniform bool u_SSREnabled;
-uniform bool u_FakeRefractions;
+uniform bool u_RefractionsEnabled;
 uniform float u_Time;
 uniform float u_MixAmount;
 
@@ -98,12 +98,20 @@ void main()
 
     // Refractions
 
-    vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
-
-    if (RefractedUV != vec2(-1.0f))
+    if (u_RefractionsEnabled)
     {
-        vec4 ReflectionColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
-        o_Color = mix(o_Color, ReflectionColor, 0.125f); 
+        vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
+
+        if (RefractedUV != vec2(-1.0f))
+        {
+            vec4 ReflectionColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
+            o_Color = mix(o_Color, ReflectionColor, 0.125f); 
+        }
+    }
+
+    else 
+    {
+        o_Color.a = 0.9f;
     }
     
     // Output values
@@ -112,7 +120,7 @@ void main()
 
     //o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
     //o_Normal.y = v_Normal.y;
-    o_Normal = g_Normal;
+    o_Normal = v_Normal;
 }
 
 

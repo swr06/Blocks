@@ -540,7 +540,7 @@ int main()
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 
-		if (!ShouldDoFakeRefractions)
+		if (!ShouldDoRefractions)
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -562,7 +562,7 @@ int main()
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", _SSR);
-		WaterShader.SetBool("u_FakeRefractions", ShouldDoFakeRefractions);
+		WaterShader.SetBool("u_RefractionsEnabled", ShouldDoRefractions);
 		WaterShader.SetFloat("u_Time", glfwGetTime());
 		WaterShader.SetFloat("u_MixAmount", (float)(app.GetCurrentFrame() % 4) / (float)(32.0f));
 		WaterShader.SetVector3f("u_SunDirection", -SunDirection);
