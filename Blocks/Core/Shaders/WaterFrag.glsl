@@ -120,7 +120,7 @@ void main()
 
     //o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
     //o_Normal.y = v_Normal.y;
-    o_Normal = v_Normal;
+    o_Normal = g_Normal;
 }
 
 

@@ -64,7 +64,7 @@ vec2 ComputeRefraction()
 	vec3 ViewSpaceNormal = vec3(u_ViewMatrix * vec4(texture(u_NormalTexture, ScreenSpacePosition2D).xyz, 0.0f));
 
 	//Screen space vector
-	vec3 ViewSpaceVector = (refract(normalize(ViewSpacePosition), (ViewSpaceNormal), 1.0f / 1.33f));
+	vec3 ViewSpaceVector = (refract(normalize(ViewSpacePosition), normalize(ViewSpaceNormal), 1.0f / 1.33f));
 	vec3 ScreenSpacePosition = ViewSpaceToClipSpace(ViewSpacePosition);
 	vec3 ViewSpaceVectorPosition = ViewSpacePosition + ViewSpaceVector;
 	vec3 ScreenSpaceVectorPosition = ViewSpaceToClipSpace(ViewSpaceVectorPosition);
