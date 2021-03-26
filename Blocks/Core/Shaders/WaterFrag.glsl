@@ -49,9 +49,9 @@ vec3 CalculateSunLight()
 	float Specular;
 
     // Blinn-phong lighting
-	vec3 ReflectDir = reflect(-LightDirection, g_Normal);		
+	vec3 ReflectDir = normalize(reflect(-LightDirection, g_Normal));		
 	vec3 Halfway = normalize(LightDirection + g_ViewDirection);  
-    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 64);
+    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 48);
 
 	vec3 SpecularColor = (g_SpecularStrength * Specular) * vec3(g_WaterColor) ; // To be also sampled with specular map
 
@@ -67,14 +67,14 @@ void main()
     float perlin_noise = texture(u_NoiseTexture, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).r;
    
     // Set globals
-    vec3 WaterMapValue = mix(texture(u_WaterMap[1], v_FragPosition.xz * 0.075f).xyz,
-                             texture(u_WaterMap[0], v_FragPosition.xz * 0.075f).xyz, u_Time * 0.005f);
+    vec3 WaterMapValue = mix(textureBicubic(u_WaterMap[1], v_FragPosition.xz * 0.05f).xyz,
+                             textureBicubic(u_WaterMap[0], v_FragPosition.xz * 0.05f).xyz, u_Time * 0.005f);
 
     g_Normal = v_TBNMatrix * vec3(WaterMapValue.x, 1.0f, WaterMapValue.y);
     g_Normal = normalize(g_Normal);
 
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
-    g_SpecularStrength = 12800.5f;
+    g_SpecularStrength = 196.0f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     g_WaterColor *= 1.4f;
     
