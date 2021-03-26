@@ -35,6 +35,7 @@
 #include "Core/GLClasses/Framebuffer.h"
 #include "Core/GLClasses/FramebufferRed.h"
 #include "Core/CubemapReflectionRenderer.h"
+#include "Core/Utils/Timer.h"
 
 // World, Camera, Player..
 Blocks::Player Player;
@@ -78,7 +79,21 @@ float SSRRenderScale = 0.3f;
 
 bool VSync = 1;
 
+struct RenderingTime
+{
+	float SSR;
+	float Refractions;
+	float CubemapReflection;
+	float ShadowMap;
+	float Rendering;
+	float Water;
+	float PostProcessing;
+	float Bloom;
+	float Volumetrics;
+};
+
 extern uint32_t _App_PolygonCount; // Internal! Do not touch.
+RenderingTime AppRenderingTime;
 
 class BlocksApp : public Blocks::Application
 {
@@ -131,6 +146,50 @@ public:
 			ImGui::End();
 		}
 
+		static RenderingTime render_time;
+
+		if (this->GetCurrentFrame() % 6 == 0)
+		{
+			render_time = AppRenderingTime;
+
+			// Write the default time values
+			AppRenderingTime.SSR = 0.0f;
+			AppRenderingTime.Refractions = 0.0f;
+			AppRenderingTime.CubemapReflection = 0.0f;
+			AppRenderingTime.ShadowMap = 0.0f;
+			AppRenderingTime.Rendering = 0.0f;
+			AppRenderingTime.Water = 0.0f;
+			AppRenderingTime.PostProcessing = 0.0f;
+			AppRenderingTime.Bloom = 0.0f;
+			AppRenderingTime.Volumetrics = 0.0f;
+		}
+
+		if (ImGui::Begin("Performance"))
+		{
+			ImGui::Text("SSR Render time : %f", render_time.SSR);
+			ImGui::Text("SS Refraction Render time : %f", render_time.Refractions);
+			ImGui::Text("Cubemap Reflection Map Render time : %f", render_time.CubemapReflection);
+			ImGui::Text("Shadow Map Render time : %f", render_time.ShadowMap);
+			ImGui::Text("Render time : %f", render_time.Rendering);
+			ImGui::Text("Water Render time : %f", render_time.Water);
+			ImGui::Text("Bloom time : %f", render_time.Bloom);
+			ImGui::Text("Volumetrics time : %f", render_time.Volumetrics);
+			ImGui::Text("Post Processing time : %f", render_time.PostProcessing);
+			ImGui::Text("Total time : %f",
+				render_time.SSR +
+				render_time.Refractions +
+				render_time.CubemapReflection +
+				render_time.ShadowMap +
+				render_time.Rendering +
+				render_time.Water +
+				render_time.PostProcessing +
+				render_time.Bloom +
+				render_time.Volumetrics
+			);
+
+			ImGui::End();
+		}
+		
 		if (prevSunDirection != SunDirection)
 		{
 			SunDirectionChanged = true;
@@ -287,6 +346,8 @@ int main()
 	// Setup reflection map renderer
 	Blocks::CubemapReflectionRenderer::Initialize();
 
+	// Write default time values
+
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		// Set MainRenderFBO Sizes
@@ -321,14 +382,22 @@ int main()
 		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged || 
 			app.GetCurrentFrame() % 30 == 0)
 		{
+			Blocks::Timer shadow_timer;
+			shadow_timer.Start();
+
 			// Render the shadow map
 			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
+			AppRenderingTime.ShadowMap = shadow_timer.End();
 		}
 
 		if (app.GetCurrentFrame() % 4 == 0)
 		{
+			Blocks::Timer reflection_timer;
+			reflection_timer.Start();
+
 			// Render the reflection map
 			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &skybox, &MainWorld);
+			AppRenderingTime.CubemapReflection = reflection_timer.End();
 		}
 
 		// ---------
@@ -336,6 +405,9 @@ int main()
 
 		if (_SSR)
 		{
+			Blocks::Timer t1;
+			t1.Start();
+
 			SSRFBO.Bind();
 			glViewport(0, 0, SSRFBO.GetWidth(), SSRFBO.GetHeight());
 
@@ -373,10 +445,15 @@ int main()
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glUseProgram(0);
+
+			AppRenderingTime.SSR = t1.End();
 		}
 
 		else
 		{
+			Blocks::Timer t1;
+			t1.Start();
+
 			SSRFBO.Bind();
 			glViewport(0, 0, SSRFBO.GetWidth(), SSRFBO.GetHeight());
 
@@ -387,12 +464,17 @@ int main()
 			glUseProgram(0);
 
 			glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
+		
+			AppRenderingTime.SSR = t1.End();
 		}
 
 		// Refraction
 
 		if (1)
 		{
+			Blocks::Timer t2;
+			t2.Start();
+
 			RefractionFBO.Bind();
 			glViewport(0, 0, RefractionFBO.GetWidth(), RefractionFBO.GetHeight());
 
@@ -430,10 +512,15 @@ int main()
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glUseProgram(0);
+
+			AppRenderingTime.Refractions = t2.End();
 		}
 
 		else
 		{
+			Blocks::Timer t2;
+			t2.Start();
+
 			RefractionFBO.Bind();
 			glViewport(0, 0, RefractionFBO.GetWidth(), RefractionFBO.GetHeight());
 
@@ -444,6 +531,8 @@ int main()
 			glUseProgram(0);
 
 			glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
+			
+			AppRenderingTime.Refractions = t2.End();
 		}
 
 
@@ -451,6 +540,10 @@ int main()
 
 		// ---------------------
 		// Normal render pass
+
+		Blocks::Timer t3;
+		t3.Start();
+
 		CurrentlyUsedFBO.Bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second);
@@ -521,6 +614,8 @@ int main()
 
 		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, RenderShader);
 
+		AppRenderingTime.Rendering = t3.End();
+
 		// ---------------	
 		// Blit the fbo to a temporary one for fake refractions and for bloom
 
@@ -533,6 +628,9 @@ int main()
 		
 		// ----------------
 		// Water rendering
+
+		Blocks::Timer t4;
+		t4.Start();
 
 		CurrentlyUsedFBO.Bind();
 		WaterShader.Use();
@@ -606,11 +704,16 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(0);
 
+		AppRenderingTime.Water = t4.End();
+
 		// ----------------
 		// Volumetric lighting pass
 
 		if (ShouldRenderVolumetrics)
 		{
+			Blocks::Timer t5;
+			t5.Start();
+
 			VolumetricLightingFBO.Bind();
 
 			glViewport(0, 0, VolumetricLightingFBO.GetWidth(), VolumetricLightingFBO.GetHeight());
@@ -647,6 +750,8 @@ int main()
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glUseProgram(0);
+
+			AppRenderingTime.Volumetrics = t5.End();
 		}
 
 		// --------------
@@ -654,6 +759,9 @@ int main()
 
 		if (_Bloom)
 		{
+			Blocks::Timer t6;
+			t6.Start();
+
 			BloomFBO.Bind();
 			glViewport(0, 0, BloomFBO.GetWidth(), BloomFBO.GetHeight());
 
@@ -676,10 +784,15 @@ int main()
 
 			glUseProgram(0);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+			AppRenderingTime.Bloom = t6.End();
 		}
 
 		// --------------
 		// After the rendering, do the tonemapping pass
+
+		Blocks::Timer t7;
+		t7.Start();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, app.GetWidth(), app.GetHeight());
@@ -706,6 +819,8 @@ int main()
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		FBOVAO.Unbind();
+
+		AppRenderingTime.PostProcessing = t7.End();
 
 		// Render the 2D elements
 		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
