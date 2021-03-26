@@ -416,5 +416,8 @@
     <None Include="Core\Shaders\CubemapReflectionVert.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Core\Shaders\SSRefractionsFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

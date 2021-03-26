@@ -48,6 +48,7 @@ GLClasses::Framebuffer TempFBO(800, 600, false, true);
 
 GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer SSRFBO(800, 600, true);
+GLClasses::Framebuffer RefractionFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
 
 // Flags 
@@ -55,7 +56,7 @@ bool ShouldRenderSkybox = true;
 bool ShouldRenderVolumetrics = false;
 bool ShouldDoBloomPass = true;
 bool ShouldDoSSRPass = false;
-bool ShouldDoFakeRefractions = true;
+bool ShouldDoRefractions = true;
 
 bool _Bloom = true;
 bool _SSR = true;
@@ -123,7 +124,7 @@ public:
 			ImGui::Checkbox("Render Volumetrics?", &ShouldRenderVolumetrics);
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
 			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
-			ImGui::Checkbox("Fake Refractions?", &ShouldDoFakeRefractions);
+			ImGui::Checkbox("SS Refractions?", &ShouldDoRefractions);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
 			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
 			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.1f);
@@ -219,6 +220,7 @@ int main()
 	GLClasses::Shader BloomShader;
 	GLClasses::Shader SSRShader;
 	GLClasses::Shader WaterShader;
+	GLClasses::Shader RefractionShader;
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -252,6 +254,8 @@ int main()
 	BloomShader.CompileShaders();
 	SSRShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/SSRFrag.glsl");
 	SSRShader.CompileShaders();
+	RefractionShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/SSRefractionsFrag.glsl");
+	RefractionShader.CompileShaders();
 	WaterShader.CreateShaderProgramFromFile("Core/Shaders/WaterVert.glsl", "Core/Shaders/WaterFrag.glsl");
 	WaterShader.CompileShaders();
 
@@ -295,6 +299,7 @@ int main()
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
+		RefractionFBO.SetSize(wx * 0.5f, wy * 0.5f);
 
 		// ----------------- //
 
@@ -383,6 +388,64 @@ int main()
 
 			glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
 		}
+
+		// Refraction
+
+		if (1)
+		{
+			RefractionFBO.Bind();
+			glViewport(0, 0, RefractionFBO.GetWidth(), RefractionFBO.GetHeight());
+
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+
+			RefractionShader.Use();
+
+			RefractionShader.SetInteger("u_NormalTexture", 1);
+			RefractionShader.SetInteger("u_DepthTexture", 2);
+			RefractionShader.SetInteger("u_RefractionMaskTexture", 3);
+			RefractionShader.SetInteger("u_NoiseTexture", 4);
+
+			RefractionShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
+			RefractionShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
+			RefractionShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+			RefractionShader.SetFloat("u_zNear", 0.1f);
+			RefractionShader.SetFloat("u_zFar", 1000.0f);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetNormalTexture());
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
+
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetRefractionMaskTexture());
+
+			glActiveTexture(GL_TEXTURE4);
+			glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glUseProgram(0);
+		}
+
+		else
+		{
+			RefractionFBO.Bind();
+			glViewport(0, 0, RefractionFBO.GetWidth(), RefractionFBO.GetHeight());
+
+			glClearColor(-1.0f, -1.0f, -1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glUseProgram(0);
+
+			glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
+		}
+
 
 		// Do the normal rendering
 
@@ -495,6 +558,7 @@ int main()
 		WaterShader.SetInteger("u_WaterDetailNormalMap", 7);
 		WaterShader.SetInteger("u_WaterMap[0]", 8);
 		WaterShader.SetInteger("u_WaterMap[1]", 9);
+		WaterShader.SetInteger("u_RefractionUVTexture", 10);
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", _SSR);
@@ -533,6 +597,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE9);
 		glBindTexture(GL_TEXTURE_2D, WaterMaps[idx_1].GetTextureID());
+
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_2D, RefractionFBO.GetTexture());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 

@@ -3,6 +3,7 @@
 layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
 layout (location = 2) out float o_SSRMask;
+layout (location = 3) out float o_RefractionMask;
 
 in vec2 v_TexCoord;
 in vec3 v_Normal;
@@ -16,6 +17,7 @@ uniform sampler2D u_NoiseNormalTexture;
 uniform sampler2D u_RefractionTexture;
 uniform sampler2D u_WaterDetailNormalMap;
 uniform sampler2D u_WaterMap[2];
+uniform sampler2D u_RefractionUVTexture;
 
 uniform bool u_SSREnabled;
 uniform bool u_FakeRefractions;
@@ -94,26 +96,23 @@ void main()
         }
     }
 
-    if (u_FakeRefractions)
+    // Refractions
+
+    vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
+
+    if (RefractedUV != vec2(-1.0f))
     {
-        vec2 RefractTexCoords;
-        RefractTexCoords.x = ScreenSpaceCoordinates.x + ((distance(ScreenSpaceCoordinates.x, 1.0f) * 0.25f) * g_Normal.x);
-        RefractTexCoords.y = ScreenSpaceCoordinates.y + ((distance(ScreenSpaceCoordinates.y, 1.0f) * 0.25f) * g_Normal.z);
-
-        vec3 Refract = texture(u_RefractionTexture, RefractTexCoords).rgb;
-        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.125f);
-        o_Color.a = 1.0f;
+        vec4 ReflectionColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
+        o_Color = mix(o_Color, ReflectionColor, 0.125f); 
     }
-
-    else 
-    {
-        o_Color.a = 0.85f;
-    }
-
+    
     // Output values
     o_SSRMask = 1.0f;
-    o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
-    o_Normal.y = v_Normal.y;
+    o_RefractionMask = 1.0f;
+
+    //o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
+    //o_Normal.y = v_Normal.y;
+    o_Normal = g_Normal;
 }
 
 
