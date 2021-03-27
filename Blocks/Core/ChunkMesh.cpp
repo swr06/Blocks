@@ -133,6 +133,8 @@ namespace Blocks
 
 		m_ChunkMeshPosition = glm::vec3(chunk_pos.x, 0.0f, chunk_pos.y);
 
+		m_Vertices.reserve(CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z * 4);
+
 		for (int x = 0; x < CHUNK_SIZE_X; x++)
 		{
 			for (int y = start_y; y < end_y; y++)

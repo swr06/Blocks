@@ -3,11 +3,14 @@
 layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
 layout (location = 2) out float o_SSRMask;
+layout (location = 3) out float o_RefractionMask;
+layout (location = 4) out vec3 o_SSRNormal;
 
 in vec2 v_TexCoord;
 in vec3 v_Normal;
 in mat3 v_TBNMatrix;
 in vec3 v_FragPosition;
+in vec3 v_TangentFragPosition;
 
 uniform sampler2D u_SSRTexture;
 uniform sampler2D u_PreviousFrameColorTexture;
@@ -15,14 +18,24 @@ uniform sampler2D u_NoiseTexture;
 uniform sampler2D u_NoiseNormalTexture;
 uniform sampler2D u_RefractionTexture;
 uniform sampler2D u_WaterDetailNormalMap;
+uniform sampler2D u_WaterMap[2];
+uniform sampler2D u_RefractionUVTexture;
 
 uniform bool u_SSREnabled;
-uniform bool u_FakeRefractions;
+uniform bool u_RefractionsEnabled;
 uniform float u_Time;
+uniform float u_MixAmount;
 
 uniform vec2 u_Dimensions;
 uniform vec3 u_SunDirection;
 uniform vec3 u_ViewerPosition;
+
+// Tweakable values
+uniform bool u_EnableParallax;
+uniform float u_ParallaxDepth;
+uniform float u_ParallaxScale;
+
+uniform int u_CurrentFrame;
 
 // Prototypes
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
@@ -36,99 +49,6 @@ vec3 g_F0;
 
 const float freq = 0.6f;
 
-// This is heavily based on SEUS V10.1
-float CalculateWaves2D(in vec2 coords) 
-{
-    float AnimationTime = u_Time * 0.9f;
-    
-    coords *= freq;
-    coords += 10.0f;
-    float waves = 0.0f;
-    coords += AnimationTime / 40.0f;
-    
-    float weight;
-    float weights;
-    
-    weight = 1.0f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.9f, 1.2f) + vec2(0.0f, coords.x * 1.856f)).r * weight;
-    weights += weight;
-    coords /= 1.8f;
-    coords.x -= AnimationTime / 55.0f;
-    coords.y -= AnimationTime / 45.0f;
-
-    weight = 2.24f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.5f, 1.3f) + vec2(0.0f,coords.x * -1.96f)).r * weight;
-    weights += weight;
-    coords.x += AnimationTime / 20.0f;     
-    coords.y += AnimationTime / 25.0f;
-    coords /= 1.3f;
-
-    weight = 6.2f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * 1.265f)).r * weight;
-    weights += weight;
-    coords /= 2.2f;
-
-    coords -= AnimationTime / 22.50f;
-    weight = 8.34f;
-    waves += texture(u_NoiseTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * -1.8454f)).r * weight;
-    weights += weight;
-    
-    return waves / weights;
-}
-
-vec3 CalculateWavesNormal2D(in vec2 coords) 
-{
-    float AnimationTime = u_Time * 0.9f;
-    
-    coords *= freq;
-    coords += 10.0f;
-    vec3 waves = vec3(0.0f);
-    coords += AnimationTime / 40.0f;
-    
-    float weight;
-    float weights;
-    
-    weight = 1.0f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.9f, 1.2f) + vec2(0.0f, coords.x * 1.856f)).xyz * weight;
-    weights += weight;
-    coords /= 1.8f;
-    coords.x -= AnimationTime / 55.0f;
-    coords.y -= AnimationTime / 45.0f;
-
-    weight = 2.24f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.5f, 1.3f) + vec2(0.0f,coords.x * -1.96f)).xyz * weight;
-    weights += weight;
-    coords.x += AnimationTime / 20.0f;     
-    coords.y += AnimationTime / 25.0f;
-    coords /= 1.3f;
-
-    weight = 6.2f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * 1.265f)).xyz * weight;
-    weights += weight;
-    coords /= 2.2f;
-
-    coords -= AnimationTime / 22.50f;
-    weight = 8.34f;
-    waves += texture(u_NoiseNormalTexture, coords * vec2(1.1f, 0.7f) + vec2(0.0f, coords.x * -1.8454f)).xyz * weight;
-    weights += weight;
-    
-    return waves / weights;
-}
-
-float CalculateOverlayedWaves2D(in vec2 coords)
-{
-    float waves0 = CalculateWaves2D(coords);
-    float waves1 = CalculateWaves2D(-coords);
-    return sqrt(waves0 * waves1); // take geometric mean of both values
-} 
-
-vec3 CalculateOverlayedWavesNormal2D(in vec2 coords)
-{
-    vec3 waves0 = CalculateWavesNormal2D(coords);
-    vec3 waves1 = CalculateWavesNormal2D(-coords);
-    return sqrt(waves0 * waves1); // take geometric mean of both values
-} 
-
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -140,14 +60,47 @@ vec3 CalculateSunLight()
 	float Specular;
 
     // Blinn-phong lighting
-	vec3 ReflectDir = reflect(-LightDirection, g_Normal);		
+	vec3 ReflectDir = normalize(reflect(-LightDirection, g_Normal));		
 	vec3 Halfway = normalize(LightDirection + g_ViewDirection);  
-    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 84);
+    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 48);
 
 	vec3 SpecularColor = (g_SpecularStrength * Specular) * vec3(g_WaterColor) ; // To be also sampled with specular map
 
 	return vec3(vec3(0.3f * g_WaterColor) + SpecularColor);  
 }
+
+float GetWaterHeightAt(vec2 tx)
+{
+    float depth = texture(u_WaterMap[0], tx).z;
+    return depth * u_ParallaxScale;
+}
+
+vec2 ParallaxMapping(vec2 TextureCoords, vec3 ViewDirection)
+{ 
+    float NumLayers = u_ParallaxDepth;
+    float LayerDepth = 1.0 / NumLayers;
+    float CurrentLayerDepth = 0.0;
+    vec2 P = ViewDirection.xy * 1.0f; 
+    vec2 DeltaTexCoords = P / NumLayers;
+
+    vec2  CurrentTexCoords = TextureCoords;
+    float CurrentDepthMapValue = GetWaterHeightAt(CurrentTexCoords);
+      
+    while(CurrentLayerDepth < CurrentDepthMapValue)
+    {
+        CurrentTexCoords -= DeltaTexCoords;
+        CurrentDepthMapValue = GetWaterHeightAt(CurrentTexCoords);  
+        CurrentLayerDepth += LayerDepth;  
+    }
+
+    vec2 PrevTexCoords = CurrentTexCoords + DeltaTexCoords;
+    float AfterDepth  = CurrentDepthMapValue - CurrentLayerDepth;
+    float BeforeDepth = GetWaterHeightAt(PrevTexCoords) - CurrentLayerDepth + LayerDepth;
+    float Weight = AfterDepth / (AfterDepth - BeforeDepth);
+    vec2 FinalTexCoords = PrevTexCoords * Weight + CurrentTexCoords * (1.0 - Weight);
+    
+    return CurrentTexCoords;
+}   
 
 void main()
 {
@@ -156,15 +109,23 @@ void main()
     ScreenSpaceCoordinates.y = clamp(ScreenSpaceCoordinates.y, 0.0f, 1.0f);
 
     float perlin_noise = texture(u_NoiseTexture, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).r;
-    vec3 DetailNormal = texture(u_WaterDetailNormalMap, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).xyz;
    
+    vec2 WaterUV = vec2(v_FragPosition.xz * 0.05f);
+    vec3 TangentViewPosition = v_TBNMatrix * u_ViewerPosition;
+
+    if (u_EnableParallax)
+    {
+        WaterUV = ParallaxMapping(WaterUV, normalize(TangentViewPosition - v_TangentFragPosition));
+    }
+
     // Set globals
-    DetailNormal = v_TBNMatrix * DetailNormal;
-    g_Normal = v_TBNMatrix * CalculateOverlayedWavesNormal2D(v_FragPosition.xz * 0.25f);
-    g_Normal = normalize((DetailNormal * 0.5f) + g_Normal);
+    vec3 WaterMapValue = mix(texture(u_WaterMap[0], WaterUV).rgb, texture(u_WaterMap[1], WaterUV).rgb, (u_CurrentFrame % 6) / 6.0f);
+
+    g_Normal = v_TBNMatrix * vec3(WaterMapValue.x, 1.0f, WaterMapValue.y);
+    g_Normal = normalize(g_Normal);
 
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
-    g_SpecularStrength = 2.25f;
+    g_SpecularStrength = 196.0f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     g_WaterColor *= 1.4f;
     
@@ -184,25 +145,34 @@ void main()
         }
     }
 
-    if (u_FakeRefractions)
-    {
-        vec2 RefractTexCoords;
-        RefractTexCoords.x = ScreenSpaceCoordinates.x + ((distance(ScreenSpaceCoordinates.x, 1.0f) * 0.25f) * g_Normal.x);
-        RefractTexCoords.y = ScreenSpaceCoordinates.y + ((distance(ScreenSpaceCoordinates.y, 1.0f) * 0.25f) * g_Normal.z);
+    // Refractions
 
-        vec3 Refract = texture(u_RefractionTexture, RefractTexCoords).rgb;
-        o_Color = mix(o_Color, vec4(Refract, 1.0f), 0.125f);
-        o_Color.a = 1.0f;
+    if (u_RefractionsEnabled)
+    {
+        vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
+
+        if (RefractedUV != vec2(-1.0f))
+        {
+            vec4 ReflectionColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
+            o_Color = mix(o_Color, ReflectionColor, 0.08f); 
+        }
     }
 
     else 
     {
-        o_Color.a = 0.85f;
+        o_Color.a = 0.92f;
     }
-
+    
     // Output values
     o_SSRMask = 1.0f;
-    o_Normal = v_Normal + vec3(0.075f * (g_Normal)) ;
+    o_RefractionMask = 1.0f;
+
+    //o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
+    //o_Normal.y = v_Normal.y;
+    o_Normal = g_Normal + perlin_noise;
+    o_SSRNormal = vec3(v_Normal.z + (g_Normal.z * 0.035f), 
+                       v_Normal.y, 
+                       v_Normal.x + (g_Normal.x * 0.040f));
 }
 
 

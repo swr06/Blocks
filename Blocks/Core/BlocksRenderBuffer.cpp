@@ -26,10 +26,12 @@ namespace Blocks
 
 	void BlocksRenderBuffer::GenerateFramebuffers()
 	{
-		GLenum DrawBuffers[4] = {
+		GLenum DrawBuffers[5] = {
 			GL_COLOR_ATTACHMENT0,
 			GL_COLOR_ATTACHMENT1,
 			GL_COLOR_ATTACHMENT2, 
+			GL_COLOR_ATTACHMENT3,
+			GL_COLOR_ATTACHMENT4
 		};
 
 		glGenFramebuffers(1, &m_FBO);
@@ -59,6 +61,22 @@ namespace Blocks
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_SSRMaskTexture, 0);
 		
+		// refraction mask texture (For SS refractions)
+		glGenTextures(1, &m_RefractionMaskTexture);
+		glBindTexture(GL_TEXTURE_2D, m_RefractionMaskTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_Width, m_Height, 0, GL_RED, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_RefractionMaskTexture, 0);
+
+		// SSR normal texture
+		glGenTextures(1, &m_SSRNormalTexture);
+		glBindTexture(GL_TEXTURE_2D, m_SSRNormalTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_SSRNormalTexture, 0);
+
 		// Depth buffer
 		glGenTextures(1, &m_DepthTexture);
 		glBindTexture(GL_TEXTURE_2D, m_DepthTexture);
@@ -71,7 +89,7 @@ namespace Blocks
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, col);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DepthTexture, 0);
 
-		glDrawBuffers(3, DrawBuffers);
+		glDrawBuffers(5, DrawBuffers);
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
@@ -89,11 +107,15 @@ namespace Blocks
 		glDeleteTextures(1, &m_DepthTexture);
 		glDeleteTextures(1, &m_NormalTexture);
 		glDeleteTextures(1, &m_SSRMaskTexture);
+		glDeleteTextures(1, &m_RefractionMaskTexture);
+		glDeleteTextures(1, &m_SSRNormalTexture);
 
 		m_FBO = 0;
 		m_ColorTexture = 0;
 		m_NormalTexture = 0;
 		m_DepthTexture = 0;
 		m_SSRMaskTexture = 0;
+		m_RefractionMaskTexture = 0;
+		m_SSRNormalTexture = 0;
 	}
 }

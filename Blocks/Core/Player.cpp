@@ -87,12 +87,15 @@ namespace Blocks
 			(int)floor(Camera.GetPosition().z)
 		};
 
-		if (GetWorldBlockPtr(player_block)->ID == WATER_BLOCK_RESERVED_ID)
-		{
-			InWater = true;
-		}
+		InWater = false;
 
-		else { InWater = false; }
+		if (player_block.y < CHUNK_SIZE_Y)
+		{
+			if (GetWorldBlockPtr(player_block)->ID == WATER_BLOCK_RESERVED_ID)
+			{
+				InWater = true;
+			}
+		}
 
 		return moved;
 	}
@@ -114,6 +117,8 @@ namespace Blocks
 
 	bool Player::TestBlockCollision(const glm::vec3& position)
 	{
+		if (Freefly) { return false; }
+
 		// Convert center position to top-left position
 		glm::vec3 pos = glm::vec3(
 			position.x - 0.375f,

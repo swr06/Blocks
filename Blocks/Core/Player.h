@@ -23,5 +23,6 @@ namespace Blocks
 
 
 		bool InWater = false;
+		bool Freefly = false;
 	};
 }

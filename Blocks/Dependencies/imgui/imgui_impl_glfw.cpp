@@ -72,6 +72,8 @@
 #define GLFW_HAS_MOUSE_PASSTHROUGH    (0)
 #endif
 
+extern bool blocks_mouse_enabled;
+
 // Data
 enum GlfwClientApi
 {
@@ -319,7 +321,7 @@ static void ImGui_ImplGlfw_UpdateMousePosAndButtons()
         const bool focused = true;
         IM_ASSERT(platform_io.Viewports.Size == 1);
 #else
-        const bool focused = glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0;
+        const bool focused = glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0 && blocks_mouse_enabled;
 #endif
         if (focused)
         {
