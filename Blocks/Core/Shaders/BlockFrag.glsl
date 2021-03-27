@@ -9,6 +9,7 @@ layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
 layout (location = 2) out float o_SSRMask;
 layout (location = 3) out float o_RefractionMask;
+layout (location = 4) out vec3 o_SSRNormal;
 
 in vec2 v_TexCoord;
 in float v_TexIndex;
@@ -148,6 +149,7 @@ void main()
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
     o_Normal = v_Normal;
+    o_SSRNormal = v_Normal + (g_Normal * 0.1f);
 
     bool reflective_block = v_TexIndex == u_GraniteTexIndex;
 

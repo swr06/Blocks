@@ -240,6 +240,11 @@ namespace Blocks
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(m_Window);
 
+		if (m_CurrentFrame >= 2147483646)
+		{
+			m_CurrentFrame = 0;
+		}
+
 		m_CurrentFrame += 1;
 	}
 

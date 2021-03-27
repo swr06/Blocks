@@ -4,6 +4,7 @@ layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
 layout (location = 2) out float o_SSRMask;
 layout (location = 3) out float o_RefractionMask;
+layout (location = 4) out vec3 o_SSRNormal;
 
 in vec2 v_TexCoord;
 in vec3 v_Normal;
@@ -32,6 +33,8 @@ uniform vec3 u_ViewerPosition;
 // Tweakable values
 uniform bool u_EnableParallax;
 uniform float u_ParallaxDepth;
+
+uniform int u_CurrentFrame;
 
 // Prototypes
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
@@ -115,7 +118,7 @@ void main()
     }
 
     // Set globals
-    vec3 WaterMapValue = texture(u_WaterMap[0], WaterUV).rgb;
+    vec3 WaterMapValue = mix(texture(u_WaterMap[0], WaterUV).rgb, texture(u_WaterMap[1], WaterUV).rgb, (u_CurrentFrame % 6) / 6.0f);
 
     g_Normal = v_TBNMatrix * vec3(WaterMapValue.x, 1.0f, WaterMapValue.y);
     g_Normal = normalize(g_Normal);
@@ -150,13 +153,13 @@ void main()
         if (RefractedUV != vec2(-1.0f))
         {
             vec4 ReflectionColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
-            o_Color = mix(o_Color, ReflectionColor, 0.125f); 
+            o_Color = mix(o_Color, ReflectionColor, 0.08f); 
         }
     }
 
     else 
     {
-        o_Color.a = 0.9f;
+        o_Color.a = 0.92f;
     }
     
     // Output values
@@ -165,7 +168,10 @@ void main()
 
     //o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
     //o_Normal.y = v_Normal.y;
-    o_Normal = g_Normal;
+    o_Normal = g_Normal + perlin_noise;
+    o_SSRNormal = vec3(v_Normal.z + (g_Normal.z * 0.035f), 
+                       v_Normal.y, 
+                       v_Normal.x + (g_Normal.x * 0.040f));
 }
 
 

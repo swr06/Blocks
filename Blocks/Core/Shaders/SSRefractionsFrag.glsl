@@ -66,15 +66,14 @@ vec2 ComputeRefraction()
 	//Screen space vector
 	vec3 ViewSpaceVector = (refract(normalize(ViewSpacePosition), normalize(ViewSpaceNormal), 1.0f / 1.33f));
 	vec3 ScreenSpacePosition = ViewSpaceToClipSpace(ViewSpacePosition);
+	ScreenSpacePosition.z = linearizeDepth(ScreenSpacePosition.z);
+
 	vec3 ViewSpaceVectorPosition = ViewSpacePosition + ViewSpaceVector;
 	vec3 ScreenSpaceVectorPosition = ViewSpaceToClipSpace(ViewSpaceVectorPosition);
+	ScreenSpaceVectorPosition.z = linearizeDepth(ScreenSpaceVectorPosition.z);
+
 	vec3 ScreenSpaceVector = InitialStepAmount * normalize(ScreenSpaceVectorPosition - ScreenSpacePosition);
 	
-	//Jitter the initial ray
-	//float Offset1 = clamp(rand(gl_FragCoord.xy), 0.0f, 1.0f) / 6000.0f;
-	//float Offset2 = clamp(rand(gl_FragCoord.yy), 0.0f, 1.0f) / 6000.0f;
-	//ScreenSpaceVector += vec3(Offset1, Offset2, 0.0f); // Jitter the ray
-
 	vec3 OldPosition = ScreenSpacePosition + ScreenSpaceVector;
 	vec3 CurrentPosition = OldPosition + ScreenSpaceVector;
 	
@@ -99,11 +98,11 @@ vec2 ComputeRefraction()
 
 			//intersections
 			vec2 SamplePos = CurrentPosition.xy;
-			float CurrentDepth = linearizeDepth(CurrentPosition.z);
+			float CurrentDepth = (CurrentPosition.z);
 			float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
 			float diff = CurrentDepth - SampleDepth;
 
-			if(diff >= 0 && diff < 100.0f)
+			if(diff >= 0 && diff < 1000.0f)
 			{
 				ScreenSpaceVector *= StepRefinementAmount;
 				CurrentPosition = OldPosition;

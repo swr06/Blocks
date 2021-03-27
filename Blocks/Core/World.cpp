@@ -5,8 +5,8 @@ namespace Blocks
 #ifdef _DEBUG
 	int render_distance_x = 1;
 	int render_distance_z = 1;
-	int build_distance_x = render_distance_x + 2;
-	int build_distance_z = render_distance_z + 2;
+	int build_distance_x = render_distance_x + 3;
+	int build_distance_z = render_distance_z + 3;
 	int flora_build_distance_x = render_distance_x + 1;
 	int flora_build_distance_z = render_distance_z + 1;
 #else _RELEASE

@@ -364,7 +364,7 @@ int main()
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
-		RefractionFBO.SetSize(wx * 0.5f, wy * 0.5f);
+		RefractionFBO.SetSize(wx * 0.25f, wy * 0.25f);
 
 		// ----------------- //
 
@@ -432,7 +432,7 @@ int main()
 			SSRShader.SetFloat("u_zFar", 1000.0f);
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetNormalTexture());
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetSSRNormalTexture());
 
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
@@ -474,7 +474,7 @@ int main()
 
 		// Refraction
 
-		if (1)
+		if (ShouldDoRefractions)
 		{
 			Blocks::Timer t2;
 			t2.Start();
@@ -637,7 +637,7 @@ int main()
 		t4.Start();
 
 		CurrentlyUsedFBO.Bind();
-		WaterShader.Use();
+		WaterShader.Use(); 
 
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
@@ -661,6 +661,7 @@ int main()
 		WaterShader.SetInteger("u_WaterMap[0]", 8);
 		WaterShader.SetInteger("u_WaterMap[1]", 9);
 		WaterShader.SetInteger("u_RefractionUVTexture", 10);
+		WaterShader.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", _SSR);
@@ -693,8 +694,8 @@ int main()
 		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_2D, WaterDetailNormalMap.GetTextureID());
 
-		unsigned int idx = (((app.GetCurrentFrame() / 4)) % 100 + 100) % 100;
-		unsigned int idx_1 = (((app.GetCurrentFrame() / 4) - 1) % 100 + 100) % 100;
+		unsigned int idx = (((app.GetCurrentFrame() / 6)) % 100 + 100) % 100;
+		unsigned int idx_1 = (((app.GetCurrentFrame() / 6) + 1) % 100 + 100) % 100;
 
 		glActiveTexture(GL_TEXTURE8);
 		glBindTexture(GL_TEXTURE_2D, WaterMaps[idx].GetTextureID());
