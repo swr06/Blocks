@@ -38,6 +38,7 @@ out mat3 v_TBNMatrix;
 out vec3 v_FragPosition;
 
 out float v_AO;
+out vec3 v_TangentFragPosition;
 
 void main()
 {
@@ -58,5 +59,7 @@ void main()
 	vec3 B = normalize(Bitangent);
 	vec3 N = normalize(v_Normal);
 	v_TBNMatrix = mat3(T, B, N);
+
+	v_TangentFragPosition = v_TBNMatrix * v_FragPosition;
 
 }

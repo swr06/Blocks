@@ -9,6 +9,7 @@ in vec2 v_TexCoord;
 in vec3 v_Normal;
 in mat3 v_TBNMatrix;
 in vec3 v_FragPosition;
+in vec3 v_TangentFragPosition;
 
 uniform sampler2D u_SSRTexture;
 uniform sampler2D u_PreviousFrameColorTexture;
@@ -27,6 +28,10 @@ uniform float u_MixAmount;
 uniform vec2 u_Dimensions;
 uniform vec3 u_SunDirection;
 uniform vec3 u_ViewerPosition;
+
+// Tweakable values
+uniform bool u_EnableParallax;
+uniform float u_ParallaxDepth;
 
 // Prototypes
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
@@ -60,6 +65,39 @@ vec3 CalculateSunLight()
 	return vec3(vec3(0.3f * g_WaterColor) + SpecularColor);  
 }
 
+float GetWaterHeightAt(vec2 tx)
+{
+    float depth = texture(u_WaterMap[0], tx).z;
+    return depth * 0.65f;
+}
+
+vec2 ParallaxMapping(vec2 TextureCoords, vec3 ViewDirection)
+{ 
+    float NumLayers = u_ParallaxDepth;
+    float LayerDepth = 1.0 / NumLayers;
+    float CurrentLayerDepth = 0.0;
+    vec2 P = ViewDirection.xy * 1.01f; 
+    vec2 DeltaTexCoords = P / NumLayers;
+
+    vec2  CurrentTexCoords = TextureCoords;
+    float CurrentDepthMapValue = GetWaterHeightAt(CurrentTexCoords);
+      
+    while(CurrentLayerDepth < CurrentDepthMapValue)
+    {
+        CurrentTexCoords -= DeltaTexCoords;
+        CurrentDepthMapValue = GetWaterHeightAt(CurrentTexCoords);  
+        CurrentLayerDepth += LayerDepth;  
+    }
+
+    vec2 PrevTexCoords = CurrentTexCoords + DeltaTexCoords;
+    float AfterDepth  = CurrentDepthMapValue - CurrentLayerDepth;
+    float BeforeDepth = GetWaterHeightAt(PrevTexCoords) - CurrentLayerDepth + LayerDepth;
+    float Weight = AfterDepth / (AfterDepth - BeforeDepth);
+    vec2 FinalTexCoords = PrevTexCoords * Weight + CurrentTexCoords * (1.0 - Weight);
+    
+    return CurrentTexCoords;
+}   
+
 void main()
 {
     vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
@@ -68,9 +106,16 @@ void main()
 
     float perlin_noise = texture(u_NoiseTexture, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).r;
    
+    vec2 WaterUV = vec2(v_FragPosition.xz * 0.05f);
+    vec3 TangentViewPosition = v_TBNMatrix * u_ViewerPosition;
+
+    if (u_EnableParallax)
+    {
+        WaterUV = ParallaxMapping(WaterUV, normalize(TangentViewPosition - v_TangentFragPosition));
+    }
+
     // Set globals
-    vec3 WaterMapValue = mix(textureBicubic(u_WaterMap[1], v_FragPosition.xz * 0.05f).xyz,
-                             textureBicubic(u_WaterMap[0], v_FragPosition.xz * 0.05f).xyz, u_Time * 0.005f);
+    vec3 WaterMapValue = texture(u_WaterMap[0], WaterUV).rgb;
 
     g_Normal = v_TBNMatrix * vec3(WaterMapValue.x, 1.0f, WaterMapValue.y);
     g_Normal = normalize(g_Normal);
