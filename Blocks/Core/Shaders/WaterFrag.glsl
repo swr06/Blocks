@@ -33,6 +33,7 @@ uniform vec3 u_ViewerPosition;
 // Tweakable values
 uniform bool u_EnableParallax;
 uniform float u_ParallaxDepth;
+uniform float u_ParallaxScale;
 
 uniform int u_CurrentFrame;
 
@@ -71,7 +72,7 @@ vec3 CalculateSunLight()
 float GetWaterHeightAt(vec2 tx)
 {
     float depth = texture(u_WaterMap[0], tx).z;
-    return depth * 0.65f;
+    return depth * u_ParallaxScale;
 }
 
 vec2 ParallaxMapping(vec2 TextureCoords, vec3 ViewDirection)
@@ -79,7 +80,7 @@ vec2 ParallaxMapping(vec2 TextureCoords, vec3 ViewDirection)
     float NumLayers = u_ParallaxDepth;
     float LayerDepth = 1.0 / NumLayers;
     float CurrentLayerDepth = 0.0;
-    vec2 P = ViewDirection.xy * 1.01f; 
+    vec2 P = ViewDirection.xy * 1.0f; 
     vec2 DeltaTexCoords = P / NumLayers;
 
     vec2  CurrentTexCoords = TextureCoords;

@@ -78,6 +78,7 @@ float RenderScale = 1.0f;
 float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.3f;
 float WaterParallaxDepth = 8.0f;
+float WaterParallaxHeight = 0.5f;
 
 bool VSync = 1;
 
@@ -142,11 +143,13 @@ public:
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
 			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
 			ImGui::Checkbox("SS Refractions?", &ShouldDoRefractions);
+			ImGui::Checkbox("Freefly (Shouldn't do collisions) ?", &Player.Freefly);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
 			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
 			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.1f);
 			ImGui::Checkbox("Water Parallax?", &ShouldDoWaterParallax);
 			ImGui::SliderFloat("Water Parallax Depth", &WaterParallaxDepth, 8.0f, 96.0f);
+			ImGui::SliderFloat("Water Parallax Height", &WaterParallaxHeight, 0.25f, 4.0f);
 			ImGui::End();
 		}
 
@@ -670,6 +673,7 @@ int main()
 		WaterShader.SetFloat("u_Time", glfwGetTime());
 		WaterShader.SetFloat("u_MixAmount", (float)(app.GetCurrentFrame() % 4) / (float)(32.0f));
 		WaterShader.SetFloat("u_ParallaxDepth", WaterParallaxDepth);
+		WaterShader.SetFloat("u_ParallaxScale", WaterParallaxHeight);
 		WaterShader.SetVector3f("u_SunDirection", -SunDirection);
 		WaterShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 
