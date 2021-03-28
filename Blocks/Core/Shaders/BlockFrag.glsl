@@ -148,8 +148,8 @@ void main()
     vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
     o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
-    o_Normal = v_Normal;
-    o_SSRNormal = v_Normal + (g_Normal * 0.1f);
+    o_Normal = g_Normal;
+    o_SSRNormal = v_Normal;
 
     bool reflective_block = v_TexIndex == u_GraniteTexIndex;
 
@@ -166,6 +166,7 @@ void main()
 
         if (SSR_UV != vec2(-1.0f))
         {
+            SSR_UV += g_Normal.xz * 0.3f;
             o_Color = mix(o_Color, vec4(textureBicubic(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.3); 
         }
     }

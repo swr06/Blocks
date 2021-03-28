@@ -20,6 +20,7 @@ uniform sampler2D u_RefractionTexture;
 uniform sampler2D u_WaterDetailNormalMap;
 uniform sampler2D u_WaterMap[2];
 uniform sampler2D u_RefractionUVTexture;
+uniform sampler2D u_PreviousFrameDepthTexture;
 
 uniform bool u_SSREnabled;
 uniform bool u_RefractionsEnabled;
@@ -140,8 +141,14 @@ void main()
 
         if (SSR_UV != vec2(-1.0f))
         {
-            vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
-            o_Color = mix(o_Color, ReflectionColor, 0.25f); 
+            SSR_UV += g_Normal.xz * 0.15f;
+            float reflected_depth = texture(u_PreviousFrameDepthTexture, SSR_UV).r;
+
+            if (reflected_depth < 0.999f)
+            {
+                vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
+                o_Color = mix(o_Color, ReflectionColor, 0.25f); 
+            }
         }
     }
 
@@ -153,7 +160,16 @@ void main()
 
         if (RefractedUV != vec2(-1.0f))
         {
+            RefractedUV += g_Normal.xz * 0.02f;
+            RefractedUV = clamp(RefractedUV, 0.0f, 1.0f);
+
             vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
+            o_Color = mix(o_Color, RefractedColor, 0.08f); 
+        }
+
+        else 
+        {
+            vec4 RefractedColor = vec4(texture(u_RefractionTexture, ScreenSpaceCoordinates + (g_Normal.xz * 0.01f)).rgb, 1.0);
             o_Color = mix(o_Color, RefractedColor, 0.08f); 
         }
     }
@@ -167,12 +183,12 @@ void main()
     o_SSRMask = 1.0f;
     o_RefractionMask = 1.0f;
 
-    //o_Normal.xz = v_Normal.xz + normalize(g_Normal.xz);
-    //o_Normal.y = v_Normal.y;
-    o_Normal = g_Normal + perlin_noise;
-    o_SSRNormal = vec3(v_Normal.z + (g_Normal.z * 0.035f), 
-                       v_Normal.y, 
-                       v_Normal.x + (g_Normal.x * 0.040f));
+    // Set output normals
+    o_Normal = g_Normal + (perlin_noise * 0.05f);
+
+    o_SSRNormal = vec3(v_Normal.x, 
+                       v_Normal.y,  
+                       v_Normal.z);
 }
 
 

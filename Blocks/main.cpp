@@ -76,7 +76,7 @@ float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
 float RenderScale = 1.0f;
 float VolumetricRenderScale = 0.5f;
-float SSRRenderScale = 0.3f;
+float SSRRenderScale = 0.25f;
 float WaterParallaxDepth = 8.0f;
 float WaterParallaxHeight = 0.5f;
 
@@ -367,7 +367,7 @@ int main()
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
-		RefractionFBO.SetSize(wx * 0.25f, wy * 0.25f);
+		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
 
 		// ----------------- //
 
@@ -664,6 +664,7 @@ int main()
 		WaterShader.SetInteger("u_WaterMap[0]", 8);
 		WaterShader.SetInteger("u_WaterMap[1]", 9);
 		WaterShader.SetInteger("u_RefractionUVTexture", 10);
+		WaterShader.SetInteger("u_PreviousFrameDepthTexture", 11);
 		WaterShader.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
@@ -709,6 +710,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_2D, RefractionFBO.GetTexture());
+
+		glActiveTexture(GL_TEXTURE11);
+		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 
