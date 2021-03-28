@@ -153,8 +153,8 @@ void main()
 
         if (RefractedUV != vec2(-1.0f))
         {
-            vec4 ReflectionColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
-            o_Color = mix(o_Color, ReflectionColor, 0.08f); 
+            vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
+            o_Color = mix(o_Color, RefractedColor, 0.08f); 
         }
     }
 

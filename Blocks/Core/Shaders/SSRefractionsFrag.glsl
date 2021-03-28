@@ -48,7 +48,7 @@ float linearizeDepth(float depth)
 	return (2.0 * u_zNear) / (u_zFar + u_zNear - depth * (u_zFar - u_zNear));
 }
 
-vec3 ViewSpaceToClipSpace(in vec3 view_space)
+vec3 ViewSpaceToScreenSpace(in vec3 view_space)
 {
 	vec4 clipSpace = u_ProjectionMatrix * vec4(view_space, 1);
 	vec3 NDCSpace = clipSpace.xyz / clipSpace.w;
@@ -65,11 +65,11 @@ vec2 ComputeRefraction()
 
 	//Screen space vector
 	vec3 ViewSpaceVector = (refract(normalize(ViewSpacePosition), normalize(ViewSpaceNormal), 1.0f / 1.33f));
-	vec3 ScreenSpacePosition = ViewSpaceToClipSpace(ViewSpacePosition);
+	vec3 ScreenSpacePosition = ViewSpaceToScreenSpace(ViewSpacePosition);
 	ScreenSpacePosition.z = linearizeDepth(ScreenSpacePosition.z);
 
 	vec3 ViewSpaceVectorPosition = ViewSpacePosition + ViewSpaceVector;
-	vec3 ScreenSpaceVectorPosition = ViewSpaceToClipSpace(ViewSpaceVectorPosition);
+	vec3 ScreenSpaceVectorPosition = ViewSpaceToScreenSpace(ViewSpaceVectorPosition);
 	ScreenSpaceVectorPosition.z = linearizeDepth(ScreenSpaceVectorPosition.z);
 
 	vec3 ScreenSpaceVector = InitialStepAmount * normalize(ScreenSpaceVectorPosition - ScreenSpacePosition);
