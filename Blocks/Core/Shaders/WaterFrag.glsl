@@ -147,7 +147,20 @@ void main()
             if (reflected_depth < 0.999f)
             {
                 vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
-                o_Color = mix(o_Color, ReflectionColor, 0.25f); 
+                float distance_to_edge = distance(SSR_UV.x, 1.0f);
+                float ReflectionMixFactor;
+
+                if (distance_to_edge < 0.5f)
+                {
+                    ReflectionMixFactor = (1.0f - SSR_UV.x) * 0.85f;
+                }
+
+                else 
+                {
+                    ReflectionMixFactor = (SSR_UV.x) * 0.85f;
+                }
+
+                o_Color = mix(o_Color, ReflectionColor, ReflectionMixFactor); 
             }
         }
     }
@@ -161,10 +174,9 @@ void main()
         if (RefractedUV != vec2(-1.0f))
         {
             RefractedUV += g_Normal.xz * 0.02f;
-            RefractedUV = clamp(RefractedUV, 0.0f, 1.0f);
 
             vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
-            o_Color = mix(o_Color, RefractedColor, 0.08f); 
+            o_Color = mix(o_Color, RefractedColor, 0.1f); 
         }
 
         else 

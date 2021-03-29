@@ -18,8 +18,8 @@ uniform float u_zNear;
 uniform float u_zFar;
 
 //Tweakable variables
-const float InitialStepAmount = .01f;
-const float StepRefinementAmount = .7f;
+const float InitialStepAmount = 0.022f; // 0.16
+const float StepRefinementAmount = 0.25f; // 0.3
 const int MaxRefinements = 3;
 const int MaxDepth = 1;
 
@@ -86,43 +86,40 @@ vec2 ComputeReflection()
 	int depth = 0;
 
 	//Ray trace!
-	while(depth < MaxDepth) //doesnt do anything right now
+	for (int count = 0 ; count < 40 ; count++)
 	{
-		for (int count = 0 ; count < 100 ; count++)
+		if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
+		   CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
+		   CurrentPosition.z < 0 || CurrentPosition.z > 1)
 		{
-			if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
-			   CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
-			   CurrentPosition.z < 0 || CurrentPosition.z > 1)
-			{
-				break;
-			}
-
-			//intersections
-			vec2 SamplePos = CurrentPosition.xy;
-			float CurrentDepth = linearizeDepth(CurrentPosition.z);
-			float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
-			float diff = CurrentDepth - SampleDepth;
-
-			if(diff >= 0 && diff < 0.5f)
-			{
-				ScreenSpaceVector *= StepRefinementAmount;
-				CurrentPosition = OldPosition;
-				NumRefinements++;
-
-				if(NumRefinements >= MaxRefinements)
-				{
-					final_uv = SamplePos;
-					break;
-				}
-			}
-
-			//Step ray
-			OldPosition = CurrentPosition;
-			CurrentPosition = OldPosition + ScreenSpaceVector;
+			break;
 		}
 
-		depth++;
+		//intersections
+		vec2 SamplePos = CurrentPosition.xy;
+		float CurrentDepth = linearizeDepth(CurrentPosition.z);
+		float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
+		float diff = CurrentDepth - SampleDepth;
+
+		if(diff >= 0 && diff < 0.5f)
+		{
+			ScreenSpaceVector *= StepRefinementAmount;
+			CurrentPosition = OldPosition;
+			NumRefinements++;
+
+			if(NumRefinements >= MaxRefinements)
+			{
+				final_uv = SamplePos;
+				break;
+			}
+		}
+
+		//Step ray
+		OldPosition = CurrentPosition;
+		CurrentPosition = OldPosition + ScreenSpaceVector;
 	}
+
+	depth++;
 
 	return final_uv;
 }

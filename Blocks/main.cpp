@@ -93,6 +93,7 @@ struct RenderingTime
 	float PostProcessing;
 	float Bloom;
 	float Volumetrics;
+	float Update;
 };
 
 extern uint32_t _App_PolygonCount; // Internal! Do not touch.
@@ -182,6 +183,7 @@ public:
 			ImGui::Text("Bloom time : %f", render_time.Bloom);
 			ImGui::Text("Volumetrics time : %f", render_time.Volumetrics);
 			ImGui::Text("Post Processing time : %f", render_time.PostProcessing);
+			ImGui::Text("Update time : %f", render_time.Update);
 			ImGui::Text("Total time : %f",
 				render_time.SSR +
 				render_time.Refractions +
@@ -191,7 +193,8 @@ public:
 				render_time.Water +
 				render_time.PostProcessing +
 				render_time.Bloom +
-				render_time.Volumetrics
+				render_time.Volumetrics + 
+				render_time.Update
 			);
 
 			ImGui::End();
@@ -382,9 +385,14 @@ int main()
 		glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
+		Blocks::Timer update_timer;
+
+		update_timer.Start();
 		app.OnUpdate();
 		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 		PlayerMoved = Player.OnUpdate(app.GetWindow());
+
+		AppRenderingTime.Update = update_timer.End();
 
 		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged || 
 			app.GetCurrentFrame() % 30 == 0)
@@ -397,7 +405,7 @@ int main()
 			AppRenderingTime.ShadowMap = shadow_timer.End();
 		}
 
-		if (app.GetCurrentFrame() % 4 == 0)
+		if (app.GetCurrentFrame() % 8 == 0)
 		{
 			Blocks::Timer reflection_timer;
 			reflection_timer.Start();

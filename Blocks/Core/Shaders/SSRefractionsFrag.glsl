@@ -85,7 +85,7 @@ vec2 ComputeRefraction()
 	int depth = 0;
 
 	//Ray trace!
-	for (int count = 0 ; count < 100 ; count++)
+	for (int count = 0 ; count < 50 ; count++)
 	{
 		if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
 			CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
