@@ -79,6 +79,7 @@ float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.25f;
 float WaterParallaxDepth = 8.0f;
 float WaterParallaxHeight = 0.5f;
+float Exposure = 1.0f;
 
 bool VSync = 1;
 
@@ -134,6 +135,7 @@ public:
 			ImGui::SliderFloat3("Sun Direction", &SunDirection[0], -1.0f, 1.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
+			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);
 			ImGui::End();
 		}
 
@@ -829,6 +831,7 @@ int main()
 		PPShader.SetBool("u_BloomEnabled", _Bloom);
 		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
 		PPShader.SetBool("u_PlayerInWater", Player.InWater);
+		PPShader.SetFloat("u_Exposure", Exposure);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
