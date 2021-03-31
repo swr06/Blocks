@@ -148,6 +148,7 @@ void main()
             {
                 vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
                 float distance_to_edge = distance(SSR_UV.x, 1.0f);
+                float ReflectionMixFactor_1 = (1.0f - SSR_UV.y) * 0.85f;
                 float ReflectionMixFactor;
 
                 if (distance_to_edge < 0.5f)
@@ -160,7 +161,7 @@ void main()
                     ReflectionMixFactor = (SSR_UV.x) * 0.85f;
                 }
 
-                o_Color = mix(o_Color, ReflectionColor, ReflectionMixFactor); 
+                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 6.4, 0.4f)); 
             }
         }
     }
