@@ -254,6 +254,8 @@
     <None Include="Core\Shaders\CubemapReflectionFrag.glsl" />
     <None Include="Core\Shaders\CubemapReflectionVert.glsl" />
     <None Include="Core\Shaders\DepthFrag.glsl" />
+    <None Include="Core\Shaders\DepthPrepassVert.glsl" />
+    <None Include="Core\Shaders\DepthPrepassFrag.glsl" />
     <None Include="Core\Shaders\DepthVert.glsl" />
     <None Include="Core\Shaders\FBOFrag.glsl" />
     <None Include="Core\Shaders\FBOVert.glsl" />

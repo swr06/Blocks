@@ -79,8 +79,9 @@ float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.25f;
 float WaterParallaxDepth = 8.0f;
 float WaterParallaxHeight = 0.5f;
-float Exposure = 1.0f;
+float Exposure = 3.25f;
 
+bool DepthPrePass = true;
 bool VSync = 1;
 
 struct RenderingTime
@@ -136,6 +137,7 @@ public:
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
 			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);
+			ImGui::Checkbox("Depth Prepass? (Reduces overdraw)", &DepthPrePass);
 			ImGui::End();
 		}
 
@@ -292,6 +294,7 @@ int main()
 	GLClasses::Shader SSRShader;
 	GLClasses::Shader WaterShader;
 	GLClasses::Shader RefractionShader;
+	GLClasses::Shader DepthPrepassShader;
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -329,6 +332,8 @@ int main()
 	RefractionShader.CompileShaders();
 	WaterShader.CreateShaderProgramFromFile("Core/Shaders/WaterVert.glsl", "Core/Shaders/WaterFrag.glsl");
 	WaterShader.CompileShaders();
+	DepthPrepassShader.CreateShaderProgramFromFile("Core/Shaders/DepthPrepassVert.glsl", "Core/Shaders/DepthPrepassFrag.glsl");
+	DepthPrepassShader.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -552,17 +557,50 @@ int main()
 			AppRenderingTime.Refractions = t2.End();
 		}
 
+		// ---------------------
+		// Depth pre pass
+
+		if (DepthPrePass)
+		{
+			CurrentlyUsedFBO.Bind();
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glFrontFace(GL_CW);
+			glDepthMask(GL_TRUE);
+
+			DepthPrepassShader.Use();
+			glViewport(0, 0, CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second);
+
+			DepthPrepassShader.SetMatrix4("u_ViewProjection", Player.Camera.GetViewProjection());
+			MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, DepthPrepassShader);
+
+			glUseProgram(0);
+		}
 
 		// Do the normal rendering
 
 		// ---------------------
 		// Normal render pass
 
+		CurrentlyUsedFBO.Bind();
+
+		if (DepthPrePass) 
+		{
+			glDepthMask(GL_FALSE); 
+		} 
+
+		else 
+		{ 
+			glDepthMask(GL_TRUE); 
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
+
 		Blocks::Timer t3;
 		t3.Start();
 
-		CurrentlyUsedFBO.Bind();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second);
 
 		if (ShouldRenderSkybox)
@@ -632,6 +670,8 @@ int main()
 		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, RenderShader);
 
 		AppRenderingTime.Rendering = t3.End();
+
+		glDepthMask(GL_TRUE);
 
 		// ---------------	
 		// Blit the fbo to a temporary one for fake refractions and for bloom
