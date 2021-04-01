@@ -25,7 +25,7 @@
 #include "Core/World.h"
 #include "Core/BlockDatabaseParser.h"
 #include "Core/BlockDatabase.h"
-#include "Core/Skybox.h"
+#include "Core/AtmosphereRenderer.h"
 #include "Core/OrthographicCamera.h"
 #include "Core/Renderer2D.h"
 #include "Core/Player.h"
@@ -266,14 +266,7 @@ int main()
 	app.Initialize();
 	app.SetCursorLocked(true);
 
-	Blocks::Skybox skybox({
-		"Res/Skybox/right.bmp",
-		"Res/Skybox/left.bmp",
-		"Res/Skybox/top.bmp",
-		"Res/Skybox/bottom.bmp",
-		"Res/Skybox/front.bmp",
-		"Res/Skybox/back.bmp"
-		});
+	Blocks::AtmosphereRenderer AtmosphereRenderer;
 
 	Blocks::BlockDatabase::Initialize();
 	Blocks::Renderer2D Renderer2D;
@@ -418,7 +411,7 @@ int main()
 			reflection_timer.Start();
 
 			// Render the reflection map
-			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &skybox, &MainWorld);
+			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &MainWorld, nullptr);
 			AppRenderingTime.CubemapReflection = reflection_timer.End();
 		}
 
@@ -605,7 +598,7 @@ int main()
 
 		if (ShouldRenderSkybox)
 		{
-			skybox.RenderSkybox(&Player.Camera);
+			AtmosphereRenderer.RenderAtmosphere(&Player.Camera);
 		}
 
 		// Prepare to render the chunks

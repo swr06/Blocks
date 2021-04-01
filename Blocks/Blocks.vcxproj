@@ -180,6 +180,7 @@
     <ClCompile Include="Core\Player.cpp" />
     <ClCompile Include="Core\Renderer2D.cpp" />
     <ClCompile Include="Core\ShadowRenderer.cpp" />
+    <ClCompile Include="Core\AtmosphereRenderer.cpp" />
     <ClCompile Include="Core\Skybox.cpp" />
     <ClCompile Include="Core\ViewFrustum.cpp" />
     <ClCompile Include="Core\World.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="Core\Player.h" />
     <ClInclude Include="Core\Renderer2D.h" />
     <ClInclude Include="Core\ShadowRenderer.h" />
+    <ClInclude Include="Core\AtmosphereRenderer.h" />
     <ClInclude Include="Core\Skybox.h" />
     <ClInclude Include="Core\Utils\Random.h" />
     <ClInclude Include="Core\Utils\Timer.h" />
@@ -259,10 +261,12 @@
     <None Include="Core\Shaders\DepthVert.glsl" />
     <None Include="Core\Shaders\FBOFrag.glsl" />
     <None Include="Core\Shaders\FBOVert.glsl" />
-    <None Include="Core\Shaders\SkyboxFrag.glsl" />
-    <None Include="Core\Shaders\SkyboxVertex.glsl" />
+    <None Include="Core\Shaders\AtmosphereFrag.glsl" />
+    <None Include="Core\Shaders\AtmosphereVertex.glsl" />
     <None Include="Core\Shaders\BlockFrag.glsl" />
     <None Include="Core\Shaders\BlockVert.glsl" />
+    <None Include="Core\Shaders\SkyboxFrag.glsl" />
+    <None Include="Core\Shaders\SkyboxVertex.glsl" />
     <None Include="Core\Shaders\SSRefractionsFrag.glsl" />
     <None Include="Core\Shaders\SSRFrag.glsl" />
     <None Include="Core\Shaders\Tonemapping\ACES.glsl" />

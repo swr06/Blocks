@@ -109,9 +109,6 @@
     <ClCompile Include="Core\FpsCamera.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Skybox.cpp">
-      <Filter>Source Files\Misc</Filter>
-    </ClCompile>
     <ClCompile Include="Core\GLClasses\VertexArray.cpp">
       <Filter>Source Files\GL Classes</Filter>
     </ClCompile>
@@ -171,6 +168,12 @@
     </ClCompile>
     <ClCompile Include="Core\GLClasses\CubeReflectionMap.cpp">
       <Filter>Source Files\GL Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\AtmosphereRenderer.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Skybox.cpp">
+      <Filter>Source Files\Misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -233,9 +236,6 @@
     </ClInclude>
     <ClInclude Include="Core\GLClasses\Texture.h">
       <Filter>Source Files\GL Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Skybox.h">
-      <Filter>Source Files\Misc</Filter>
     </ClInclude>
     <ClInclude Include="Core\Camera.h">
       <Filter>Source Files\Misc</Filter>
@@ -321,6 +321,12 @@
     <ClInclude Include="Core\GLClasses\CubeReflectionMap.h">
       <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
+    <ClInclude Include="Core\AtmosphereRenderer.h">
+      <Filter>Source Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Skybox.h">
+      <Filter>Source Files\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">
@@ -328,12 +334,6 @@
     </None>
     <None Include="Dependencies\fast_noise\LICENSE">
       <Filter>Source Files\Deps\Fast Noise</Filter>
-    </None>
-    <None Include="Core\Shaders\SkyboxFrag.glsl">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
-    <None Include="Core\Shaders\SkyboxVertex.glsl">
-      <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Core\Shaders\BlockFrag.glsl">
       <Filter>Source Files\Shaders</Filter>
@@ -423,6 +423,18 @@
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Core\Shaders\DepthPrepassVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\AtmosphereVertex.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\AtmosphereFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\SkyboxFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\SkyboxVertex.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>
