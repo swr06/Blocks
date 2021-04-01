@@ -2,7 +2,6 @@
 #define PI 3.1415926536
 
 /*
-https://www.shadertoy.com/view/wtlyzB
 https://www.shadertoy.com/view/XtBXDz
 */
 

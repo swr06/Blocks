@@ -372,7 +372,7 @@ int main()
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
-		AtmosphereFBO.SetSize(wx * 0.05f, wy * 0.05f);
+		AtmosphereFBO.SetSize(wx * 0.04f, wy * 0.04f);
 
 		// ----------------- //
 
