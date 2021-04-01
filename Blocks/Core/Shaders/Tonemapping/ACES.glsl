@@ -1,16 +1,22 @@
 #version 330 core
 
 in vec2 v_TexCoords;
+in vec3 v_RayPosition;
+in vec3 v_RayDirection;
+
 layout(location = 0) out vec4 o_Color;
 
 uniform sampler2D u_FramebufferTexture;
 uniform sampler2D u_VolumetricTexture;
 uniform sampler2D u_BloomTexture;
+uniform sampler2D u_DepthTexture;
+uniform sampler2D u_AtmosphereTexture;
 uniform float u_Exposure = 1.0f;
 
 uniform bool u_BloomEnabled;
 uniform bool u_VolumetricEnabled;
 uniform bool u_PlayerInWater;
+uniform float u_Time;
 
 const vec3 SUN_COLOR = vec3(1.0);
 
@@ -47,6 +53,27 @@ vec4 ACESFitted(vec4 Color, float Exposure)
     return Color;
 }
 
+vec3 GetAtmosphere()
+{
+    vec3 sun_dir = normalize(vec3(0.0, sin(u_Time * 0.1f), cos(u_Time * 0.1f))); 
+    vec3 moon_dir = -sun_dir; 
+
+    vec3 atmosphere = textureBicubic(u_AtmosphereTexture, v_TexCoords).rgb;
+    vec3 ray_dir = normalize(v_RayDirection);
+
+    if(dot(ray_dir, sun_dir) > 0.9855)
+    {
+        atmosphere *= (10.0);
+    }
+
+    if(dot(ray_dir, moon_dir) > 0.9965)
+    {
+        atmosphere *= (4.4, 4.4, 5.2);
+    }
+
+    return atmosphere;
+}
+
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
@@ -76,9 +103,15 @@ void main()
     final_color = HDR + Bloom + (Volumetric * 0.1f);
 
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
+
+    if (texture(u_DepthTexture, v_TexCoords).r == 1.0f)
+    {
+        o_Color = vec4(GetAtmosphere(), 1.0f);
+    }
 }
 
-vec4 cubic(float v){
+vec4 cubic(float v)
+{
     vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;
     vec4 s = n * n * n;
     float x = s.x;

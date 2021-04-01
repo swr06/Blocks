@@ -11,7 +11,7 @@ namespace Blocks
 		ReflectionShader->CompileShaders();
 	}
 
-	void CubemapReflectionRenderer::Render(GLClasses::CubeReflectionMap& reflection_map, const glm::vec3& center, const glm::vec3& light_dir, Skybox* skybox, World* world)
+	void CubemapReflectionRenderer::Render(GLClasses::CubeReflectionMap& reflection_map, const glm::vec3& center, const glm::vec3& light_dir, World* world, Skybox* skybox)
 	{
 
 		reflection_map.Bind();
@@ -37,7 +37,11 @@ namespace Blocks
 			frustum.Update(projection_matrix * view_matrices[i]);
 
 			reflection_map.BindFace(i);
-			skybox->RenderSkybox(projection_matrix, view_matrices[i]);
+
+			if (skybox)
+			{
+				skybox->RenderSkybox(projection_matrix, view_matrices[i]);
+			}
 
 			ReflectionShader->Use();
 			ReflectionShader->SetMatrix4("u_Projection", projection_matrix);

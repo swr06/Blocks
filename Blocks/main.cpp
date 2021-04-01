@@ -25,7 +25,7 @@
 #include "Core/World.h"
 #include "Core/BlockDatabaseParser.h"
 #include "Core/BlockDatabase.h"
-#include "Core/Skybox.h"
+#include "Core/AtmosphereRenderer.h"
 #include "Core/OrthographicCamera.h"
 #include "Core/Renderer2D.h"
 #include "Core/Player.h"
@@ -51,6 +51,7 @@ GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer SSRFBO(800, 600, true);
 GLClasses::Framebuffer RefractionFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
+GLClasses::Framebuffer AtmosphereFBO(800, 600, true);
 
 // Flags 
 bool ShouldRenderSkybox = true;
@@ -266,14 +267,7 @@ int main()
 	app.Initialize();
 	app.SetCursorLocked(true);
 
-	Blocks::Skybox skybox({
-		"Res/Skybox/right.bmp",
-		"Res/Skybox/left.bmp",
-		"Res/Skybox/top.bmp",
-		"Res/Skybox/bottom.bmp",
-		"Res/Skybox/front.bmp",
-		"Res/Skybox/back.bmp"
-		});
+	Blocks::AtmosphereRenderer AtmosphereRenderer;
 
 	Blocks::BlockDatabase::Initialize();
 	Blocks::Renderer2D Renderer2D;
@@ -320,7 +314,7 @@ int main()
 	// Create and compile the shaders
 	RenderShader.CreateShaderProgramFromFile("Core/Shaders/BlockVert.glsl", "Core/Shaders/BlockFrag.glsl");
 	RenderShader.CompileShaders();
-	PPShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/Tonemapping/ACES.glsl");
+	PPShader.CreateShaderProgramFromFile("Core/Shaders/Tonemapping/TonemapVert.glsl", "Core/Shaders/Tonemapping/ACES.glsl");
 	PPShader.CompileShaders();
 	VolumetricShader.CreateShaderProgramFromFile("Core/Shaders/VolumetricLightingVert.glsl", "Core/Shaders/VolumetricLightingFrag.glsl");
 	VolumetricShader.CompileShaders();
@@ -378,6 +372,7 @@ int main()
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
+		AtmosphereFBO.SetSize(wx * 0.05f, wy * 0.05f);
 
 		// ----------------- //
 
@@ -418,9 +413,16 @@ int main()
 			reflection_timer.Start();
 
 			// Render the reflection map
-			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &skybox, &MainWorld);
+			Blocks::CubemapReflectionRenderer::Render(ReflectionMap, Player.Camera.GetPosition(), SunDirection, &MainWorld, nullptr);
 			AppRenderingTime.CubemapReflection = reflection_timer.End();
 		}
+
+		// ---------
+		// Atmospherics rendering pass
+
+		AtmosphereFBO.Bind();
+		AtmosphereRenderer.RenderAtmosphere(&Player.Camera);
+		AtmosphereFBO.Unbind();
 
 		// ---------
 		// SSR pass
@@ -587,26 +589,13 @@ int main()
 
 		CurrentlyUsedFBO.Bind();
 
-		if (DepthPrePass) 
-		{
-			glDepthMask(GL_FALSE); 
-		} 
-
-		else 
-		{ 
-			glDepthMask(GL_TRUE); 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		}
+		glDepthMask(GL_TRUE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		Blocks::Timer t3;
 		t3.Start();
 
 		glViewport(0, 0, CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second);
-
-		if (ShouldRenderSkybox)
-		{
-			skybox.RenderSkybox(&Player.Camera);
-		}
 
 		// Prepare to render the chunks
 		glEnable(GL_DEPTH_TEST);
@@ -868,10 +857,15 @@ int main()
 		PPShader.SetInteger("u_FramebufferTexture", 0);
 		PPShader.SetInteger("u_VolumetricTexture", 1);
 		PPShader.SetInteger("u_BloomTexture", 2);
+		PPShader.SetInteger("u_AtmosphereTexture", 3);
+		PPShader.SetInteger("u_DepthTexture", 4);
 		PPShader.SetBool("u_BloomEnabled", _Bloom);
 		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
 		PPShader.SetBool("u_PlayerInWater", Player.InWater);
 		PPShader.SetFloat("u_Exposure", Exposure);
+		PPShader.SetFloat("u_Time", glfwGetTime());
+		PPShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
+		PPShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
@@ -881,6 +875,12 @@ int main()
 
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, BloomFBO.GetTexture());
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, AtmosphereFBO.GetTexture());
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);

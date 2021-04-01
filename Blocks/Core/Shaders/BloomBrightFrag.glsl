@@ -11,13 +11,13 @@ void main()
 {
     float depth = texture(u_DepthTexture, v_TexCoords).r;
 
-    if (depth == 1.0f) { o_Color = vec3(0.0f); return; }
+    //if (depth == 1.0f) { o_Color = vec3(0.0f); return; }
 
     vec3 Color = texture(u_Texture, v_TexCoords).rgb;
 	float Brightness = (Color.r * 0.2126f) + (Color.g * 0.7152f) + (Color.b * 0.722f);
-    //Brightness = 2.0f * (1.0f - (1.0f / (Brightness + 1.0f)));
     //Brightness = sqrt(Brightness); // Delinearize the brightness
+    //Brightness = 2.0f * (1.0f - (1.0f / (Brightness + 1.0f)));
 
     // We want to avoid branching in shaders 
-    o_Color = mix(vec3(0.0f), Color, float(Brightness > 1.40f));
+    o_Color = mix(vec3(0.0f), Color, float(Brightness > 1.5f));
 }
