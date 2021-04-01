@@ -276,6 +276,7 @@
     <None Include="Core\Shaders\Tonemapping\README.md" />
     <None Include="Core\Shaders\Tonemapping\reinhard.glsl" />
     <None Include="Core\Shaders\Tonemapping\reinhard2.glsl" />
+    <None Include="Core\Shaders\Tonemapping\TonemapVert.glsl" />
     <None Include="Core\Shaders\Tonemapping\uchimura.glsl" />
     <None Include="Core\Shaders\Tonemapping\uncharted2.glsl" />
     <None Include="Core\Shaders\Tonemapping\unreal.glsl" />

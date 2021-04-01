@@ -68,8 +68,8 @@ const float atmosphere_radius = 6420e3;
 const vec3 sun_power = vec3(10.0);
 const vec3 moon_power = sun_power * vec3(0.2,0.2,0.35);
 
-const int num_samples = 40;
-const int num_samples_light = 4; //The original shader used 8, but I think you can get away with 3 (speedup will be substantial)
+const int num_samples = 30;
+const int num_samples_light = 3; 
 
 const sphere_t atmosphere = sphere_t(vec3(0.),atmosphere_radius);
 const sphere_t earth = sphere_t(vec3(0.),earth_radius);
@@ -172,16 +172,6 @@ vec3 get_incident_light(in ray_t ray)
     vec3 col = sun_power * (sumR * phaseR * betaR +sumM * phaseM * betaM) 
         + moon_power * (sumMoonR * phaseMoonR * betaR + sumMoonM * phaseMoonM * betaM); 
     
-    if(dot(ray.direction, sun_dir) > 0.9855)
-    {
-        col *= (5.0);
-    }
-
-    if(dot(ray.direction, moon_dir) > 0.9965)
-    {
-        col *= (2.4, 2.4, 3.2);
-    }
-    
     return col;
 }
 
@@ -190,7 +180,7 @@ void main()
     g_Time = u_Time * 0.1f;
     vec2 uv = v_TexCoords.xy;
 
-    vec3 cameraCenter = vec3(0.,earth_radius+1.,0.);
+    vec3 cameraCenter = vec3(0.0f, earth_radius + 1.0f, 0.0f);
     ray_t primary_ray = ray_t(cameraCenter, normalize(v_RayDirection)); 
     vec3 col = get_incident_light(primary_ray);
    

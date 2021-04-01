@@ -437,5 +437,8 @@
     <None Include="Core\Shaders\SkyboxVertex.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Core\Shaders\Tonemapping\TonemapVert.glsl">
+      <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
   </ItemGroup>
 </Project>
