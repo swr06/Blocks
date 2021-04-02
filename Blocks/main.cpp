@@ -165,7 +165,7 @@ public:
 		if (ImGui::Begin("Settings"))
 		{
 			ImGui::Checkbox("Tick Sun", &TickSun);
-			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 50.0f);
+			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 64.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
 			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);

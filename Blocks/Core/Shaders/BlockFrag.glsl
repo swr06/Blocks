@@ -150,7 +150,7 @@ void main()
     float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
     vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
-    g_LightColor = mix(vec3(1.0f * 5.25f, 1.0f * 5.25f, 0.8f * 4.0f), vec3(0.7f, 0.7f, 1.25f), min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    g_LightColor = mix(vec3(4.25f, 4.25f, 5.35), vec3(0.7f, 0.7f, 1.25f), min(distance(u_SunDirection.y, -1.0f), 0.99f));
 
     vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection);
     vec3 Moonlightfactor = CalculateDirectionalLightPBR(u_SunDirection);
