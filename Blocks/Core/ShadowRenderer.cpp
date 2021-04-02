@@ -17,15 +17,30 @@ void Blocks::ShadowMapRenderer::InitializeShadowRenderer()
 
 void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_buffer, const glm::vec3& center, const glm::vec3& light_direction, World* world)
 {
-	float SHADOW_DISTANCE_X = 200;
-	float SHADOW_DISTANCE_Y = -200;
+	float SHADOW_DISTANCE_X = 210;
+	float SHADOW_DISTANCE_Y = 210;
 	float SHADOW_DISTANCE_Z = 1000.0f;
 
-	LightPosition = glm::vec3(center.x, 200, center.z);
+	// Align the orthographic projected "cube" 
+	if (light_direction.z < 0.0f)
+	{
+		LightPosition = glm::vec3(
+			center.x + (SHADOW_DISTANCE_X / 2),
+			SHADOW_DISTANCE_Y - 5,
+			center.z + (SHADOW_DISTANCE_X / 2));
+	}
+
+	else
+	{
+		LightPosition = glm::vec3(
+			center.x - (SHADOW_DISTANCE_X / 2),
+			SHADOW_DISTANCE_Y - 5,
+			center.z - (SHADOW_DISTANCE_X / 2));
+	}
 
 	LightProjectionMatrix = glm::ortho(-SHADOW_DISTANCE_X, SHADOW_DISTANCE_X,
-		-SHADOW_DISTANCE_Y, SHADOW_DISTANCE_Y,
-		0.1f, SHADOW_DISTANCE_Z);
+		SHADOW_DISTANCE_Y, -SHADOW_DISTANCE_Y,
+		0.0f, SHADOW_DISTANCE_Z);
 
 	LightViewMatrix = glm::lookAt(LightPosition, LightPosition + light_direction, glm::vec3(0.0f, 1.0f, 0.0f));
 
