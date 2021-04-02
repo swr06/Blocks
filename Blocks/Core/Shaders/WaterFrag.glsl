@@ -55,13 +55,13 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 CalculateSunLight()
+vec3 CalculateSunLight(vec3 ldir)
 {
-	vec3 LightDirection = u_SunDirection;
+	vec3 LightDirection = normalize(ldir);
 	float Specular;
 
     // Blinn-phong lighting
-	vec3 ReflectDir = normalize(reflect(-LightDirection, g_Normal));		
+	vec3 ReflectDir = normalize(reflect(LightDirection, g_Normal));		
 	vec3 Halfway = normalize(LightDirection + g_ViewDirection);  
     Specular = pow(max(dot(g_Normal, Halfway), 0.0), 48);
 
@@ -129,8 +129,12 @@ void main()
     g_SpecularStrength = 196.0f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     g_WaterColor *= 1.4f;
-    
-    o_Color = vec4(CalculateSunLight(), 1.0f);
+
+    vec3 SunlightFactor = CalculateSunLight(-u_SunDirection);
+    vec3 Moonlightfactor = CalculateSunLight(u_SunDirection);
+    vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+  
+    o_Color = vec4(FinalLighting, 1.0f);
     g_F0 = vec3(0.02f);
     g_F0 = mix(g_F0, g_WaterColor, 0.025f);
 

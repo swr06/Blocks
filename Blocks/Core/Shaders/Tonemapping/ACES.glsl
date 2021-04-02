@@ -18,6 +18,8 @@ uniform bool u_VolumetricEnabled;
 uniform bool u_PlayerInWater;
 uniform float u_Time;
 
+uniform vec3 u_SunDirection;
+
 const vec3 SUN_COLOR = vec3(1.0);
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
@@ -55,7 +57,7 @@ vec4 ACESFitted(vec4 Color, float Exposure)
 
 vec3 GetAtmosphere()
 {
-    vec3 sun_dir = normalize(vec3(0.0, sin(u_Time * 0.1f), cos(u_Time * 0.1f))); 
+    vec3 sun_dir = u_SunDirection; 
     vec3 moon_dir = -sun_dir; 
 
     vec3 atmosphere = textureBicubic(u_AtmosphereTexture, v_TexCoords).rgb;

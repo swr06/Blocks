@@ -22,7 +22,7 @@ namespace Blocks
         m_VAO.Unbind();
 	}
 
-    void AtmosphereRenderer::RenderAtmosphere(FPSCamera* camera)
+    void AtmosphereRenderer::RenderAtmosphere(FPSCamera* camera, const glm::vec3& sun_direction, int steps, int lsteps)
     {
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
@@ -36,6 +36,9 @@ namespace Blocks
         m_AtmosphereShader.SetMatrix4("u_InvView", glm::inverse(glm::mat4(glm::mat3(camera->GetViewMatrix()))));
         m_AtmosphereShader.SetInteger("u_Skybox", 0);
         m_AtmosphereShader.SetFloat("u_Time", glfwGetTime());
+        m_AtmosphereShader.SetVector3f("u_SunDirection", sun_direction);
+        m_AtmosphereShader.SetInteger("u_NumSamples", steps);
+        m_AtmosphereShader.SetInteger("u_NumLightSamples", lsteps);
 
         m_VAO.Bind();
         (glDrawArrays(GL_TRIANGLES, 0, 36));
@@ -43,28 +46,6 @@ namespace Blocks
         m_VAO.Unbind();
 
         glDepthMask(GL_TRUE);
-    }
-
-    void AtmosphereRenderer::RenderAtmosphere(const glm::mat4& projection, const glm::mat4& view)
-    {
-        glDepthMask(GL_FALSE);
-        glDisable(GL_CULL_FACE);
-        m_AtmosphereShader.Use();
-
-        m_AtmosphereShader.SetMatrix4("u_Projection", projection);
-        m_AtmosphereShader.SetMatrix4("u_View", glm::mat4(glm::mat3(view))); // remove translation
-        m_AtmosphereShader.SetInteger("u_Skybox", 0);
-
-        m_VAO.Bind();
-
-        (glDrawArrays(GL_TRIANGLES, 0, 36));
-
-        m_VAO.Unbind();
-
-        glDepthMask(GL_TRUE);
-
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        glUseProgram(0);
     }
 
     void AtmosphereRenderer::Recompile()

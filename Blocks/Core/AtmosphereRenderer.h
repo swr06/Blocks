@@ -14,8 +14,7 @@ namespace Blocks
 	{
 	public:
 		AtmosphereRenderer();
-		void RenderAtmosphere(FPSCamera* camera);
-		void RenderAtmosphere(const glm::mat4& projection, const glm::mat4& view);
+		void RenderAtmosphere(FPSCamera* camera, const glm::vec3& sun_direction, int steps, int lsteps);
 		void Recompile();
 
 	private :
