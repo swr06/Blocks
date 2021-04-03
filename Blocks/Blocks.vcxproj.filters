@@ -169,11 +169,14 @@
     <ClCompile Include="Core\GLClasses\CubeReflectionMap.cpp">
       <Filter>Source Files\GL Classes</Filter>
     </ClCompile>
-    <ClCompile Include="Core\AtmosphereRenderer.cpp">
-      <Filter>Source Files\Misc</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Skybox.cpp">
       <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\AtmosphereRenderCubemap.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\AtmosphereRenderer.cpp">
+      <Filter>Source Files\Blocks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -321,11 +324,14 @@
     <ClInclude Include="Core\GLClasses\CubeReflectionMap.h">
       <Filter>Source Files\GL Classes</Filter>
     </ClInclude>
-    <ClInclude Include="Core\AtmosphereRenderer.h">
-      <Filter>Source Files\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Skybox.h">
       <Filter>Source Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AtmosphereRenderCubemap.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AtmosphereRenderer.h">
+      <Filter>Source Files\Blocks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

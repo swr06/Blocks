@@ -10,7 +10,7 @@ uniform sampler2D u_FramebufferTexture;
 uniform sampler2D u_VolumetricTexture;
 uniform sampler2D u_BloomTexture;
 uniform sampler2D u_DepthTexture;
-uniform sampler2D u_AtmosphereTexture;
+uniform samplerCube u_AtmosphereTexture;
 uniform float u_Exposure = 1.0f;
 
 uniform bool u_BloomEnabled;
@@ -60,8 +60,8 @@ vec3 GetAtmosphere()
     vec3 sun_dir = u_SunDirection; 
     vec3 moon_dir = -sun_dir; 
 
-    vec3 atmosphere = textureBicubic(u_AtmosphereTexture, v_TexCoords).rgb;
     vec3 ray_dir = normalize(v_RayDirection);
+    vec3 atmosphere = texture(u_AtmosphereTexture, ray_dir).rgb;
 
     if(dot(ray_dir, sun_dir) > 0.9855)
     {

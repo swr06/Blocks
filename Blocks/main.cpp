@@ -63,7 +63,6 @@ GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer SSRFBO(800, 600, true);
 GLClasses::Framebuffer RefractionFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
-GLClasses::Framebuffer AtmosphereFBO(800, 600, true);
 
 // Flags 
 bool ShouldRenderSkybox = true;
@@ -302,6 +301,7 @@ int main()
 	app.SetCursorLocked(true);
 
 	Blocks::AtmosphereRenderer AtmosphereRenderer;
+	Blocks::AtmosphereRenderMap AtmosphereCubemap(64);
 
 	Blocks::BlockDatabase::Initialize();
 	Blocks::Renderer2D Renderer2D;
@@ -428,7 +428,6 @@ int main()
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
-		AtmosphereFBO.SetSize(wx * AtmosphereRenderScale, wy * AtmosphereRenderScale);
 
 		// ----------------- //
 
@@ -481,10 +480,7 @@ int main()
 		Blocks::Timer atmosphere_timer;
 
 		atmosphere_timer.Start();
-		AtmosphereFBO.Bind();
-		AtmosphereRenderer.RenderAtmosphere(&Player.Camera, -SunDirection, AtmosphereSteps, AtmosphereLightSteps);
-		AtmosphereFBO.Unbind();
-
+		AtmosphereRenderer.RenderAtmosphere(AtmosphereCubemap, -SunDirection, AtmosphereSteps, AtmosphereLightSteps);
 		AppRenderingTime.Atmosphere = atmosphere_timer.End();
 
 		// ---------
@@ -689,6 +685,7 @@ int main()
 		RenderShader.SetInteger("u_PreviousFrameColorTexture", 5);
 		RenderShader.SetInteger("u_SSRTexture", 6);
 		RenderShader.SetInteger("u_ReflectionCubemap", 7);
+		RenderShader.SetInteger("u_AtmosphereCubemap", 8);
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", _SSR);
 
@@ -720,6 +717,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectionMap.GetTexture());
+
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
 
 		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, RenderShader);
 
@@ -757,6 +757,8 @@ int main()
 
 		WaterShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
 		WaterShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
+		WaterShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
+		WaterShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
 
 		WaterShader.SetInteger("u_PreviousFrameColorTexture", 0);
 		WaterShader.SetInteger("u_SSRTexture", 1);
@@ -769,6 +771,7 @@ int main()
 		WaterShader.SetInteger("u_WaterMap[1]", 9);
 		WaterShader.SetInteger("u_RefractionUVTexture", 10);
 		WaterShader.SetInteger("u_PreviousFrameDepthTexture", 11);
+		WaterShader.SetInteger("u_AtmosphereCubemap", 12);
 		WaterShader.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
@@ -817,6 +820,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE11);
 		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
+
+		glActiveTexture(GL_TEXTURE12);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 
@@ -943,7 +949,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, BloomFBO.GetTexture());
 
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, AtmosphereFBO.GetTexture());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
 
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
@@ -988,3 +994,6 @@ namespace Blocks
 		return MainWorld.GetWorldBlockLightValue(block);
 	}
 }
+
+
+

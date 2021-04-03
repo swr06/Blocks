@@ -1,12 +1,15 @@
 #pragma once
 
 #include <iostream>
+#include <string>
+#include <array>
 
 #include "GLClasses/CubeTextureMap.h"
 #include "GLClasses/Shader.h"
 #include "GLClasses/VertexBuffer.h"
 #include "GLClasses/VertexArray.h"
 #include "FpsCamera.h"
+#include "AtmosphereRenderCubemap.h"
 
 namespace Blocks
 {
@@ -14,7 +17,7 @@ namespace Blocks
 	{
 	public:
 		AtmosphereRenderer();
-		void RenderAtmosphere(FPSCamera* camera, const glm::vec3& sun_direction, int steps, int lsteps);
+		void RenderAtmosphere(AtmosphereRenderMap& map, const glm::vec3& sun_direction, int steps, int lsteps);
 		void Recompile();
 
 	private :

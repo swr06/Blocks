@@ -1,5 +1,7 @@
 #include "AtmosphereRenderer.h"
 
+#include <glm/glm.hpp>
+
 namespace Blocks
 {
     AtmosphereRenderer::AtmosphereRenderer() : m_VBO(GL_ARRAY_BUFFER)
@@ -22,28 +24,46 @@ namespace Blocks
         m_VAO.Unbind();
 	}
 
-    void AtmosphereRenderer::RenderAtmosphere(FPSCamera* camera, const glm::vec3& sun_direction, int steps, int lsteps)
+    void AtmosphereRenderer::RenderAtmosphere(AtmosphereRenderMap& map, const glm::vec3& sun_direction, int steps, int lsteps)
     {
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
 
+        glm::mat4 projection_matrix = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 600.0f);
+        glm::vec3 center = glm::vec3(0.0f);
+
+        std::array<glm::mat4, 6> view_matrices =
+        {
+            glm::lookAt(center, center + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            glm::lookAt(center, center + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            glm::lookAt(center, center + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+            glm::lookAt(center, center + glm::vec3(0.0f,-1.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+            glm::lookAt(center, center + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            glm::lookAt(center, center + glm::vec3(0.0f, 0.0f,-1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+        };
+
         m_AtmosphereShader.Use();
 
-        m_AtmosphereShader.SetMatrix4("u_Projection", camera->GetProjectionMatrix());
-        m_AtmosphereShader.SetMatrix4("u_View", glm::mat4(glm::mat3(camera->GetViewMatrix())));
-        m_AtmosphereShader.SetMatrix4("u_InvProjection", glm::inverse(camera->GetProjectionMatrix()));
-        m_AtmosphereShader.SetMatrix4("u_InvView", glm::inverse(glm::mat4(glm::mat3(camera->GetViewMatrix()))));
-        m_AtmosphereShader.SetInteger("u_Skybox", 0);
-        m_AtmosphereShader.SetFloat("u_Time", glfwGetTime());
-        m_AtmosphereShader.SetVector3f("u_SunDirection", sun_direction);
-        m_AtmosphereShader.SetInteger("u_NumSamples", steps);
-        m_AtmosphereShader.SetInteger("u_NumLightSamples", lsteps);
+        for (int i = 0; i < 6; i++)
+        {
+            const glm::mat4& view_matrix = view_matrices[i];
 
-        m_VAO.Bind();
-        (glDrawArrays(GL_TRIANGLES, 0, 36));
+            map.BindFace(i);
+            m_AtmosphereShader.SetMatrix4("u_Projection", projection_matrix);
+            m_AtmosphereShader.SetMatrix4("u_View", glm::mat4(glm::mat3(view_matrix)));
+            m_AtmosphereShader.SetMatrix4("u_InvProjection", glm::inverse(projection_matrix));
+            m_AtmosphereShader.SetMatrix4("u_InvView", glm::inverse(glm::mat4(glm::mat3(view_matrix))));
+            m_AtmosphereShader.SetInteger("u_Skybox", 0);
+            m_AtmosphereShader.SetFloat("u_Time", glfwGetTime());
+            m_AtmosphereShader.SetVector3f("u_SunDirection", sun_direction);
+            m_AtmosphereShader.SetInteger("u_NumSamples", steps);
+            m_AtmosphereShader.SetInteger("u_NumLightSamples", lsteps);
 
-        m_VAO.Unbind();
+            m_VAO.Bind();
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            m_VAO.Unbind();
+        }
 
         glDepthMask(GL_TRUE);
     }

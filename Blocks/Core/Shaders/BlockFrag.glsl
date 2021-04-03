@@ -46,6 +46,7 @@ uniform sampler2D u_PreviousFrameColorTexture;
 uniform bool u_SSREnabled;
 
 uniform samplerCube u_ReflectionCubemap;
+uniform samplerCube u_AtmosphereCubemap;
 
 // Misc
 uniform float u_GraniteTexIndex;
@@ -105,7 +106,8 @@ void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
     g_Shadow = CalculateSunShadow();
-    
+    vec3 ViewDirection = normalize(v_FragPosition - u_ViewerPosition);
+
     vec4 SampledAlbedo;
 
     if (v_IsUnderwater == 1)
@@ -164,7 +166,14 @@ void main()
 
     o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled);
 
-    o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.025f);
+    // Atmosphere lighting
+    {
+        vec3 R = normalize(reflect(ViewDirection, g_Normal));
+        vec3 AtmosphereColor = texture(u_AtmosphereCubemap, R).rgb;
+
+        o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.2f);
+    }
+
     o_Color.xyz *= max(v_LampLightValue * 1.2f, 1.0f);
     o_Color.xyz *= max(1.0f, g_Emissive * 3.5f);
 
@@ -182,8 +191,7 @@ void main()
 
     else if (reflective_block)
     {
-        vec3 I = normalize(v_FragPosition - u_ViewerPosition);
-        vec3 R = normalize(reflect(I, v_Normal + (0.1f * g_Normal)));
+        vec3 R = normalize(reflect(ViewDirection, v_Normal + (0.1f * g_Normal)));
         vec3 ReflectedColor = texture(u_ReflectionCubemap, R).rgb;
 
         o_Color = mix(o_Color, vec4(ReflectedColor, 1.0f), 0.3); 
@@ -230,6 +238,8 @@ float CalculateSunShadow()
         float ClosestDepth = texture(u_LightShadowMap, v_LightFragProjectionPos.xy).r; 
 	    shadow = Depth - u_ShadowBias > ClosestDepth ? 1.0 : 0.0;    
     #endif
+
+    if (v_IsUnderwater) { shadow *= 0.15f ;}
 
     return shadow;
 }
