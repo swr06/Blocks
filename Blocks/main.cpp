@@ -1,3 +1,15 @@
+/* -- The Blocks Voxel Engine -- 
+* 
+Contributors : 
+Samuel Rasquinha 
+Dekrain
+Kiroma
+ShadaxStack (fuzdex)
+g h o s t
+UglySwedishFish (WorldTeller)
+*/
+
+
 #include <stdio.h>
 #include <iostream>
 #include <array>
@@ -51,7 +63,6 @@ GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
 GLClasses::Framebuffer SSRFBO(800, 600, true);
 GLClasses::Framebuffer RefractionFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
-GLClasses::Framebuffer AtmosphereFBO(800, 600, true);
 
 // Flags 
 bool ShouldRenderSkybox = true;
@@ -70,7 +81,8 @@ bool BlockModified = false;
 bool SunDirectionChanged = false;
 
 // Tweakable variables
-glm::vec3 SunDirection = glm::vec3(0.1f, -1.0f, 0.1f);
+glm::vec3 SunDirection = glm::vec3(0.0f);
+glm::vec3 MoonDirection = glm::vec3(0.0f);
 
 // ImGui Adjustable Variables
 float ShadowBias = 0.001f;
@@ -81,9 +93,17 @@ float SSRRenderScale = 0.25f;
 float WaterParallaxDepth = 8.0f;
 float WaterParallaxHeight = 0.5f;
 float Exposure = 3.25f;
+float AtmosphereRenderScale = 0.04;
 
 bool DepthPrePass = true;
-bool VSync = 1;
+bool VSync = true;
+
+bool TickSun = true;
+
+int AtmosphereLightSteps = 2;
+int AtmosphereSteps = 30;
+
+float FakeSunTime = 0.0f;
 
 struct RenderingTime
 {
@@ -97,6 +117,8 @@ struct RenderingTime
 	float Bloom;
 	float Volumetrics;
 	float Update;
+	float Atmosphere;
+	float TotalMeasured;
 };
 
 extern uint32_t _App_PolygonCount; // Internal! Do not touch.
@@ -134,16 +156,20 @@ public:
 			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
 			ImGui::Text("Position : (%f, %f, %f)", Player.Camera.GetPosition().x, Player.Camera.GetPosition().y, Player.Camera.GetPosition().z);
 			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
-			ImGui::SliderFloat3("Sun Direction", &SunDirection[0], -1.0f, 1.0f);
-			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
-			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
-			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);
-			ImGui::Checkbox("Depth Prepass? (Reduces overdraw)", &DepthPrePass);
+			ImGui::Text("Sun Direction : (%f, %f, %f)", SunDirection.x, SunDirection.y, SunDirection.z);
+			ImGui::Text("Moon Direction : (%f, %f, %f)", MoonDirection.x, MoonDirection.y, MoonDirection.z);
 			ImGui::End();
 		}
 
 		if (ImGui::Begin("Settings"))
 		{
+			ImGui::Checkbox("Tick Sun", &TickSun);
+			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 64.0f);
+			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
+			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
+			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);
+			ImGui::Checkbox("Depth Prepass? (Reduces overdraw)", &DepthPrePass);
+			ImGui::Text("\n");
 			ImGui::Checkbox("Render Skybox?", &ShouldRenderSkybox);
 			ImGui::Checkbox("Render Volumetrics?", &ShouldRenderVolumetrics);
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
@@ -156,12 +182,15 @@ public:
 			ImGui::Checkbox("Water Parallax?", &ShouldDoWaterParallax);
 			ImGui::SliderFloat("Water Parallax Depth", &WaterParallaxDepth, 8.0f, 96.0f);
 			ImGui::SliderFloat("Water Parallax Height", &WaterParallaxHeight, 0.25f, 4.0f);
+			ImGui::SliderFloat("Atmosphere Render Scale", &AtmosphereRenderScale, 0.03f, 0.4f);
+			ImGui::SliderInt("Atmosphere Sample Count", &AtmosphereSteps, 2, 100);
+			ImGui::SliderInt("Atmosphere Light Sample Count", &AtmosphereLightSteps, 2, 40);
 			ImGui::End();
 		}
 
 		static RenderingTime render_time;
 
-		if (this->GetCurrentFrame() % 6 == 0)
+		if (this->GetCurrentFrame() % 8 == 0)
 		{
 			render_time = AppRenderingTime;
 
@@ -175,6 +204,8 @@ public:
 			AppRenderingTime.PostProcessing = 0.0f;
 			AppRenderingTime.Bloom = 0.0f;
 			AppRenderingTime.Volumetrics = 0.0f;
+			AppRenderingTime.Atmosphere = 0.0f;
+			AppRenderingTime.TotalMeasured = 0.0f;
 		}
 
 		if (ImGui::Begin("Performance"))
@@ -189,6 +220,8 @@ public:
 			ImGui::Text("Volumetrics time : %f", render_time.Volumetrics);
 			ImGui::Text("Post Processing time : %f", render_time.PostProcessing);
 			ImGui::Text("Update time : %f", render_time.Update);
+			ImGui::Text("Atmospherics time : %f", render_time.Atmosphere);
+			ImGui::Text("Total Measured time : %f", render_time.TotalMeasured);
 			ImGui::Text("Total time : %f",
 				render_time.SSR +
 				render_time.Refractions +
@@ -268,6 +301,7 @@ int main()
 	app.SetCursorLocked(true);
 
 	Blocks::AtmosphereRenderer AtmosphereRenderer;
+	Blocks::AtmosphereRenderMap AtmosphereCubemap(64);
 
 	Blocks::BlockDatabase::Initialize();
 	Blocks::Renderer2D Renderer2D;
@@ -357,11 +391,33 @@ int main()
 	// Setup reflection map renderer
 	Blocks::CubemapReflectionRenderer::Initialize();
 
-	// Write default time values
+	// Write default values
+	SunDirection = glm::vec3(0.0f);
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		// Set MainRenderFBO Sizes
+
+		if (TickSun)
+		{
+			SunDirection = glm::vec3(
+				0.0f,
+				glm::sin(glfwGetTime() * 0.1f),
+				glm::cos(glfwGetTime() * 0.1f)
+			);
+		}
+
+		else
+		{
+			SunDirection = glm::vec3(
+				0.0f,
+				glm::sin(FakeSunTime * 0.1f),
+				glm::cos(FakeSunTime * 0.1f)
+			);
+		}
+
+		MoonDirection = -SunDirection;
+		glm::vec3 LightDirectionToUse = -SunDirection.y < 0.01f ? MoonDirection : SunDirection;
 
 		float wx = app.GetWidth() * RenderScale, wy = app.GetHeight() * RenderScale;
 
@@ -372,9 +428,11 @@ int main()
 		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
-		AtmosphereFBO.SetSize(wx * 0.04f, wy * 0.04f);
 
 		// ----------------- //
+
+		Blocks::Timer total_timer;
+		total_timer.Start();
 
 		_SSR = ShouldDoSSRPass && (!Player.InWater);
 		_Bloom = ShouldDoBloomPass && (!Player.InWater);
@@ -396,18 +454,17 @@ int main()
 
 		AppRenderingTime.Update = update_timer.End();
 
-		if ((PlayerMoved && (app.GetCurrentFrame() % 10 == 0)) || BlockModified || SunDirectionChanged || 
-			app.GetCurrentFrame() % 30 == 0)
+		if (app.GetCurrentFrame() % 4 == 0)
 		{
 			Blocks::Timer shadow_timer;
 			shadow_timer.Start();
 
 			// Render the shadow map
-			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), SunDirection, &MainWorld);
+			Blocks::ShadowMapRenderer::RenderShadowMap(ShadowMap, Player.Camera.GetPosition(), LightDirectionToUse, &MainWorld);
 			AppRenderingTime.ShadowMap = shadow_timer.End();
 		}
 
-		if (app.GetCurrentFrame() % 8 == 0)
+		if (app.GetCurrentFrame() % 10 == 0)
 		{
 			Blocks::Timer reflection_timer;
 			reflection_timer.Start();
@@ -420,9 +477,11 @@ int main()
 		// ---------
 		// Atmospherics rendering pass
 
-		AtmosphereFBO.Bind();
-		AtmosphereRenderer.RenderAtmosphere(&Player.Camera);
-		AtmosphereFBO.Unbind();
+		Blocks::Timer atmosphere_timer;
+
+		atmosphere_timer.Start();
+		AtmosphereRenderer.RenderAtmosphere(AtmosphereCubemap, -SunDirection, AtmosphereSteps, AtmosphereLightSteps);
+		AppRenderingTime.Atmosphere = atmosphere_timer.End();
 
 		// ---------
 		// SSR pass
@@ -612,7 +671,6 @@ int main()
 		RenderShader.SetInteger("u_BlockNormalTextures", 1);
 		RenderShader.SetInteger("u_BlockPBRTextures", 2);
 		RenderShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
-		RenderShader.SetVector3f("u_LightDirection", -SunDirection);
 		RenderShader.SetFloat("u_ShadowBias", ShadowBias);
 
 		// Shadows
@@ -627,8 +685,12 @@ int main()
 		RenderShader.SetInteger("u_PreviousFrameColorTexture", 5);
 		RenderShader.SetInteger("u_SSRTexture", 6);
 		RenderShader.SetInteger("u_ReflectionCubemap", 7);
+		RenderShader.SetInteger("u_AtmosphereCubemap", 8);
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", _SSR);
+
+		RenderShader.SetVector3f("u_SunDirection", SunDirection);
+		RenderShader.SetVector3f("u_MoonDirection", MoonDirection);
 
 		// Bind Textures
 
@@ -655,6 +717,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectionMap.GetTexture());
+
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
 
 		MainWorld.RenderChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, RenderShader);
 
@@ -692,6 +757,8 @@ int main()
 
 		WaterShader.SetMatrix4("u_View", Player.Camera.GetViewMatrix());
 		WaterShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
+		WaterShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
+		WaterShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
 
 		WaterShader.SetInteger("u_PreviousFrameColorTexture", 0);
 		WaterShader.SetInteger("u_SSRTexture", 1);
@@ -704,6 +771,7 @@ int main()
 		WaterShader.SetInteger("u_WaterMap[1]", 9);
 		WaterShader.SetInteger("u_RefractionUVTexture", 10);
 		WaterShader.SetInteger("u_PreviousFrameDepthTexture", 11);
+		WaterShader.SetInteger("u_AtmosphereCubemap", 12);
 		WaterShader.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
@@ -714,7 +782,7 @@ int main()
 		WaterShader.SetFloat("u_MixAmount", (float)(app.GetCurrentFrame() % 4) / (float)(32.0f));
 		WaterShader.SetFloat("u_ParallaxDepth", WaterParallaxDepth);
 		WaterShader.SetFloat("u_ParallaxScale", WaterParallaxHeight);
-		WaterShader.SetVector3f("u_SunDirection", -SunDirection);
+		WaterShader.SetVector3f("u_SunDirection", SunDirection);
 		WaterShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
@@ -753,6 +821,9 @@ int main()
 		glActiveTexture(GL_TEXTURE11);
 		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
 
+		glActiveTexture(GL_TEXTURE12);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
+
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -784,7 +855,7 @@ int main()
 			VolumetricShader.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
 			VolumetricShader.SetMatrix4("u_LightViewProjection", Blocks::ShadowMapRenderer::GetLightProjectionMatrix() * Blocks::ShadowMapRenderer::GetLightViewMatrix());
 			VolumetricShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
-			VolumetricShader.SetVector3f("u_LightDirection", glm::normalize(SunDirection));
+			VolumetricShader.SetVector3f("u_LightDirection", glm::normalize(LightDirectionToUse));
 			VolumetricShader.SetInteger("u_Width", VolumetricLightingFBO.GetWidth());
 			VolumetricShader.SetInteger("u_Height", VolumetricLightingFBO.GetHeight());
 			VolumetricShader.SetFloat("u_Scattering", VolumetricScattering);
@@ -866,6 +937,7 @@ int main()
 		PPShader.SetFloat("u_Time", glfwGetTime());
 		PPShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
 		PPShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
+		PPShader.SetVector3f("u_SunDirection", -SunDirection);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
@@ -877,7 +949,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, BloomFBO.GetTexture());
 
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, AtmosphereFBO.GetTexture());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
 
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
@@ -890,6 +962,8 @@ int main()
 
 		// Render the 2D elements
 		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
+
+		AppRenderingTime.TotalMeasured = update_timer.End();
 
 		app.FinishFrame();
 		GLClasses::DisplayFrameRate(app.GetWindow(), "Blocks");
@@ -920,3 +994,6 @@ namespace Blocks
 		return MainWorld.GetWorldBlockLightValue(block);
 	}
 }
+
+
+

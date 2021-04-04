@@ -21,6 +21,7 @@ uniform sampler2D u_WaterDetailNormalMap;
 uniform sampler2D u_WaterMap[2];
 uniform sampler2D u_RefractionUVTexture;
 uniform sampler2D u_PreviousFrameDepthTexture;
+uniform samplerCube u_AtmosphereCubemap;
 
 uniform bool u_SSREnabled;
 uniform bool u_RefractionsEnabled;
@@ -30,6 +31,8 @@ uniform float u_MixAmount;
 uniform vec2 u_Dimensions;
 uniform vec3 u_SunDirection;
 uniform vec3 u_ViewerPosition;
+uniform mat4 u_InverseView;
+uniform mat4 u_InverseProjection;
 
 // Tweakable values
 uniform bool u_EnableParallax;
@@ -55,19 +58,50 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 CalculateSunLight()
+vec3 GetAtmosphere(vec3 ray_direction)
 {
-	vec3 LightDirection = u_SunDirection;
-	float Specular;
+    vec3 sun_dir = normalize(-u_SunDirection); 
+    vec3 moon_dir = normalize(u_SunDirection); 
 
-    // Blinn-phong lighting
-	vec3 ReflectDir = normalize(reflect(-LightDirection, g_Normal));		
-	vec3 Halfway = normalize(LightDirection + g_ViewDirection);  
-    Specular = pow(max(dot(g_Normal, Halfway), 0.0), 48);
+    vec3 ray_dir = ray_direction;
+    vec3 atmosphere = texture(u_AtmosphereCubemap, ray_dir).rgb;
+    atmosphere = max(atmosphere, 0.15f);
 
-	vec3 SpecularColor = (g_SpecularStrength * Specular) * vec3(g_WaterColor) ; // To be also sampled with specular map
+    if(dot(ray_dir, sun_dir) > 0.9855)
+    {
+        atmosphere *= 10.0f;
+    }
 
-	return vec3(vec3(0.3f * g_WaterColor) + SpecularColor);  
+    if(dot(ray_dir, moon_dir) > 0.9965)
+    {
+        atmosphere *= 3.0;
+    }
+
+    return atmosphere;
+}
+
+
+vec3 CalculateSunLight(vec3 ldir)
+{
+    vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
+    ScreenSpaceCoordinates.x = clamp(ScreenSpaceCoordinates.x, 0.0f, 1.0f);
+    ScreenSpaceCoordinates.y = clamp(ScreenSpaceCoordinates.y, 0.0f, 1.0f);
+
+    vec3 ambient = 0.3f * g_WaterColor;
+    vec2 NDC = ScreenSpaceCoordinates.xy * 2.0f - 1.0f;
+    vec4 clip = vec4(NDC, -1.0, 1.0);
+    vec4 eye = vec4(vec2(u_InverseProjection * clip), -1.0, 0.0);
+    vec3 ray_dir = vec3(u_InverseView * eye);
+    vec3 normal = g_Normal;
+    ray_dir = normalize(ray_dir);
+
+    normal.x /= 2.0f;
+    normal.z /= 3.4f;
+    normal.y /= 2.5f;
+
+    vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
+
+    return g_WaterColor * GetAtmosphere(reflected);
 }
 
 float GetWaterHeightAt(vec2 tx)
@@ -129,8 +163,8 @@ void main()
     g_SpecularStrength = 196.0f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     g_WaterColor *= 1.4f;
-    
-    o_Color = vec4(CalculateSunLight(), 1.0f);
+
+    o_Color = vec4(CalculateSunLight(-u_SunDirection), 1.0f); // Calculate water, ray traced lighting
     g_F0 = vec3(0.02f);
     g_F0 = mix(g_F0, g_WaterColor, 0.025f);
 
@@ -177,13 +211,13 @@ void main()
             RefractedUV += g_Normal.xz * 0.02f;
 
             vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
-            o_Color = mix(o_Color, RefractedColor, 0.1f); 
+            o_Color = mix(o_Color, RefractedColor, 0.2f); 
         }
 
         else 
         {
             vec4 RefractedColor = vec4(texture(u_RefractionTexture, ScreenSpaceCoordinates + (g_Normal.xz * 0.01f)).rgb, 1.0);
-            o_Color = mix(o_Color, RefractedColor, 0.08f); 
+            o_Color = mix(o_Color, RefractedColor, 0.14f); 
         }
     }
 

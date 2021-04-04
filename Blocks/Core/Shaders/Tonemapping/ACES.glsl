@@ -10,13 +10,15 @@ uniform sampler2D u_FramebufferTexture;
 uniform sampler2D u_VolumetricTexture;
 uniform sampler2D u_BloomTexture;
 uniform sampler2D u_DepthTexture;
-uniform sampler2D u_AtmosphereTexture;
+uniform samplerCube u_AtmosphereTexture;
 uniform float u_Exposure = 1.0f;
 
 uniform bool u_BloomEnabled;
 uniform bool u_VolumetricEnabled;
 uniform bool u_PlayerInWater;
 uniform float u_Time;
+
+uniform vec3 u_SunDirection;
 
 const vec3 SUN_COLOR = vec3(1.0);
 
@@ -55,11 +57,11 @@ vec4 ACESFitted(vec4 Color, float Exposure)
 
 vec3 GetAtmosphere()
 {
-    vec3 sun_dir = normalize(vec3(0.0, sin(u_Time * 0.1f), cos(u_Time * 0.1f))); 
+    vec3 sun_dir = u_SunDirection; 
     vec3 moon_dir = -sun_dir; 
 
-    vec3 atmosphere = textureBicubic(u_AtmosphereTexture, v_TexCoords).rgb;
     vec3 ray_dir = normalize(v_RayDirection);
+    vec3 atmosphere = texture(u_AtmosphereTexture, ray_dir).rgb;
 
     if(dot(ray_dir, sun_dir) > 0.9855)
     {

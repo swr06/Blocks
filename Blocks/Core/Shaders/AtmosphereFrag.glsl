@@ -12,6 +12,10 @@ in vec3 v_ViewPosition;
 in vec3 v_RayDirection;
 
 uniform float u_Time;
+uniform vec3 u_SunDirection;
+
+uniform int u_NumSamples;
+uniform int u_NumLightSamples; 
 
 // Structures
 struct ray_t
@@ -67,9 +71,6 @@ const float atmosphere_radius = 6420e3;
 const vec3 sun_power = vec3(10.0);
 const vec3 moon_power = sun_power * vec3(0.2,0.2,0.35);
 
-const int num_samples = 30;
-const int num_samples_light = 3; 
-
 const sphere_t atmosphere = sphere_t(vec3(0.),atmosphere_radius);
 const sphere_t earth = sphere_t(vec3(0.),earth_radius);
 
@@ -79,9 +80,9 @@ bool get_sun_light(in ray_t ray, inout float opticalDepthR, inout float opticalD
     intersects_sphere(ray, atmosphere,t0,t1);
     
     float march_pos = 0.0f ;
-    float march_length = t1 / float(num_samples_light);
+    float march_length = t1 / float(u_NumLightSamples);
     
-    for(int i = 0; i < num_samples_light; i++)
+    for(int i = 0; i < u_NumLightSamples; i++)
     {
         vec3 s = ray.origin + ray.direction * (march_pos + 0.5f * march_length);
         float height = length(s)-earth_radius;
@@ -96,7 +97,7 @@ bool get_sun_light(in ray_t ray, inout float opticalDepthR, inout float opticalD
 
 vec3 get_incident_light(in ray_t ray)
 {
-    vec3 sun_dir = normalize(vec3(0.0, sin(g_Time),cos(g_Time))) ; 
+    vec3 sun_dir = u_SunDirection ; 
     vec3 moon_dir = -sun_dir; 
     
     float t0,t1;
@@ -106,7 +107,7 @@ vec3 get_incident_light(in ray_t ray)
         return vec3(1.0f);
     }
     
-    float march_length = t1 / float(num_samples);
+    float march_length = t1 / float(u_NumSamples);
     
     float mu = dot(sun_dir, ray.direction);
     float muMoon = dot(moon_dir, ray.direction);
@@ -127,7 +128,7 @@ vec3 get_incident_light(in ray_t ray)
     
     float march_pos = 0.;
     
-    for(int i = 0 ; i < num_samples; i++)
+    for(int i = 0 ; i < u_NumSamples; i++)
     {
         vec3 s = ray.origin + ray.direction * (march_pos + 0.5f * march_length); //sample middle of step
         float height = length(s) - earth_radius;

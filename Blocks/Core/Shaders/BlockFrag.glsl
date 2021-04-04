@@ -33,7 +33,8 @@ uniform sampler2DArray u_BlockPBRTextures;
 // Shadowing and light info
 uniform sampler2D u_LightShadowMap;
 
-uniform vec3 u_LightDirection;
+uniform vec3 u_SunDirection;
+uniform vec3 u_MoonDirection;
 uniform float u_ShadowBias;
 
 // Noise 
@@ -45,6 +46,7 @@ uniform sampler2D u_PreviousFrameColorTexture;
 uniform bool u_SSREnabled;
 
 uniform samplerCube u_ReflectionCubemap;
+uniform samplerCube u_AtmosphereCubemap;
 
 // Misc
 uniform float u_GraniteTexIndex;
@@ -59,12 +61,13 @@ float g_Roughness = 0.1f;
 float g_Metalness = 0.1f;
 float g_Emissive = 0.0f;
 float g_Shadow = 0.0f;
+vec3 g_LightColor;
 
-//const vec3 SUN_COLOR = vec3(252.0f / 255.0f, 212.0f / 255.0f, 64.0f / 255.0f);
 const vec3 SUN_COLOR = vec3(1.0f * 5.25f, 1.0f * 5.25f, 0.8f * 4.0f);
+const vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 1.25f);
 const vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
-vec3 CalculateDirectionalLightPBR();
+vec3 CalculateDirectionalLightPBR(vec3);
 vec3 RandomPointInUnitSphere();
 float nextFloat(inout int seed);
 float nextFloat(inout int seed, in float max);
@@ -98,10 +101,12 @@ const vec2 PoissonDisk[32] = vec2[]
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 float CalculateSunShadow();
 
+
 void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
     g_Shadow = CalculateSunShadow();
+    vec3 ViewDirection = normalize(v_FragPosition - u_ViewerPosition);
 
     vec4 SampledAlbedo;
 
@@ -147,17 +152,30 @@ void main()
     float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
     vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
-    o_Color = vec4(Ambient + CalculateDirectionalLightPBR(), 1.0f);
+    g_LightColor = mix(vec3(4.15f, 4.15f, 5.5), vec3(0.7f, 0.7f, 1.25f), min(distance(u_SunDirection.y, -1.0f), 0.99f));
+
+    vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection);
+    vec3 Moonlightfactor = CalculateDirectionalLightPBR(u_SunDirection);
+    vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+
+    o_Color = vec4(Ambient + FinalLighting, 1.0f);
     o_Normal = g_Normal;
     o_SSRNormal = v_Normal;
 
     bool reflective_block = v_TexIndex == u_GraniteTexIndex;
 
-    o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled);
+    // Atmosphere lighting
+    {
+        vec3 R = normalize(reflect(ViewDirection, g_Normal));
+        vec3 AtmosphereColor = texture(u_AtmosphereCubemap, R).rgb;
 
-    o_Color = mix(o_Color, vec4(SKY_LIGHT, 1.0f), 0.025f);
+        o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.2f);
+    }
+
     o_Color.xyz *= max(v_LampLightValue * 1.2f, 1.0f);
     o_Color.xyz *= max(1.0f, g_Emissive * 3.5f);
+
+    o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled && reflective_block);
 
     if (u_SSREnabled && reflective_block) 
     {
@@ -173,8 +191,7 @@ void main()
 
     else if (reflective_block)
     {
-        vec3 I = normalize(v_FragPosition - u_ViewerPosition);
-        vec3 R = normalize(reflect(I, v_Normal + (0.1f * g_Normal)));
+        vec3 R = normalize(reflect(ViewDirection, v_Normal + (0.1f * g_Normal)));
         vec3 ReflectedColor = texture(u_ReflectionCubemap, R).rgb;
 
         o_Color = mix(o_Color, vec4(ReflectedColor, 1.0f), 0.3); 
@@ -221,6 +238,8 @@ float CalculateSunShadow()
         float ClosestDepth = texture(u_LightShadowMap, v_LightFragProjectionPos.xy).r; 
 	    shadow = Depth - u_ShadowBias > ClosestDepth ? 1.0 : 0.0;    
     #endif
+
+    if (v_IsUnderwater) { shadow *= 0.15f ;}
 
     return shadow;
 }
@@ -300,15 +319,15 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 CalculateDirectionalLightPBR()
+vec3 CalculateDirectionalLightPBR(vec3 light_dir)
 {
     float ShadowIntensity = 0.5f;
     float Shadow = g_Shadow * ShadowIntensity;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
-    vec3 L = normalize(u_LightDirection);
+    vec3 L = normalize(light_dir);
     vec3 H = normalize(V + L);
-	vec3 radiance = SUN_COLOR;
+	vec3 radiance = g_LightColor;
 
     float NDF = DistributionGGX(g_Normal, H, g_Roughness);   
     float G = GeometrySmith(g_Normal, V, L, g_Roughness);      
