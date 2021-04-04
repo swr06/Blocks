@@ -164,9 +164,7 @@ void main()
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
     g_WaterColor *= 1.4f;
 
-    vec3 SunlightFactor = CalculateSunLight(-u_SunDirection);
-  
-    o_Color = vec4(SunlightFactor, 1.0f);
+    o_Color = vec4(CalculateSunLight(-u_SunDirection), 1.0f); // Calculate water, ray traced lighting
     g_F0 = vec3(0.02f);
     g_F0 = mix(g_F0, g_WaterColor, 0.025f);
 

@@ -152,7 +152,7 @@ void main()
     float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
     vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
-    g_LightColor = mix(vec3(4.25f, 4.25f, 5.35), vec3(0.7f, 0.7f, 1.25f), min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    g_LightColor = mix(vec3(4.15f, 4.15f, 5.5), vec3(0.7f, 0.7f, 1.25f), min(distance(u_SunDirection.y, -1.0f), 0.99f));
 
     vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection);
     vec3 Moonlightfactor = CalculateDirectionalLightPBR(u_SunDirection);
@@ -164,8 +164,6 @@ void main()
 
     bool reflective_block = v_TexIndex == u_GraniteTexIndex;
 
-    o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled);
-
     // Atmosphere lighting
     {
         vec3 R = normalize(reflect(ViewDirection, g_Normal));
@@ -176,6 +174,8 @@ void main()
 
     o_Color.xyz *= max(v_LampLightValue * 1.2f, 1.0f);
     o_Color.xyz *= max(1.0f, g_Emissive * 3.5f);
+
+    o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled && reflective_block);
 
     if (u_SSREnabled && reflective_block) 
     {
