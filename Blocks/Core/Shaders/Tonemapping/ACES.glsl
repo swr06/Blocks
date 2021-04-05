@@ -8,7 +8,7 @@ layout(location = 0) out vec4 o_Color;
 
 uniform sampler2D u_FramebufferTexture;
 uniform sampler2D u_VolumetricTexture;
-uniform sampler2D u_BloomTexture;
+uniform sampler2D u_BloomTextures[3];
 uniform sampler2D u_DepthTexture;
 uniform samplerCube u_AtmosphereTexture;
 uniform float u_Exposure = 1.0f;
@@ -55,31 +55,10 @@ vec4 ACESFitted(vec4 Color, float Exposure)
     return Color;
 }
 
-vec3 GetAtmosphere()
-{
-    vec3 sun_dir = u_SunDirection; 
-    vec3 moon_dir = -sun_dir; 
-
-    vec3 ray_dir = normalize(v_RayDirection);
-    vec3 atmosphere = texture(u_AtmosphereTexture, ray_dir).rgb;
-
-    if(dot(ray_dir, sun_dir) > 0.9855)
-    {
-        atmosphere *= (10.0);
-    }
-
-    if(dot(ray_dir, moon_dir) > 0.9965)
-    {
-        atmosphere *= (4.4, 4.4, 5.2);
-    }
-
-    return atmosphere;
-}
-
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
-    vec3 Bloom = vec3(0.0f);
+    vec3 Bloom[2] = vec3[](vec3(0.0f), vec3(0.0f));
 
     if (u_VolumetricEnabled)
     {
@@ -89,7 +68,8 @@ void main()
 
     if (u_BloomEnabled)
     {
-         Bloom = textureBicubic(u_BloomTexture, v_TexCoords).xyz;
+         Bloom[0] = texture(u_BloomTextures[0], v_TexCoords).xyz;
+         Bloom[1] = texture(u_BloomTextures[1], v_TexCoords).xyz;
     }
    
     vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
@@ -102,14 +82,11 @@ void main()
     }
 
     vec3 final_color;
-    final_color = HDR + Bloom + (Volumetric * 0.1f);
+    final_color = HDR + 
+                  Bloom[0] + Bloom[1] +
+                  (Volumetric * 0.1f);
 
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
-
-    if (texture(u_DepthTexture, v_TexCoords).r == 1.0f)
-    {
-        o_Color = vec4(GetAtmosphere(), 1.0f);
-    }
 }
 
 vec4 cubic(float v)

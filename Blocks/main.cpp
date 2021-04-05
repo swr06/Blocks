@@ -48,6 +48,7 @@ UglySwedishFish (WorldTeller)
 #include "Core/GLClasses/FramebufferRed.h"
 #include "Core/CubemapReflectionRenderer.h"
 #include "Core/Utils/Timer.h"
+#include "Core/BloomRenderer.h"
 
 // World, Camera, Player..
 Blocks::Player Player;
@@ -95,7 +96,7 @@ float WaterParallaxHeight = 0.5f;
 float Exposure = 3.25f;
 float AtmosphereRenderScale = 0.04;
 
-bool DepthPrePass = true;
+bool DepthPrePass = false;
 bool VSync = true;
 
 bool TickSun = true;
@@ -323,11 +324,14 @@ int main()
 	GLClasses::Shader WaterShader;
 	GLClasses::Shader RefractionShader;
 	GLClasses::Shader DepthPrepassShader;
+	GLClasses::Shader AtmosphereCombineShader;
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
 	GLClasses::DepthBuffer ShadowMap(4096, 4096);
 	GLClasses::CubeReflectionMap ReflectionMap(256);
+
+	Blocks::BloomFBO BloomFBO(800, 600);
 
 	// Setup the basic vao
 
@@ -362,6 +366,8 @@ int main()
 	WaterShader.CompileShaders();
 	DepthPrepassShader.CreateShaderProgramFromFile("Core/Shaders/DepthPrepassVert.glsl", "Core/Shaders/DepthPrepassFrag.glsl");
 	DepthPrepassShader.CompileShaders();
+	AtmosphereCombineShader.CreateShaderProgramFromFile("Core/Shaders/AtmosphereCombineVert.glsl", "Core/Shaders/AtmosphereCombineFrag.glsl");
+	AtmosphereCombineShader.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -394,6 +400,8 @@ int main()
 	// Write default values
 	SunDirection = glm::vec3(0.0f);
 
+	Blocks::BloomRenderer::Initialize();
+
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		// Set MainRenderFBO Sizes
@@ -425,11 +433,12 @@ int main()
 		SecondaryRenderFBO.SetDimensions(wx, wy);
 		TempFBO.SetSize(wx, wy);
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
-		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
+		BloomFBO.SetSize(floor(wx), floor(wy));
 
 		// ----------------- //
+
 
 		Blocks::Timer total_timer;
 		total_timer.Start();
@@ -442,7 +451,7 @@ int main()
 
 		glfwSwapInterval(VSync);
 
-		glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
 		Blocks::Timer update_timer;
@@ -551,7 +560,8 @@ int main()
 			AppRenderingTime.SSR = t1.End();
 		}
 
-		// Refraction
+		// ----------
+		// Screen Space Refractions
 
 		if (ShouldDoRefractions)
 		{
@@ -647,9 +657,34 @@ int main()
 		// Normal render pass
 
 		CurrentlyUsedFBO.Bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// --------------------
+		// Render the atmosphere
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glDepthMask(GL_FALSE);
+
+		AtmosphereCombineShader.Use();
+		AtmosphereCombineShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
+		AtmosphereCombineShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
+		AtmosphereCombineShader.SetInteger("u_AtmosphereTexture", 3);
+		AtmosphereCombineShader.SetVector3f("u_SunDir", SunDirection);
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
+
+		FBOVAO.Bind();
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		FBOVAO.Unbind();
 
 		glDepthMask(GL_TRUE);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+
+		// ------------------------
+		// Render the actual chunks
 
 		Blocks::Timer t3;
 		t3.Start();
@@ -887,28 +922,7 @@ int main()
 			Blocks::Timer t6;
 			t6.Start();
 
-			BloomFBO.Bind();
-			glViewport(0, 0, BloomFBO.GetWidth(), BloomFBO.GetHeight());
-
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-
-			BloomShader.Use();
-			BloomShader.SetInteger("u_Texture", 0);
-			BloomShader.SetInteger("u_DepthTexture", 1);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, TempFBO.GetTexture());
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
-
-			FBOVAO.Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			FBOVAO.Unbind();
-
-			glUseProgram(0);
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			Blocks::BloomRenderer::RenderBloom(BloomFBO, CurrentlyUsedFBO.GetColorTexture());
 
 			AppRenderingTime.Bloom = t6.End();
 		}
@@ -927,9 +941,13 @@ int main()
 		PPShader.Use();
 		PPShader.SetInteger("u_FramebufferTexture", 0);
 		PPShader.SetInteger("u_VolumetricTexture", 1);
-		PPShader.SetInteger("u_BloomTexture", 2);
 		PPShader.SetInteger("u_AtmosphereTexture", 3);
 		PPShader.SetInteger("u_DepthTexture", 4);
+
+		// Bloom textures
+		PPShader.SetInteger("u_BloomTextures[0]", 5);
+		PPShader.SetInteger("u_BloomTextures[1]", 6);
+
 		PPShader.SetBool("u_BloomEnabled", _Bloom);
 		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
 		PPShader.SetBool("u_PlayerInWater", Player.InWater);
@@ -945,14 +963,17 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
 
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, BloomFBO.GetTexture());
-
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
 
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
+
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, BloomFBO.m_Mip0);
+
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, BloomFBO.m_Mip1);
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);

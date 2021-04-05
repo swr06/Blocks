@@ -178,6 +178,12 @@
     <ClCompile Include="Core\AtmosphereRenderer.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\BloomRenderer.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\BloomFBO.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -333,6 +339,12 @@
     <ClInclude Include="Core\AtmosphereRenderer.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="Core\BloomRenderer.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\BloomFBO.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">
@@ -445,6 +457,21 @@
     </None>
     <None Include="Core\Shaders\Tonemapping\TonemapVert.glsl">
       <Filter>Source Files\Shaders\Tonemapping</Filter>
+    </None>
+    <None Include="Core\Shaders\BloomMaskFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\GaussianBlurHorizontal.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\GaussianBlurVertical.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\AtmosphereCombineFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\AtmosphereCombineVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>
