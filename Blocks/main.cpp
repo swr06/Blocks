@@ -96,7 +96,7 @@ float WaterParallaxHeight = 0.5f;
 float Exposure = 3.25f;
 float AtmosphereRenderScale = 0.04;
 
-bool DepthPrePass = true;
+bool DepthPrePass = false;
 bool VSync = true;
 
 bool TickSun = true;
