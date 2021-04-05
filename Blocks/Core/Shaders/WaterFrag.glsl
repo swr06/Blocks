@@ -99,9 +99,13 @@ vec3 CalculateSunLight(vec3 ldir)
     normal.z /= 3.4f;
     normal.y /= 2.5f;
 
-    vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
+    float diff = max(dot(normal, vec3(0.0f, -0.8269f, 0.5620f)), 0.0);
 
-    return g_WaterColor * GetAtmosphere(reflected);
+    vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
+    vec3 atmosphere = GetAtmosphere(reflected);
+    atmosphere += min(diff * 3.0f, abs(ldir.y) * 0.125f);
+
+    return g_WaterColor * atmosphere;
 }
 
 float GetWaterHeightAt(vec2 tx)
@@ -195,7 +199,7 @@ void main()
                     ReflectionMixFactor = (SSR_UV.x) * 0.85f;
                 }
 
-                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 6.4, 0.4f)); 
+                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 6.4, 0.64f)); 
             }
         }
     }
