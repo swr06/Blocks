@@ -54,8 +54,8 @@ namespace Blocks
 
 		void RenderBloom(BloomFBO& bloom_fbo, GLuint source_tex)
 		{
-			int w = bloom_fbo.GetWidth() / 2;
-			int h = bloom_fbo.GetHeight() / 2;
+			int w = bloom_fbo.GetWidth() * bloom_fbo.m_mipscale1;
+			int h = bloom_fbo.GetHeight() * bloom_fbo.m_mipscale1;
 
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
@@ -109,8 +109,8 @@ namespace Blocks
 			// 1/4th pass ///////////////////
 			/////////////////////////////////
 
-			w = bloom_fbo.GetWidth() / 4;
-			h = bloom_fbo.GetHeight() / 4;
+			w = floor(bloom_fbo.GetWidth() * bloom_fbo.m_mipscale2);
+			h = floor(bloom_fbo.GetHeight() * bloom_fbo.m_mipscale2);
 
 			BloomAlternateFBO1->SetSize(w, h);
 
@@ -160,62 +160,6 @@ namespace Blocks
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 			BloomFBOVAO->Unbind();
 			
-			/*
-			/////////////////////////////////
-			// 1/8th pass ///////////////////
-			/////////////////////////////////
-
-			w = bloom_fbo.GetWidth() / 8;
-			h = bloom_fbo.GetHeight() / 8;
-
-			BloomAlternateFBO2->SetSize(w, h);
-
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT2);
-			glViewport(0, 0, w, h);
-
-			BloomBrightShader->Use();
-			BloomBrightShader->SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, source_tex);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform a horizontal blur
-
-			BloomAlternateFBO2->Bind();
-
-			GaussianHorizontalBlur->Use();
-			GaussianHorizontalBlur->SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip2);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform the vertical blur
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT2);
-
-			GaussianVerticalBlur->Use();
-			GaussianVerticalBlur->SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO2->GetTexture());
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();*/
-
 			return;
 		}
 	}
