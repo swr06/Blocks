@@ -20,9 +20,9 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Water Caustics ✓
 - Voxel GI
 - Depth of Field
-- Motion Blur
-- Atmospheric Scattering
-- Day/Night cycle
+- Motion Blur 
+- Atmospheric Scattering ✓
+- Day/Night cycle ✓
 - Weather
 - CSM
 - VSM Shadows
@@ -30,7 +30,7 @@ A Voxel Engine that has emphasis on graphics and performance.
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
 - Global illumination
-- Atmospheric effect 
+- Atmospheric effect ✓
 
 # Test Environment <br>
 CPU : Ryzen 3 2200G <br>
