@@ -157,6 +157,8 @@
     <ClCompile Include="Core\BlockDatabase.cpp" />
     <ClCompile Include="Core\BlockDatabaseParser.cpp" />
     <ClCompile Include="Core\BlocksRenderBuffer.cpp" />
+    <ClCompile Include="Core\BloomFBO.cpp" />
+    <ClCompile Include="Core\BloomRenderer.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
     <ClCompile Include="Core\Chunk.cpp" />
     <ClCompile Include="Core\ChunkMesh.cpp" />
@@ -205,6 +207,8 @@
     <ClInclude Include="Core\BlockDatabase.h" />
     <ClInclude Include="Core\BlockDatabaseParser.h" />
     <ClInclude Include="Core\BlocksRenderBuffer.h" />
+    <ClInclude Include="Core\BloomFBO.h" />
+    <ClInclude Include="Core\BloomRenderer.h" />
     <ClInclude Include="Core\Camera.h" />
     <ClInclude Include="Core\Chunk.h" />
     <ClInclude Include="Core\ChunkMesh.h" />
@@ -255,6 +259,7 @@
     <None Include="Core\Shaders\2DElementShaderVert.glsl" />
     <None Include="Core\Shaders\BilateralBlurFrag.glsl" />
     <None Include="Core\Shaders\BloomBrightFrag.glsl" />
+    <None Include="Core\Shaders\BloomMaskFrag.glsl" />
     <None Include="Core\Shaders\CubemapReflectionFrag.glsl" />
     <None Include="Core\Shaders\CubemapReflectionVert.glsl" />
     <None Include="Core\Shaders\DepthFrag.glsl" />
@@ -267,6 +272,8 @@
     <None Include="Core\Shaders\AtmosphereVertex.glsl" />
     <None Include="Core\Shaders\BlockFrag.glsl" />
     <None Include="Core\Shaders\BlockVert.glsl" />
+    <None Include="Core\Shaders\GaussianBlurHorizontal.glsl" />
+    <None Include="Core\Shaders\GaussianBlurVertical.glsl" />
     <None Include="Core\Shaders\SkyboxFrag.glsl" />
     <None Include="Core\Shaders\SkyboxVertex.glsl" />
     <None Include="Core\Shaders\SSRefractionsFrag.glsl" />

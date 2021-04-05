@@ -48,6 +48,7 @@ UglySwedishFish (WorldTeller)
 #include "Core/GLClasses/FramebufferRed.h"
 #include "Core/CubemapReflectionRenderer.h"
 #include "Core/Utils/Timer.h"
+#include "Core/BloomRenderer.h"
 
 // World, Camera, Player..
 Blocks::Player Player;
@@ -329,6 +330,8 @@ int main()
 	GLClasses::DepthBuffer ShadowMap(4096, 4096);
 	GLClasses::CubeReflectionMap ReflectionMap(256);
 
+	Blocks::BloomFBO BloomFBO(800, 600);
+
 	// Setup the basic vao
 
 	float QuadVertices[] =
@@ -394,6 +397,8 @@ int main()
 	// Write default values
 	SunDirection = glm::vec3(0.0f);
 
+	Blocks::BloomRenderer::Initialize();
+
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		// Set MainRenderFBO Sizes
@@ -425,11 +430,12 @@ int main()
 		SecondaryRenderFBO.SetDimensions(wx, wy);
 		TempFBO.SetSize(wx, wy);
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
-		BloomFBO.SetSize(floor((float)wx / (float)6.0f), floor((float)wy / (float)6.0f));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
+		BloomFBO.SetSize(floor(wx), floor(wy));
 
 		// ----------------- //
+
 
 		Blocks::Timer total_timer;
 		total_timer.Start();
@@ -887,28 +893,7 @@ int main()
 			Blocks::Timer t6;
 			t6.Start();
 
-			BloomFBO.Bind();
-			glViewport(0, 0, BloomFBO.GetWidth(), BloomFBO.GetHeight());
-
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-
-			BloomShader.Use();
-			BloomShader.SetInteger("u_Texture", 0);
-			BloomShader.SetInteger("u_DepthTexture", 1);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, TempFBO.GetTexture());
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
-
-			FBOVAO.Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			FBOVAO.Unbind();
-
-			glUseProgram(0);
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			Blocks::BloomRenderer::RenderBloom(BloomFBO, PreviousFrameFBO.GetColorTexture());
 
 			AppRenderingTime.Bloom = t6.End();
 		}
@@ -946,7 +931,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
 
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, BloomFBO.GetTexture());
+		glBindTexture(GL_TEXTURE_2D, BloomFBO.m_Mip0);
 
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());

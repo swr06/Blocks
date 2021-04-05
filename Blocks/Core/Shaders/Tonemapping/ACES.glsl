@@ -89,7 +89,7 @@ void main()
 
     if (u_BloomEnabled)
     {
-         Bloom = textureBicubic(u_BloomTexture, v_TexCoords).xyz;
+         Bloom = texture(u_BloomTexture, v_TexCoords).xyz;
     }
    
     vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
