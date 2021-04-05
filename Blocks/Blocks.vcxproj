@@ -257,6 +257,8 @@
   <ItemGroup>
     <None Include="Core\Shaders\2DElementShaderFrag.glsl" />
     <None Include="Core\Shaders\2DElementShaderVert.glsl" />
+    <None Include="Core\Shaders\AtmosphereCombineFrag.glsl" />
+    <None Include="Core\Shaders\AtmosphereCombineVert.glsl" />
     <None Include="Core\Shaders\BilateralBlurFrag.glsl" />
     <None Include="Core\Shaders\BloomBrightFrag.glsl" />
     <None Include="Core\Shaders\BloomMaskFrag.glsl" />

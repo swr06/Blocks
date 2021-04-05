@@ -324,6 +324,7 @@ int main()
 	GLClasses::Shader WaterShader;
 	GLClasses::Shader RefractionShader;
 	GLClasses::Shader DepthPrepassShader;
+	GLClasses::Shader AtmosphereCombineShader;
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -365,6 +366,8 @@ int main()
 	WaterShader.CompileShaders();
 	DepthPrepassShader.CreateShaderProgramFromFile("Core/Shaders/DepthPrepassVert.glsl", "Core/Shaders/DepthPrepassFrag.glsl");
 	DepthPrepassShader.CompileShaders();
+	AtmosphereCombineShader.CreateShaderProgramFromFile("Core/Shaders/AtmosphereCombineVert.glsl", "Core/Shaders/AtmosphereCombineFrag.glsl");
+	AtmosphereCombineShader.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -557,7 +560,8 @@ int main()
 			AppRenderingTime.SSR = t1.End();
 		}
 
-		// Refraction
+		// ----------
+		// Screen Space Refractions
 
 		if (ShouldDoRefractions)
 		{
@@ -653,9 +657,34 @@ int main()
 		// Normal render pass
 
 		CurrentlyUsedFBO.Bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// --------------------
+		// Render the atmosphere
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glDepthMask(GL_FALSE);
+
+		AtmosphereCombineShader.Use();
+		AtmosphereCombineShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
+		AtmosphereCombineShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
+		AtmosphereCombineShader.SetInteger("u_AtmosphereTexture", 3);
+		AtmosphereCombineShader.SetVector3f("u_SunDir", SunDirection);
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
+
+		FBOVAO.Bind();
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		FBOVAO.Unbind();
 
 		glDepthMask(GL_TRUE);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+
+		// ------------------------
+		// Render the actual chunks
 
 		Blocks::Timer t3;
 		t3.Start();

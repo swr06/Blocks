@@ -55,27 +55,6 @@ vec4 ACESFitted(vec4 Color, float Exposure)
     return Color;
 }
 
-vec3 GetAtmosphere()
-{
-    vec3 sun_dir = u_SunDirection; 
-    vec3 moon_dir = -sun_dir; 
-
-    vec3 ray_dir = normalize(v_RayDirection);
-    vec3 atmosphere = texture(u_AtmosphereTexture, ray_dir).rgb;
-
-    if(dot(ray_dir, sun_dir) > 0.9855)
-    {
-        atmosphere *= (10.0);
-    }
-
-    if(dot(ray_dir, moon_dir) > 0.9965)
-    {
-        atmosphere *= (4.4, 4.4, 5.2);
-    }
-
-    return atmosphere;
-}
-
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
@@ -108,11 +87,6 @@ void main()
                   (Volumetric * 0.1f);
 
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
-
-    if (texture(u_DepthTexture, v_TexCoords).r == 1.0f)
-    {
-        o_Color = vec4(GetAtmosphere(), 1.0f);
-    }
 }
 
 vec4 cubic(float v)
