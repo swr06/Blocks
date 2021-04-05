@@ -12,7 +12,7 @@ namespace Blocks
 		m_w = w;
 		m_h = h;
 
-		int w0, h0, w1, h1, w2, h2, w3, h3;
+		int w0, h0, w1, h1, w2, h2;
 
 		w0 = w / 2;
 		h0 = h / 2;
@@ -22,9 +22,6 @@ namespace Blocks
 
 		w2 = w / 8;
 		h2 = h / 8;
-
-		w3 = w / 16;
-		h3 = h / 16;
 
 		glGenTextures(1, &m_Mip0);
 		glBindTexture(GL_TEXTURE_2D, m_Mip0);
@@ -44,18 +41,11 @@ namespace Blocks
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glGenTextures(1, &m_Mip3);
-		glBindTexture(GL_TEXTURE_2D, m_Mip3);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w3, h3, 0, GL_RGBA, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 		glGenFramebuffers(1, &m_Framebuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_Framebuffer);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Mip0, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_Mip1, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_Mip2, 0);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_Mip3, 0);
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
@@ -76,13 +66,11 @@ namespace Blocks
 		glDeleteTextures(1, &m_Mip0);
 		glDeleteTextures(1, &m_Mip1);
 		glDeleteTextures(1, &m_Mip2);
-		glDeleteTextures(1, &m_Mip3);
 		glDeleteFramebuffers(1, &m_Framebuffer);
 
 		m_Mip0 = 0;
 		m_Mip1 = 0;
 		m_Mip2 = 0;
-		m_Mip3 = 0;
 		m_Framebuffer = 0;
 	}
 }

@@ -20,7 +20,6 @@ namespace Blocks
 			m_Mip0 = v.m_Mip0;
 			m_Mip1 = v.m_Mip1;
 			m_Mip2 = v.m_Mip2;
-			m_Mip3 = v.m_Mip3;
 			m_w = v.m_w;
 			m_h = v.m_h;
 
@@ -28,7 +27,6 @@ namespace Blocks
 			v.m_Mip0 = 0;
 			v.m_Mip1 = 0;
 			v.m_Mip2 = 0;
-			v.m_Mip3 = 0;
 			v.m_w = -1;
 			v.m_h = -1;
 		}
@@ -48,7 +46,6 @@ namespace Blocks
 		GLuint m_Mip0;
 		GLuint m_Mip1;
 		GLuint m_Mip2;
-		GLuint m_Mip3; 
 
 		inline int GetWidth() const { return m_w; }
 		inline int GetHeight() const { return m_h; }

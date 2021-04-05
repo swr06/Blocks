@@ -448,7 +448,7 @@ int main()
 
 		glfwSwapInterval(VSync);
 
-		glClearColor(173.0f / 255.0f, 216.0f / 255.0f, 230.0f / 255.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 
 		Blocks::Timer update_timer;
@@ -893,7 +893,7 @@ int main()
 			Blocks::Timer t6;
 			t6.Start();
 
-			Blocks::BloomRenderer::RenderBloom(BloomFBO, PreviousFrameFBO.GetColorTexture());
+			Blocks::BloomRenderer::RenderBloom(BloomFBO, CurrentlyUsedFBO.GetColorTexture());
 
 			AppRenderingTime.Bloom = t6.End();
 		}
@@ -912,9 +912,13 @@ int main()
 		PPShader.Use();
 		PPShader.SetInteger("u_FramebufferTexture", 0);
 		PPShader.SetInteger("u_VolumetricTexture", 1);
-		PPShader.SetInteger("u_BloomTexture", 2);
 		PPShader.SetInteger("u_AtmosphereTexture", 3);
 		PPShader.SetInteger("u_DepthTexture", 4);
+
+		// Bloom textures
+		PPShader.SetInteger("u_BloomTextures[0]", 5);
+		PPShader.SetInteger("u_BloomTextures[1]", 6);
+
 		PPShader.SetBool("u_BloomEnabled", _Bloom);
 		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
 		PPShader.SetBool("u_PlayerInWater", Player.InWater);
@@ -930,14 +934,17 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
 
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, BloomFBO.m_Mip0);
-
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
 
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
+
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, BloomFBO.m_Mip0);
+
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, BloomFBO.m_Mip1);
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
