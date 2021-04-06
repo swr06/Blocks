@@ -10,7 +10,8 @@ void main()
 {
     vec3 Color = texture(u_Texture, v_TexCoords).rgb;
 	float Brightness = (Color.r * 0.2126f) + (Color.g * 0.7152f) + (Color.b * 0.722f);
+    Brightness = sqrt(Brightness);
 
     // to avoid branching!
-    o_Color = mix(vec3(0.0f), Color, float(Brightness > 1.2f));
+    o_Color = mix(vec3(0.0f), Color, float(Brightness > 1.4f));
 }
