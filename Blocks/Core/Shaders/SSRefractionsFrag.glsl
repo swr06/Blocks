@@ -18,9 +18,9 @@ uniform float u_zNear;
 uniform float u_zFar;
 
 //Tweakable variables
-const float InitialStepAmount = 0.04f;
-const float StepRefinementAmount = 0.25f;
-const int MaxRefinements = 3;
+const float InitialStepAmount = 0.08f;
+const float StepRefinementAmount = 0.1f;
+const int MaxRefinements = 5;
 const int MaxDepth = 1;
 
 // Basic random function used to jitter the ray

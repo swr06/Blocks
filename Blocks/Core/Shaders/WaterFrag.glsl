@@ -99,11 +99,11 @@ vec3 CalculateSunLight(vec3 ldir)
     normal.z /= 3.4f;
     normal.y /= 2.5f;
 
-    float diff = max(dot(normal, vec3(0.0f, -0.8269f, 0.5620f)), 0.0);
+    float diff = max(dot(normal, vec3(0.0f, -0.8269f, 0.5620f)), 0.0); 
 
     vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
     vec3 atmosphere = GetAtmosphere(reflected);
-    atmosphere += min(diff * 3.0f, abs(ldir.y) * 0.125f);
+    atmosphere += atmosphere * min(diff * 24.0f, 0.64f);
 
     return g_WaterColor * atmosphere;
 }
@@ -213,6 +213,7 @@ void main()
         if (RefractedUV != vec2(-1.0f))
         {
             RefractedUV += g_Normal.xz * 0.02f;
+            RefractedUV = clamp(RefractedUV, 0.0f, 1.0f);
 
             vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
             o_Color = mix(o_Color, RefractedColor, 0.2f); 
