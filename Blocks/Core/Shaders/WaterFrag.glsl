@@ -58,6 +58,41 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
+float curve(float x)
+{
+	return x * x * (3.0 - 2.0 * x);
+}
+
+float saturate(float x)
+{
+	return clamp(x, 0.0, 1.0);
+}
+
+vec3 saturate(vec3 x)
+{
+	return clamp(x, vec3(0.0), vec3(1.0));
+}
+
+vec2 saturate(vec2 x)
+{
+	return clamp(x, vec2(0.0), vec2(1.0));
+}
+
+float RenderDisc(vec3 ray_dir, vec3 light_dir, float disc_size)
+{
+	float d = dot(ray_dir, light_dir);
+
+	float disc = 0.0;
+	float size = disc_size;
+	float hardness = 1000.0;
+
+	disc = pow(curve(saturate((d - (1.0 - size)) * hardness)), 2.0);
+	float visibility = curve(saturate(ray_dir.y * 30.0));
+
+	disc *= visibility;
+	return disc;
+}
+
 vec3 GetAtmosphere(vec3 ray_direction)
 {
     vec3 sun_dir = normalize(-u_SunDirection); 
@@ -67,15 +102,9 @@ vec3 GetAtmosphere(vec3 ray_direction)
     vec3 atmosphere = texture(u_AtmosphereCubemap, ray_dir).rgb;
     atmosphere = max(atmosphere, 0.15f);
 
-    if(dot(ray_dir, sun_dir) > 0.9855)
-    {
-        atmosphere *= 10.0f;
-    }
-
-    if(dot(ray_dir, moon_dir) > 0.9965)
-    {
-        atmosphere *= 10.0;
-    }
+    // Water specular highlights
+    atmosphere *= max(RenderDisc(ray_dir, sun_dir, 0.00395) * 100.0f, 1.0f);
+    atmosphere *= max(RenderDisc(ray_dir, moon_dir, 0.00195) * 100.0f, 1.0f);
 
     return atmosphere;
 }

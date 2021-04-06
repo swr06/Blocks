@@ -55,6 +55,14 @@ vec4 ACESFitted(vec4 Color, float Exposure)
     return Color;
 }
 
+void Vignette(inout vec3 color) 
+{
+	float dist = distance(v_TexCoords.xy, vec2(0.5f)) * 2.0f;
+	dist /= 1.5142f;
+
+	color.rgb *= 1.0f - dist * 0.5;
+}
+
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
@@ -68,8 +76,8 @@ void main()
 
     if (u_BloomEnabled)
     {
-         Bloom[0] = texture(u_BloomTextures[0], v_TexCoords).xyz;
-         Bloom[1] = texture(u_BloomTextures[1], v_TexCoords).xyz;
+         Bloom[0] = textureBicubic(u_BloomTextures[0], v_TexCoords).xyz;
+         Bloom[1] = textureBicubic(u_BloomTextures[1], v_TexCoords).xyz;
     }
    
     vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
@@ -85,6 +93,8 @@ void main()
     final_color = HDR + 
                   Bloom[0] + Bloom[1] +
                   (Volumetric * 0.1f);
+
+    Vignette(final_color);
 
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
 }

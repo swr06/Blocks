@@ -67,6 +67,9 @@ namespace Blocks
 			return { m_Width, m_Height };
 		}
 
+		uint32_t GetWidth() { return m_Width; }
+		uint32_t GetHeight() { return m_Height; }
+
 		inline GLuint GetFramebufferID() const noexcept { return m_FBO; }
 		inline GLuint GetColorTexture() const noexcept { return m_ColorTexture; }
 		inline GLuint GetNormalTexture() const noexcept { return m_NormalTexture; }
