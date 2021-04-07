@@ -431,11 +431,11 @@ int main()
 		MoonDirection = -SunDirection;
 		glm::vec3 LightDirectionToUse = -SunDirection.y < 0.01f ? MoonDirection : SunDirection;
 
-		float wx = app.GetWidth() * RenderScale, wy = app.GetHeight() * RenderScale;
+		float wx = app.GetWidth(), wy = app.GetHeight();
 
-		MainRenderFBO.SetDimensions(wx, wy);
-		SecondaryRenderFBO.SetDimensions(wx, wy);
-		TempFBO.SetSize(wx, wy);
+		MainRenderFBO.SetDimensions(wx * RenderScale, wy * RenderScale);
+		SecondaryRenderFBO.SetDimensions(wx * RenderScale, wy * RenderScale);
+		TempFBO.SetSize(wx * RenderScale, wy * RenderScale);
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		VolumetricLightingFBOBlurred.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);

@@ -3,6 +3,8 @@
 #define TAU 6.28318530718
 #define USE_PCF
 #define PCF_COUNT 8
+#define rot(a) mat2(cos(a+PI*vec4(0,1.5,0.5,0)))
+
 #pragma optionNV (unroll all) // fixes loop unrolling bug on nvidia cards
 
 layout (location = 0) out vec4 o_Color;
@@ -101,6 +103,35 @@ const vec2 PoissonDisk[32] = vec2[]
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 float CalculateSunShadow();
 
+/* Reduces aliasing with pixel art */
+vec4 BetterTexture(sampler2D tex, vec2 uv) 
+{
+    vec2 res = vec2(textureSize(tex, 0).xy);
+    uv = uv * res + 0.5f;
+
+    vec2 fl = floor(uv);
+    vec2 fr = fract(uv);
+    vec2 aa = fwidth(uv)*0.75;
+    fr = smoothstep( vec2(0.5)-aa, vec2(0.5)+aa, fr);
+    
+    uv = (fl+fr-0.5) / res;
+    return texture(tex, uv);
+}
+
+vec4 BetterTexture(sampler2DArray tex, vec3 uv_) 
+{
+    vec2 res = vec2(textureSize(tex, 0).xy);
+    vec2 uv = uv_.xy;
+    uv = uv * res + 0.5f;
+
+    vec2 fl = floor(uv);
+    vec2 fr = fract(uv);
+    vec2 aa = fwidth(uv)*0.75;
+    fr = smoothstep( vec2(0.5)-aa, vec2(0.5)+aa, fr);
+    
+    uv = (fl+fr-0.5) / res;
+    return texture(tex, vec3(uv, uv_.b));
+}
 
 void main()
 {
@@ -117,7 +148,7 @@ void main()
 
     else
     {
-        SampledAlbedo = texture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex));
+        SampledAlbedo = BetterTexture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex));
     }
 
 	g_Normal = v_Normal;
@@ -132,14 +163,14 @@ void main()
 
 	if (v_NormalTexIndex >= 0.0f)
 	{
-	    g_Normal = texture(u_BlockNormalTextures, vec3(v_TexCoord, v_NormalTexIndex)).xyz;
+	    g_Normal = BetterTexture(u_BlockNormalTextures, vec3(v_TexCoord, v_NormalTexIndex)).xyz;
 	    g_Normal = g_Normal * 2.0 - 1.0; 
 		g_Normal = normalize(v_TBNMatrix * g_Normal);
 	}
 
     if (v_PBRTexIndex >= 0.0f)
     {
-        vec3 PBR_Color = texture(u_BlockPBRTextures, vec3(v_TexCoord, v_PBRTexIndex)).xyz;
+        vec3 PBR_Color = BetterTexture(u_BlockPBRTextures, vec3(v_TexCoord, v_PBRTexIndex)).xyz;
         g_Roughness = 1.0f - PBR_Color.x;
         g_Metalness = max(0.01f, PBR_Color.z);
         g_Emissive = PBR_Color.y;
