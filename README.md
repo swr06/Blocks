@@ -23,6 +23,7 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Motion Blur 
 - Atmospheric Scattering ✓
 - Day/Night cycle ✓
+- Temporal Anti Aliasing 
 - Weather
 - CSM
 - VSM Shadows
