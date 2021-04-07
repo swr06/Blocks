@@ -21,6 +21,8 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 	float SHADOW_DISTANCE_Y = 210;
 	float SHADOW_DISTANCE_Z = 1000.0f;
 
+	glm::vec3 center_ = center;
+
 	// Align the orthographic projected "cube" 
 	if (light_direction.z < 0.0f)
 	{
@@ -65,7 +67,7 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, BlockDatabase::GetTextureArray());
 
-	world->RenderChunks(center, *DepthShader);
+	world->RenderChunks(center_, *DepthShader);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(0);

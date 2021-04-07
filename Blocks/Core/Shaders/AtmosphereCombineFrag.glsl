@@ -22,7 +22,7 @@ vec3 GetAtmosphere()
 
     if(dot(ray_dir, moon_dir) > 0.9965)
     {
-        atmosphere *= (4.4, 4.4, 5.2);
+        atmosphere *= (10.0);
     }
 
     return atmosphere;

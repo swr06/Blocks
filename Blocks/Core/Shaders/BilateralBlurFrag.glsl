@@ -1,58 +1,71 @@
+// Original shader by mrharicot
+
 #version 330 core
 
 #define SIGMA 10.0
-#define BSIGMA 0.1
 #define MSIZE 15
 
 layout (location = 0) out vec3 o_Color;
-in vec2 v_TexCoords;
 
-uniform sampler2D u_ColorTexture;
-uniform vec2 u_Resolution;
+uniform sampler2D u_Texture;
+
+uniform vec2 u_SketchSize;
+uniform float u_BSIGMA = 0.75;
 
 float normpdf(in float x, in float sigma)
 {
-	return 0.39894*exp(-0.5*x*x/(sigma*sigma))/sigma;
+	return 0.39894f * exp(-0.5f * x * x / (sigma * sigma)) / sigma;
 }
 
 float normpdf3(in vec3 v, in float sigma)
 {
-	return 0.39894*exp(-0.5*dot(v,v)/(sigma*sigma))/sigma;
+	return 0.39894f * exp(-0.5f * dot(v,v) / (sigma*sigma)) / sigma;
 }
 
-void main()
+void main(void)
 {
-	vec3 c = texture(u_ColorTexture, v_TexCoords).rgb;
-
-	//declare stuff
-	const int kSize = (MSIZE-1)/2;
-	float kernel[MSIZE];
-	vec3 final_colour = vec3(0.0);
+	vec3 c = texture2D(u_Texture, vec2(0.0, 0.0) + (gl_FragCoord.xy / u_SketchSize.xy)).rgb;
 		
-	//create the 1-D kernel
+	const int kSize = (MSIZE - 1) / 2;
+	vec3 final_colour = vec3(0.0);
+	
 	float Z = 0.0;
 
+	// TODO : Precompute and store this
+	/*
+	float kernel[MSIZE];
+	
 	for (int j = 0; j <= kSize; ++j)
 	{
-		kernel[kSize+j] = kernel[kSize-j] = normpdf(float(j), SIGMA);
-	}
-		
+		kernel[kSize + j] = kernel[kSize - j] = normpdf(float(j), SIGMA);
+	}*/
+
+	// Precalculated kernet of size 15
+	const float kernel[MSIZE] = float[MSIZE]
+	(
+			0.031225216, 0.033322271, 0.035206333, 
+			0.036826804, 0.038138565, 0.039104044,
+			0.039695028, 0.039894000, 0.039695028,
+			0.039104044, 0.038138565, 0.036826804, 
+			0.035206333, 0.033322271, 0.031225216
+	);
+	
 	vec3 cc;
 	float factor;
-	float bZ = 1.0/normpdf(0.0, BSIGMA);
+	float bZ = 1.0 / normpdf(0.0, u_BSIGMA);
+
 	//read out the texels
-	for (int i=-kSize; i <= kSize; ++i)
+	for (int i = -kSize; i <= kSize; ++i)
 	{
-		for (int j=-kSize; j <= kSize; ++j)
+		for (int j = -kSize; j <= kSize; ++j)
 		{
-			cc = texture(u_ColorTexture, (gl_FragCoord.xy+vec2(float(i),float(j))) / u_Resolution.xy).rgb;
-			factor = normpdf3(cc-c, BSIGMA)*bZ*kernel[kSize+j]*kernel[kSize+i];
+			cc = texture2D(u_Texture, vec2(0.0, 0.0) + ( gl_FragCoord.xy + vec2(float(i),float(j))) / u_SketchSize.xy).rgb;
+			factor = normpdf3(cc - c, u_BSIGMA) * bZ * kernel[kSize + j] * kernel[kSize + i];
 			Z += factor;
-			final_colour += factor*cc;
+			final_colour += factor * cc;
 
 		}
 	}
-		
-	o_Color = final_colour / Z;
-	//o_Color = c;
+	
+	o_Color = vec3(final_colour / Z);
 }

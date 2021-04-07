@@ -61,6 +61,7 @@ Blocks::BlocksRenderBuffer SecondaryRenderFBO(800, 600);
 GLClasses::Framebuffer TempFBO(800, 600, false, true);
 
 GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
+GLClasses::FramebufferRed VolumetricLightingFBOBlurred(800, 600);
 GLClasses::Framebuffer SSRFBO(800, 600, true);
 GLClasses::Framebuffer RefractionFBO(800, 600, true);
 GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
@@ -325,6 +326,7 @@ int main()
 	GLClasses::Shader RefractionShader;
 	GLClasses::Shader DepthPrepassShader;
 	GLClasses::Shader AtmosphereCombineShader;
+	GLClasses::Shader BilateralBlur;
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -368,6 +370,8 @@ int main()
 	DepthPrepassShader.CompileShaders();
 	AtmosphereCombineShader.CreateShaderProgramFromFile("Core/Shaders/AtmosphereCombineVert.glsl", "Core/Shaders/AtmosphereCombineFrag.glsl");
 	AtmosphereCombineShader.CompileShaders();
+	BilateralBlur.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BilateralBlurFrag.glsl");
+	BilateralBlur.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/crosshair.png", false);
@@ -433,6 +437,7 @@ int main()
 		SecondaryRenderFBO.SetDimensions(wx, wy);
 		TempFBO.SetSize(wx, wy);
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
+		VolumetricLightingFBOBlurred.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
 		BloomFBO.SetSize(floor(wx), floor(wy));
@@ -911,6 +916,29 @@ int main()
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glUseProgram(0);
 
+			///////////////////////////
+			// Perform a bilateral blur 
+
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+
+			VolumetricLightingFBOBlurred.Bind();
+
+			BilateralBlur.Use();
+			BilateralBlur.SetVector2f("u_SketchSize",
+				glm::vec2(VolumetricLightingFBOBlurred.GetWidth(), VolumetricLightingFBOBlurred.GetHeight()));
+			BilateralBlur.SetInteger("u_Texture", 0);
+			BilateralBlur.SetFloat("u_BSIGMA", 1.0f);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
+
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
+
+			VolumetricLightingFBOBlurred.Unbind();
+
 			AppRenderingTime.Volumetrics = t5.End();
 		}
 
@@ -962,7 +990,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
 		
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
+		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBOBlurred.GetTexture());
 
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());

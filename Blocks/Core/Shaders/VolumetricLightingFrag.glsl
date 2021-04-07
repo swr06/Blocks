@@ -1,7 +1,7 @@
 #version 330 core
 
 #define PI 3.14159265359f
-#define NB_STEPS 30
+#define NB_STEPS 15
 
 layout(location = 0) out float o_VolumetricFog; // outputs to the volumetric texture that is in half resolution
 in vec2 v_TexCoords;
@@ -52,7 +52,7 @@ vec3 WorldPosFromDepth(float depth)
 void main()
 {
 	float depth = texture(u_DepthTexture, v_TexCoords).r;
-	vec3 NoiseValue = texture(u_NoiseTexture, v_TexCoords * NoiseScale).rgb;
+	vec3 NoiseValue = texture(u_NoiseTexture, v_TexCoords * NoiseScale).grb;
 
 	vec3 WorldPosition = WorldPosFromDepth(depth);
 	vec3 StartPosition = u_ViewerPosition;
@@ -77,18 +77,26 @@ void main()
 		vec4 FragPosLightSpace = u_LightViewProjection * vec4(CurrentPosition, 1.0f);
 		vec3 ProjectionCoordinates = FragPosLightSpace.xyz / FragPosLightSpace.w;
 		ProjectionCoordinates = ProjectionCoordinates * 0.5f + 0.5f;
+
 		float SampledDepth = texture(u_ShadowMap, ProjectionCoordinates.xy).r; 
 		float CurrentDepth = ProjectionCoordinates.z;
 		float bias = 0.001f;
+
+		bool inshadow = (CurrentDepth - bias) < SampledDepth;
 		
-		if ((CurrentDepth - bias) < SampledDepth)
+		if (ProjectionCoordinates.z > 1.0)
 		{
-			TotalFog += ComputeScattering(dot(RayDirection, -u_LightDirection)) * vec3(2.0f);
+			inshadow = false;
+		}
+
+		if (inshadow)
+		{
+			TotalFog += ComputeScattering(dot(RayDirection, -u_LightDirection)) * vec3(16.0f);
 		}
 
 		CurrentPosition += step_sz;
 	}
 
 	TotalFog /= NB_STEPS;
-	o_VolumetricFog = TotalFog.r * 8.0f;
+	o_VolumetricFog = TotalFog.r;
 }
