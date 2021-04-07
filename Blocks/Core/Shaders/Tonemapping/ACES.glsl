@@ -63,6 +63,46 @@ void Vignette(inout vec3 color)
 	color.rgb *= 1.0f - dist * 0.5;
 }
 
+vec4 BetterTexture(sampler2D tex, vec2 uv) 
+{
+    vec2 res = vec2(textureSize(tex, 0).xy);
+    uv = uv * res + 0.5f;
+
+    vec2 fl = floor(uv);
+    vec2 fr = fract(uv);
+    vec2 aa = fwidth(uv)*0.75;
+    fr = smoothstep( vec2(0.5)-aa, vec2(0.5)+aa, fr);
+    
+    uv = (fl+fr-0.5) / res;
+    return texture(tex, uv);
+}
+
+vec4 BetterTexture(sampler2DArray tex, vec3 uv_) 
+{
+    vec2 res = vec2(textureSize(tex, 0).xy);
+    vec2 uv = uv_.xy;
+    uv = uv * res + 0.5f;
+
+    vec2 fl = floor(uv);
+    vec2 fr = fract(uv);
+    vec2 aa = fwidth(uv)*0.75;
+    fr = smoothstep( vec2(0.5)-aa, vec2(0.5)+aa, fr);
+    
+    uv = (fl+fr-0.5) / res;
+    return texture(tex, vec3(uv, uv_.b));
+}
+
+// By IQ
+vec4 BetterTexture_1( sampler2D tex, vec2 uv)
+{
+    vec2 res = vec2(textureSize(tex,0));
+    
+    uv = uv * res;
+    vec2 seam = floor(uv+0.5);
+    uv = seam + clamp( (uv-seam)/fwidth(uv), -0.5, 0.5);
+    return texture(tex, uv/res);
+}
+
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
@@ -80,7 +120,7 @@ void main()
          Bloom[1] = textureBicubic(u_BloomTextures[1], v_TexCoords).xyz;
     }
    
-    vec3 HDR = texture(u_FramebufferTexture, v_TexCoords).rgb;
+    vec3 HDR = BetterTexture(u_FramebufferTexture, v_TexCoords).rgb;
 
     if (u_PlayerInWater)
     {
