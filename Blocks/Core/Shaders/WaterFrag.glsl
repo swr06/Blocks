@@ -167,7 +167,7 @@ vec2 ParallaxMapping(vec2 TextureCoords, vec3 ViewDirection)
     float Weight = AfterDepth / (AfterDepth - BeforeDepth);
     vec2 FinalTexCoords = PrevTexCoords * Weight + CurrentTexCoords * (1.0 - Weight);
     
-    return CurrentTexCoords;
+    return FinalTexCoords;
 }   
 
 void main()
