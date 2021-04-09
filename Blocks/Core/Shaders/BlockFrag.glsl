@@ -1,9 +1,18 @@
 #version 330 core
+
+// Common Constants
 #define PI 3.141592653589
 #define TAU 6.28318530718
+
+// Flags
 #define USE_PCF
-#define PCF_COUNT 8
-#define rot(a) mat2(cos(a+PI*vec4(0,1.5,0.5,0)))
+#define PCF_COUNT 8 
+
+//#define rot(a) mat2(cos(a + PI * vec4(0,1.5,0.5,0)))
+ 
+// in some mc textures, "smoothness" is used, rather than roughness
+// define this if your textures use smoothness!
+//#define USE_SMOOTHNESS
 
 #pragma optionNV (unroll all) // fixes loop unrolling bug on nvidia cards
 
@@ -59,9 +68,11 @@ uniform float u_Time;
 vec3 g_Albedo;
 vec3 g_Normal;
 vec3 g_F0;
+vec2 g_Texcoords;
 float g_Roughness = 0.1f;
 float g_Metalness = 0.1f;
-float g_Emissive = 0.0f;
+float g_Displacement = 0.0f;
+float g_AO = 1.0f;
 float g_Shadow = 0.0f;
 vec3 g_LightColor;
 
@@ -136,7 +147,9 @@ vec4 BetterTexture(sampler2DArray tex, vec3 uv_)
 void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
-    g_Shadow = CalculateSunShadow();
+    g_Shadow = CalculateSunShadow() * 1.62f;
+    g_Texcoords = v_TexCoord;
+
     vec3 ViewDirection = normalize(v_FragPosition - u_ViewerPosition);
 
     vec4 SampledAlbedo;
@@ -148,7 +161,7 @@ void main()
 
     else
     {
-        SampledAlbedo = BetterTexture(u_BlockTextures, vec3(v_TexCoord, v_TexIndex));
+        SampledAlbedo = BetterTexture(u_BlockTextures, vec3(g_Texcoords, v_TexIndex));
     }
 
 	g_Normal = v_Normal;
@@ -163,17 +176,26 @@ void main()
 
 	if (v_NormalTexIndex >= 0.0f)
 	{
-	    g_Normal = BetterTexture(u_BlockNormalTextures, vec3(v_TexCoord, v_NormalTexIndex)).xyz;
+	    g_Normal = BetterTexture(u_BlockNormalTextures, vec3(g_Texcoords, v_NormalTexIndex)).xyz;
 	    g_Normal = g_Normal * 2.0 - 1.0; 
 		g_Normal = normalize(v_TBNMatrix * g_Normal);
 	}
 
     if (v_PBRTexIndex >= 0.0f)
     {
-        vec3 PBR_Color = BetterTexture(u_BlockPBRTextures, vec3(v_TexCoord, v_PBRTexIndex)).xyz;
+        vec4 PBR_Color = BetterTexture(u_BlockPBRTextures, vec3(g_Texcoords, v_PBRTexIndex));
+
+        #ifdef USE_SMOOTHNESS
         g_Roughness = 1.0f - PBR_Color.x;
-        g_Metalness = max(0.01f, PBR_Color.z);
-        g_Emissive = PBR_Color.y;
+        #else
+        g_Roughness = PBR_Color.x;
+        #endif
+
+        g_Metalness = max(0.01f, PBR_Color.y);
+
+        // Todo!
+        g_Displacement = PBR_Color.z;
+        g_AO = PBR_Color.w;
 
         g_F0 = vec3(0.04f); 
 		g_F0 = mix(g_F0, g_Albedo, g_Metalness);
@@ -200,11 +222,11 @@ void main()
         vec3 R = normalize(reflect(ViewDirection, g_Normal));
         vec3 AtmosphereColor = texture(u_AtmosphereCubemap, R).rgb;
 
-        o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.2f);
+        o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.05f);
     }
 
     o_Color.xyz *= max(v_LampLightValue * 1.2f, 1.0f);
-    o_Color.xyz *= max(1.0f, g_Emissive * 3.5f);
+    o_Color.xyz *= g_AO;
 
     o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled && reflective_block);
 
@@ -228,7 +250,7 @@ void main()
         o_Color = mix(o_Color, vec4(ReflectedColor, 1.0f), 0.3); 
     }
 
-    //o_Color = vec4(vec3(g_Metalness), 1.0f);
+    //o_Color = vec4(vec3(g_Displacement), 1.0f);
 
     o_RefractionMask = -1.0f;
 }

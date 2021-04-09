@@ -26,7 +26,7 @@ namespace Blocks
 		std::vector<std::string> paths;
 		std::vector<std::string> normal_paths;
 		std::vector<std::string> pbr_paths;
-		std::pair<int, int> texture_resolutions = { 256,256 };
+		std::pair<int, int> texture_resolutions = { 512,512 };
 
 		for (auto& e : ParsedBlockDataList)
 		{
@@ -52,9 +52,9 @@ namespace Blocks
 			pbr_paths.push_back(e.second.PBRMap.right);
 		}
 
-		BlockTextureArray.CreateArray(paths, texture_resolutions, true);
-		BlockNormalTextureArray.CreateArray(normal_paths, texture_resolutions, true, GL_LINEAR, true);
-		BlockPBRTextureArray.CreateArray(pbr_paths, texture_resolutions, false, GL_LINEAR, true);
+		BlockTextureArray.CreateArray(paths, texture_resolutions, true, true);
+		BlockNormalTextureArray.CreateArray(normal_paths, texture_resolutions, false, true, GL_LINEAR, true);
+		BlockPBRTextureArray.CreateArray(pbr_paths, texture_resolutions, false, true, GL_LINEAR, true);
 	}
 
 	uint8_t BlockDatabase::GetBlockID(const std::string& block_name)

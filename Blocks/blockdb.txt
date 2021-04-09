@@ -1,125 +1,120 @@
 {
 	Name : Grass
-	Albedo_top : Res/grass_block_top.png
-	Albedo_bottom : Res/dirt.png
-	Albedo_left : Res/grass_block_side.png
-	Albedo_right : Res/grass_block_side.png
-	Albedo_front : Res/grass_block_side.png
-	Albedo_back : Res/grass_block_side.png
+	Albedo_top : Res/Block/Grass/Top/Albedo.png
+	Albedo_bottom : Res/Block/Dirt/Albedo.png
+	Albedo : Res/Block/Grass/Side/Albedo.png
 	
-	Normal_top : Res/grass_block_top_n.png
-	Normal_bottom : Res/dirt_n.png
-	Normal_left : Res/grass_block_side_n.png
-	Normal_right : Res/grass_block_side_n.png
-	Normal_front : Res/grass_block_side_n.png
-	Normal_back : Res/grass_block_side_n.png
+	Normal_top : Res/Block/Grass/Top/Normal.png
+	Normal_bottom : Res/Block/Dirt/Normal.png
+	Normal : Res/Block/Grass/Side/Normal.png
 	
-	PBR_top : Res/grass_block_top_s.png
-	PBR_bottom : Res/dirt_s.png
-	PBR_left : Res/grass_block_side_s.png
-	PBR_right : Res/grass_block_side_s.png
-	PBR_front : Res/grass_block_side_s.png
-	PBR_back : Res/grass_block_side_s.png
+	PBR_top : Res/Block/Grass/Top/PBR.png
+	PBR_bottom : Res/Block/Dirt/PBR.png
+	PBR : Res/Block/Grass/Side/PBR.png
 }
 
 {
 	Name : Dirt
-	Albedo : Res/dirt.png
-
-	Normal_top : Res/dirt_n.png
-	Normal_bottom : Res/dirt_n.png
-	Normal_left : Res/dirt_n.png
-	Normal_right : Res/dirt_n.png
-	Normal_front : Res/dirt_n.png
-	Normal_back : Res/dirt_n.png
 	
-	PBR : Res/dirt_s.png
+	Albedo : Res/Block/Dirt/Albedo.png
+	Normal : Res/Block/Dirt/Normal.png
+	PBR : Res/Block/Dirt/PBR.png
 }
 
 {
 	Name : Stone
-	Albedo : Res/stone.png
-	Normal : Res/stone_n.png
-	PBR : Res/stone_s.png
-}
-
-{
-	Name : polished_granite
-	Albedo : Res/polished_granite.png
-	Normal : Res/polished_granite_n.png
-	PBR : Res/polished_granite_s.png
-}
-
-{
-	Name : Bricks
-	Albedo : Res/bricks.png
-	Normal : Res/bricks_n.png
-	PBR : Res/bricks_s.png
-}
-
-{
-	Name : chiseled_stone_bricks
-	Albedo : Res/chiseled_stone_bricks.png
-	Normal : Res/chiseled_stone_bricks_n.png
-	PBR : Res/chiseled_stone_bricks_s.png
-}
-
-{
-	Name : oak_planks
-	Albedo : Res/oak_planks.png
-	Normal : Res/oak_planks_n.png
-	PBR : Res/oak_planks_s.png
+	Albedo : Res/Block/Stone/Albedo.png
+	Normal : Res/Block/Stone/Normal.png
+	PBR : Res/Block/Stone/PBR.png
 }
 
 {
 	Name : oak_log
-	Albedo_top : Res/oak_log_top.png
-	Albedo : Res/oak_log.png
-	Normal_top : Res/oak_log_top_n.png
-	Normal : Res/oak_log_n.png
-	PBR_top : Res/oak_log_top_s.png
-	PBR : Res/oak_log_s.png
+
+	Albedo_top : Res/Block/Bark/Top/Albedo.png
+	Albedo :  Res/Block/Bark/Side/Albedo.png
+
+	Normal_top :  Res/Block/Bark/Top/Normal.png
+	Normal :  Res/Block/Bark/Side/Normal.png
+
+	PBR_top :  Res/Block/Bark/Top/PBR.png
+	PBR :  Res/Block/Bark/Side/PBR.png
 }
 
 {
 	Name : oak_leaves
-	Albedo : Res/oak_leaves.png
-	Normal : Res/oak_leaves_n.png
-	PBR : Res/oak_leaves_s.png
+	Albedo : Res/Block/Leaves/Albedo.png
+	Normal : Res/Block/Leaves/Normal.png
+	PBR : Res/Block/Leaves/PBR.png
 	Transparent;
 }
 
 {
-	Name : obsidian
-	Albedo : Res/obsidian.png
-	Normal : Res/obsidian_n.png
-	PBR : Res/obsidian_s.png
+	Name : Brick
+	Albedo : Res/Block/Brick/Albedo.png
+	Normal : Res/Block/Brick/Normal.png
+	PBR : Res/Block/Brick/PBR.png
 }
 
 {
-	Name : red_wool
-	Albedo : Res/red_wool.png
-	Normal : Res/red_wool_n.png
-	PBR : Res/red_wool_s.png
+	Name : Fab1
+	Albedo : Res/Block/Fab1/Albedo.png
+	Normal : Res/Block/Fab1/Normal.png
+	PBR : Res/Block/Fab1/PBR.png
 }
 
 {
-	Name : lime_wool
-	Albedo : Res/lime_wool.png
-	Normal : Res/lime_wool_n.png
-	PBR : Res/lime_wool_s.png
+	Name : Fab2
+	Albedo : Res/Block/Fab2/Albedo.png
+	Normal : Res/Block/Fab2/Normal.png
+	PBR : Res/Block/Fab2/PBR.png
+}
+
+{
+	Name : Fab3
+	Albedo : Res/Block/Fab3/Albedo.png
+	Normal : Res/Block/Fab3/Normal.png
+	PBR : Res/Block/Fab3/PBR.png
+}
+
+{
+	Name : Gravel
+	Albedo : Res/Block/Gravel/Albedo.png
+	Normal : Res/Block/Gravel/Normal.png
+	PBR : Res/Block/Gravel/PBR.png
+}
+
+{
+	Name : Metal
+	Albedo : Res/Block/Metal/Albedo.png
+	Normal : Res/Block/Metal/Normal.png
+	PBR : Res/Block/Metal/PBR.png
+}
+
+{
+	Name : Metal1
+	Albedo : Res/Block/Metal1/Albedo.png
+	Normal : Res/Block/Metal1/Normal.png
+	PBR : Res/Block/Metal1/PBR.png
+}
+
+{
+	Name : Leather
+	Albedo : Res/Block/Leather/Albedo.png
+	Normal : Res/Block/Leather/Normal.png
+	PBR : Res/Block/Leather/PBR.png
 }
 
 {
 	Name : redstone_lamp_on
-	Albedo : Res/redstone_lamp_on.png
-	Normal : Res/redstone_lamp_on_n.png
-	PBR : Res/redstone_lamp_on_s.png
+	Albedo : Res/Block/Lamp/Albedo.png
+	Normal : Res/Block/Lamp/Normal.png
+	PBR : Res/Block/Lamp/PBR.png
 }
 
 {
-	Name : blue_wool
-	Albedo : Res/blue_wool.png
-	Normal : Res/blue_wool_n.png
-	PBR : Res/blue_wool_s.png
+	Name : MISC_LEAVE_THIS_AT_THE_END
+	Albedo : Res/Block/Misc/Albedo.png
+	Normal : Res/Block/Misc/Normal.png
+	PBR : Res/Block/Misc/PBR.png
 }

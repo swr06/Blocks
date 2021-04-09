@@ -135,7 +135,7 @@ namespace Blocks
 	{
 		m_CurrentBlock += 1;
 
-		if (m_CurrentBlock == BlockDatabase::GetNumberOfBlocksInDatabase() + 1)
+		if (m_CurrentBlock >= BlockDatabase::GetNumberOfBlocksInDatabase())
 		{
 			m_CurrentBlock = 1;
 		}

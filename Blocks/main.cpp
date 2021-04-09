@@ -1,12 +1,11 @@
 /* -- The Blocks Voxel Engine -- 
-* 
 Contributors : 
 Samuel Rasquinha 
+UglySwedishFish (WorldTeller)
 Dekrain
-Kiroma
 ShadaxStack (fuzdex)
 g h o s t
-UglySwedishFish (WorldTeller)
+Kiroma
 */
 
 
@@ -374,7 +373,7 @@ int main()
 	BilateralBlur.CompileShaders();
 
 	// Create the texture
-	Crosshair.CreateTexture("Res/crosshair.png", false);
+	Crosshair.CreateTexture("Res/Misc/crosshair.png", false);
 	BlueNoiseTexture.CreateTexture("Res/Misc/blue_noise.png", false);
 	PerlinNoiseTexture.CreateTexture("Res/Misc/perlin_noise.png", false);
 	PerlinNoiseNormalTexture.CreateTexture("Res/Misc/perlin_noise_normal.png", false);

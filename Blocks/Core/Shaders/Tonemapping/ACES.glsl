@@ -137,6 +137,7 @@ void main()
     Vignette(final_color);
 
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
+    o_Color.rgb = pow(o_Color.rgb, vec3(1.0f / 2.2f));
 }
 
 vec4 cubic(float v)
