@@ -23,15 +23,19 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Motion Blur 
 - Atmospheric Scattering ✓
 - Day/Night cycle ✓
+- Parallax Occlusion Mapping ✓
+- Parallax Self Shadowing
+- Global Cubemaps ✓
+- Parallax Corrected Cubemaps
 - Temporal Anti Aliasing 
 - Weather
-- CSM
+- CSM 
 - VSM Shadows
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
 - Global illumination
-- Atmospheric effect ✓
+- Atmospheric effect (WIP) ✓
 
 # Test Environment <br>
 CPU : Ryzen 3 2200G <br>
