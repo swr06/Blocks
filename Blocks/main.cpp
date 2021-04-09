@@ -72,6 +72,7 @@ bool ShouldDoBloomPass = true;
 bool ShouldDoSSRPass = false;
 bool ShouldDoRefractions = true;
 bool ShouldDoWaterParallax = false;
+bool ShouldDoPOM = true;
 
 bool _Bloom = true;
 bool _SSR = true;
@@ -86,7 +87,7 @@ glm::vec3 SunDirection = glm::vec3(0.0f);
 glm::vec3 MoonDirection = glm::vec3(0.0f);
 
 // ImGui Adjustable Variables
-float ShadowBias = 0.001f;
+float ShadowBias = 0.00125f;
 float VolumetricScattering = 0.6f;
 float RenderScale = 0.750f;
 float VolumetricRenderScale = 0.5f;
@@ -169,6 +170,7 @@ public:
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
 			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);
+			ImGui::Checkbox("Parallax Occlusion Mapping?", &ShouldDoPOM);
 			ImGui::Checkbox("Depth Prepass? (Reduces overdraw)", &DepthPrePass);
 			ImGui::Text("\n");
 			ImGui::Checkbox("Render Skybox?", &ShouldRenderSkybox);
@@ -467,7 +469,7 @@ int main()
 
 		AppRenderingTime.Update = update_timer.End();
 
-		if (app.GetCurrentFrame() % 4 == 0)
+		if (app.GetCurrentFrame() % 4 == 0 || BlockModified)
 		{
 			Blocks::Timer shadow_timer;
 			shadow_timer.Start();
@@ -727,6 +729,7 @@ int main()
 		RenderShader.SetInteger("u_AtmosphereCubemap", 8);
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", _SSR);
+		RenderShader.SetBool("u_UsePOM", ShouldDoPOM);
 
 		RenderShader.SetVector3f("u_SunDirection", SunDirection);
 		RenderShader.SetVector3f("u_MoonDirection", MoonDirection);

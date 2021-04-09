@@ -54,6 +54,8 @@ out float v_LampLightValue;
 out vec4 v_LightFragProjectionPos;
 flat out int v_IsUnderwater;
 
+out vec3 v_TangentFragPosition;
+
 void main()
 {
 	vec3 RealPosition;
@@ -76,6 +78,7 @@ void main()
 	vec3 N = normalize(v_Normal);
 	v_TBNMatrix = mat3(T, B, N);
 
+	v_TangentFragPosition = v_TBNMatrix * v_FragPosition;
 	v_LightFragProjectionPos = u_LightProjectionMatrix * u_LightViewMatrix * vec4(RealPosition, 1.0f);
 	v_LightFragProjectionPos.xyz = v_LightFragProjectionPos.xyz / v_LightFragProjectionPos.w; // Perspective division is not really needed for orthagonal projection but whatever
     v_LightFragProjectionPos = v_LightFragProjectionPos * 0.5f + 0.5f;

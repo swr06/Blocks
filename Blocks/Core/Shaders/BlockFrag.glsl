@@ -32,6 +32,7 @@ in vec3 v_FragPosition;
 in float v_AO;
 in float v_LampLightValue;
 flat in int v_IsUnderwater;
+in vec3 v_TangentFragPosition;
 
 // Shadows
 in vec4 v_LightFragProjectionPos;
@@ -62,9 +63,11 @@ uniform samplerCube u_AtmosphereCubemap;
 // Misc
 uniform float u_GraniteTexIndex;
 uniform vec2 u_Dimensions;
-
+uniform bool u_UsePOM;
 uniform float u_Time;
 
+
+// Globals
 vec3 g_Albedo;
 vec3 g_Normal;
 vec3 g_F0;
@@ -80,12 +83,17 @@ const vec3 SUN_COLOR = vec3(1.0f * 5.25f, 1.0f * 5.25f, 0.8f * 4.0f);
 const vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 1.25f);
 const vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
+
 vec3 CalculateDirectionalLightPBR(vec3);
 vec3 RandomPointInUnitSphere();
 float nextFloat(inout int seed);
 float nextFloat(inout int seed, in float max);
 float nextFloat(inout int seed, in float min, in float max);
 vec3 CalculateCaustics();
+
+float saturate(float x);
+vec2 saturate(vec2 x);
+vec3 saturate(vec3 x);
 
 int MIN = -2147483648;
 int MAX = 2147483647;
@@ -113,6 +121,9 @@ const vec2 PoissonDisk[32] = vec2[]
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 float CalculateSunShadow();
+
+// POM 
+vec2 ParallaxOcclusionMapping(vec2 TextureCoords, vec3 ViewDirection); // View direction should be in tangent space!
 
 /* Reduces aliasing with pixel art */
 vec4 BetterTexture(sampler2D tex, vec2 uv) 
@@ -152,6 +163,14 @@ void main()
     g_Texcoords = v_TexCoord;
 
     vec3 ViewDirection = normalize(v_FragPosition - u_ViewerPosition);
+
+    vec3 TangentViewPosition = v_TBNMatrix * u_ViewerPosition;
+    vec3 TangentViewDirection = normalize(v_TangentFragPosition - TangentViewPosition);
+
+    if (u_UsePOM)
+    {
+        g_Texcoords = (ParallaxOcclusionMapping(v_TexCoord, TangentViewDirection));
+    }
 
     vec4 SampledAlbedo;
 
@@ -255,6 +274,43 @@ void main()
 
     o_RefractionMask = -1.0f;
 }
+
+
+/// POM ///
+
+float GetDisplacementAt(vec2 tx)
+{
+    return texture(u_BlockPBRTextures, vec3(tx, v_PBRTexIndex)).b * 0.25f;
+}
+
+vec2 ParallaxOcclusionMapping(vec2 TextureCoords, vec3 ViewDirection) // View direction should be in tangent space!
+{ 
+    float NumLayers = 16; 
+    float LayerDepth = 1.0 / NumLayers;
+    float CurrentLayerDepth = 0.0;
+    vec2 P = ViewDirection.xy * 1.0f; 
+    vec2 DeltaTexCoords = P / NumLayers;
+
+    vec2  CurrentTexCoords = TextureCoords;
+    float CurrentDepthMapValue = GetDisplacementAt(CurrentTexCoords);
+      
+    while(CurrentLayerDepth < CurrentDepthMapValue)
+    {
+        CurrentTexCoords -= DeltaTexCoords;
+        CurrentDepthMapValue = GetDisplacementAt(CurrentTexCoords);  
+        CurrentLayerDepth += LayerDepth;  
+    }
+
+    vec2 PrevTexCoords = CurrentTexCoords + DeltaTexCoords;
+    float AfterDepth  = CurrentDepthMapValue - CurrentLayerDepth;
+    float BeforeDepth = GetDisplacementAt(PrevTexCoords) - CurrentLayerDepth + LayerDepth;
+    float Weight = AfterDepth / (AfterDepth - BeforeDepth);
+    vec2 FinalTexCoords = PrevTexCoords * Weight + CurrentTexCoords * (1.0 - Weight);
+    
+    return FinalTexCoords;
+}   
+
+/// /// 
 
 float CalculateSunShadow()
 {
@@ -494,4 +550,21 @@ vec4 textureBicubic(sampler2D sampler, vec2 texCoords)
     return mix(
        mix(sample3, sample2, sx), mix(sample1, sample0, sx)
     , sy);
+}
+
+
+
+float saturate(float x)
+{
+	return clamp(x, 0.0, 1.0);
+}
+
+vec3 saturate(vec3 x)
+{
+	return clamp(x, vec3(0.0), vec3(1.0));
+}
+
+vec2 saturate(vec2 x)
+{
+	return clamp(x, vec2(0.0), vec2(1.0));
 }

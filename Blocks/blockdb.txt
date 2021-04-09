@@ -29,6 +29,20 @@
 }
 
 {
+	Name : Cobblestone
+	Albedo : Res/Block/Cobblestone/Albedo.png
+	Normal : Res/Block/Cobblestone/Normal.png
+	PBR : Res/Block/Cobblestone/PBR.png
+}
+
+{
+	Name : Sand
+	Albedo : Res/Block/Sand/Albedo.png
+	Normal : Res/Block/Sand/Normal.png
+	PBR : Res/Block/Sand/PBR.png
+}
+
+{
 	Name : oak_log
 
 	Albedo_top : Res/Block/Bark/Top/Albedo.png
@@ -55,6 +69,22 @@
 	Normal : Res/Block/Brick/Normal.png
 	PBR : Res/Block/Brick/PBR.png
 }
+
+{
+	Name : Brick1
+	Albedo : Res/Block/Brick1/Albedo.png
+	Normal : Res/Block/Brick1/Normal.png
+	PBR : Res/Block/Brick1/PBR.png
+}
+
+
+{
+	Name : Brick2
+	Albedo : Res/Block/Brick2/Albedo.png
+	Normal : Res/Block/Brick2/Normal.png
+	PBR : Res/Block/Brick2/PBR.png
+}
+
 
 {
 	Name : Fab1
@@ -96,6 +126,20 @@
 	Albedo : Res/Block/Metal1/Albedo.png
 	Normal : Res/Block/Metal1/Normal.png
 	PBR : Res/Block/Metal1/PBR.png
+}
+
+{
+	Name : Metal2
+	Albedo : Res/Block/Metal2/Albedo.png
+	Normal : Res/Block/Metal2/Normal.png
+	PBR : Res/Block/Metal2/PBR.png
+}
+
+{
+	Name : Tiles
+	Albedo : Res/Block/Tiles/Albedo.png
+	Normal : Res/Block/Tiles/Normal.png
+	PBR : Res/Block/Tiles/PBR.png
 }
 
 {
