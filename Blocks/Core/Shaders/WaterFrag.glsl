@@ -78,6 +78,11 @@ vec2 saturate(vec2 x)
 	return clamp(x, vec2(0.0), vec2(1.0));
 }
 
+void LinearToGamma(inout vec3 c)
+{
+    c = pow(c, vec3(1.0f / 2.2f));
+}
+
 float RenderDisc(vec3 ray_dir, vec3 light_dir, float disc_size)
 {
 	float d = dot(ray_dir, light_dir);
@@ -195,7 +200,7 @@ void main()
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
     g_SpecularStrength = 196.0f;
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
-    g_WaterColor *= 1.4f;
+    g_WaterColor *= 0.64f;
 
     o_Color = vec4(CalculateSunLight(-u_SunDirection), 1.0f); // Calculate water, ray traced lighting
     g_F0 = vec3(0.02f);

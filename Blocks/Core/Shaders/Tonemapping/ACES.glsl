@@ -107,6 +107,7 @@ void main()
 {
     vec3 Volumetric = vec3(0.0f);
     vec3 Bloom[2] = vec3[](vec3(0.0f), vec3(0.0f));
+    float PixelDepth = texture(u_DepthTexture, v_TexCoords).r;
 
     if (u_VolumetricEnabled)
     {
@@ -137,7 +138,7 @@ void main()
     Vignette(final_color);
 
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
-    o_Color.rgb = pow(o_Color.rgb, vec3(1.0f / 2.2f));
+    o_Color.rgb = mix(pow(o_Color.rgb, vec3(1.0f / 2.2f)), o_Color.rgb, float(PixelDepth == 1.0f));
 }
 
 vec4 cubic(float v)
