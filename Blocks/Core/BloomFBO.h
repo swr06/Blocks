@@ -43,12 +43,16 @@ namespace Blocks
 		GLuint m_Framebuffer;
 		GLuint m_Mip0;
 		GLuint m_Mip1;
+		GLuint m_Mip2;
+		GLuint m_Mip3;
 
 		inline int GetWidth() const { return m_w; }
 		inline int GetHeight() const { return m_h; }
 
-		const float m_mipscale1 = 0.4f;
-		const float m_mipscale2 = 0.2f;
+		const float m_mipscale1 = 0.65f;
+		const float m_mipscale2 = 0.40f;
+		const float m_mipscale3 = 0.15f;
+		const float m_mipscale4 = 0.05f;
 
 	private :
 		void DeleteEverything();

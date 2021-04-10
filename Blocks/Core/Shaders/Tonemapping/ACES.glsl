@@ -8,7 +8,7 @@ layout(location = 0) out vec4 o_Color;
 
 uniform sampler2D u_FramebufferTexture;
 uniform sampler2D u_VolumetricTexture;
-uniform sampler2D u_BloomTextures[3];
+uniform sampler2D u_BloomTextures[4];
 uniform sampler2D u_DepthTexture;
 uniform samplerCube u_AtmosphereTexture;
 uniform float u_Exposure = 1.0f;
@@ -106,7 +106,7 @@ vec4 BetterTexture_1( sampler2D tex, vec2 uv)
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
-    vec3 Bloom[2] = vec3[](vec3(0.0f), vec3(0.0f));
+    vec3 Bloom[4] = vec3[](vec3(0.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f));
     float PixelDepth = texture(u_DepthTexture, v_TexCoords).r;
 
     if (u_VolumetricEnabled)
@@ -117,8 +117,11 @@ void main()
 
     if (u_BloomEnabled)
     {
+         // Bicubic upsampling for the bloom textures
          Bloom[0] = textureBicubic(u_BloomTextures[0], v_TexCoords).xyz;
          Bloom[1] = textureBicubic(u_BloomTextures[1], v_TexCoords).xyz;
+         Bloom[2] = textureBicubic(u_BloomTextures[2], v_TexCoords).xyz;
+         Bloom[3] = textureBicubic(u_BloomTextures[3], v_TexCoords).xyz;
     }
    
     vec3 HDR = BetterTexture(u_FramebufferTexture, v_TexCoords).rgb;
@@ -132,12 +135,14 @@ void main()
 
     vec3 final_color;
     final_color = HDR + 
-                  Bloom[0] + Bloom[1] +
-                  (Volumetric * 0.1f);
+                  (Bloom[0] * 1.0f) + (Bloom[1] * 0.65f) + (Bloom[2] * 0.45f) + (Bloom[3] * 0.20f) +
+                  (Volumetric * 0.15f);
 
     Vignette(final_color);
 
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
+
+    // Apply gamma correction
     o_Color.rgb = mix(pow(o_Color.rgb, vec3(1.0f / 2.2f)), o_Color.rgb, float(PixelDepth == 1.0f));
 }
 
