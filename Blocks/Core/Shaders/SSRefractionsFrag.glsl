@@ -18,16 +18,9 @@ uniform float u_zNear;
 uniform float u_zFar;
 
 //Tweakable variables
-const float InitialStepAmount = 0.08f;
-const float StepRefinementAmount = 0.1f;
-const int MaxRefinements = 5;
-const int MaxDepth = 1;
-
-// Basic random function used to jitter the ray
-float rand(vec2 co)
-{
-    return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
-}
+const float InitialStepAmount = 0.05f;
+const float StepRefinementAmount = 0.7f;
+const int MaxRefinements = 8;
 
 vec3 ViewPosFromDepth(float depth)
 {
@@ -84,7 +77,6 @@ vec2 ComputeRefraction()
 	int NumRefinements = 0;
 	int depth = 0;
 
-	//Ray trace!
 	for (int count = 0 ; count < 50 ; count++)
 	{
 		if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
@@ -121,7 +113,6 @@ vec2 ComputeRefraction()
 	return final_uv;
 }
 
-//Main
 void main()
 {
 	o_Color = vec3(-1.0f);

@@ -84,12 +84,8 @@ namespace Blocks
 		IBO.Bind();
 		m_WaterVBO.VertexAttribIPointer(0, 3, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 		m_WaterVBO.VertexAttribIPointer(1, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
-		m_WaterVBO.VertexAttribIPointer(2, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, AlbedoTexIndex));
-		m_WaterVBO.VertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, NormalTexIndex));
-		m_WaterVBO.VertexAttribIPointer(4, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, PBRTexIndex));
-		m_WaterVBO.VertexAttribIPointer(5, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-		m_WaterVBO.VertexAttribIPointer(6, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, AO));
-		m_WaterVBO.VertexAttribIPointer(7, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Light));
+		m_WaterVBO.VertexAttribIPointer(2, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+		m_WaterVBO.VertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, T1));
 		m_WaterVAO.Unbind();
 
 		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); FrontFaceAO[0][0] = glm::vec3(-1.0f, 0.0f, 0.0f); FrontFaceAO[0][1] = glm::vec3(0.0f, -1.0f, 0.0f);

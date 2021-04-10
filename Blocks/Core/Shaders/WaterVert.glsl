@@ -6,7 +6,7 @@
 
 layout (location = 0) in ivec3 a_Position;
 layout (location = 1) in uint a_TexCoords;
-layout (location = 5) in uint a_NormalIndex;
+layout (location = 2) in uint a_NormalIndex;
 
 vec3 Normals[6] = vec3[]( vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f),
 					vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), 
@@ -33,7 +33,7 @@ uniform mat4 u_Projection;
 uniform vec3 u_ChunkPosition;
 
 uniform vec3 u_PlayerPosition;
-uniform float u_Time;
+uniform float u_VertexTime;
 
 out vec2 v_TexCoord;
 out vec3 v_Normal;
@@ -45,7 +45,7 @@ out vec3 v_TangentFragPosition;
 
 float WavingWater(vec3 worldPos) 
 {
-	float frametime = 1.0f * u_Time;
+	float frametime = 1.0f * u_VertexTime;
 
 	float fractY = fract(worldPos.y + u_PlayerPosition.y + 0.005);
 		
@@ -66,7 +66,7 @@ void main()
 	RealPosition = vec3(a_Position.x + (u_ChunkPosition.x * RENDER_CHUNK_SIZE_X), a_Position.y + (u_ChunkPosition.y * RENDER_CHUNK_SIZE_Y), 
 	a_Position.z + (u_ChunkPosition.z * RENDER_CHUNK_SIZE_Z)); 
 	
-	RealPosition.y += 15.0f * WavingWater(RealPosition);
+	RealPosition.y += 20.0f * WavingWater(RealPosition);
 	gl_Position = u_Projection * u_View * vec4(RealPosition, 1.0);
 
 	v_TexCoord = TexCoords[a_TexCoords];

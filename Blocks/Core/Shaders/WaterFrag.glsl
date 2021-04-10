@@ -137,7 +137,7 @@ vec3 CalculateSunLight(vec3 ldir)
 
     vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
     vec3 atmosphere = GetAtmosphere(reflected);
-    atmosphere += atmosphere * min(diff * 32.0f, 0.54f);
+    atmosphere += atmosphere * min(diff * 42.0f, 0.4553f);
 
     return g_WaterColor * atmosphere;
 }
@@ -214,13 +214,15 @@ void main()
         if (SSR_UV != vec2(-1.0f))
         {
             SSR_UV += g_Normal.xz * 0.15f;
+            SSR_UV = clamp(SSR_UV, 0.0f, 1.0f);
+
             float reflected_depth = texture(u_PreviousFrameDepthTexture, SSR_UV).r;
 
             if (reflected_depth < 0.999f)
             {
                 vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
                 float distance_to_edge = distance(SSR_UV.x, 1.0f);
-                float ReflectionMixFactor_1 = (1.0f - SSR_UV.y) * 0.85f;
+                float ReflectionMixFactor_1 = (1.0f - SSR_UV.y) * 5.25f;
                 float ReflectionMixFactor;
 
                 if (distance_to_edge < 0.5f)
@@ -233,6 +235,7 @@ void main()
                     ReflectionMixFactor = (SSR_UV.x) * 0.85f;
                 }
 
+                ReflectionColor = clamp(ReflectionColor, 0.0f, 1.0f);
                 o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 6.4, 0.64f)); 
             }
         }

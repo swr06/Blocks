@@ -37,7 +37,7 @@ namespace Blocks
 		uint8_t Light = 0;
 		uint8_t IsUnderwater = 0;
 
-		// Padding
+		// Misc
 		uint8_t T1 = 0;
 	};
 }

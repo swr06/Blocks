@@ -201,7 +201,7 @@ void main()
     } 
 
 	g_Albedo = SampledAlbedo.xyz ; 
-    g_F0 = vec3(0.05f);
+    g_F0 = vec3(0.04f);
 
 	if (v_NormalTexIndex >= 0.0f)
 	{
@@ -289,21 +289,8 @@ void main()
 
 vec3 GetAtmosphere(vec3 ray_dir_)
 {
-    vec3 sun_dir = normalize(-u_SunDirection); 
-    vec3 moon_dir = normalize(u_SunDirection); 
-
     vec3 ray_dir = normalize(ray_dir_);
     vec3 atmosphere = texture(u_AtmosphereCubemap, ray_dir).rgb;
-
-    if(dot(ray_dir, sun_dir) > 0.9855)
-    {
-        atmosphere *= (3.5f);
-    }
-
-    if(dot(ray_dir, moon_dir) > 0.9965)
-    {
-        atmosphere *= (3.0f);
-    }
 
     return atmosphere;
 }
@@ -411,7 +398,7 @@ vec3 CalculateCaustics()
 	c /= float(5);
 	c = 1.17 - pow(c, 1.4);
 	vec3 colour = vec3(pow(abs(c), 8.0));
-    colour = (colour + vec3(0.0, 0.45, 0.57)) * 3.2;
+    colour = (colour + vec3(0.0, 0.45, 0.57)) * 5.2;
     
 	vec2 coord = v_TexCoord;    
     coord = clamp(coord, 0.0, 1.0);

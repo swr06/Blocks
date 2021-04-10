@@ -69,13 +69,14 @@ GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
 bool ShouldRenderSkybox = true;
 bool ShouldRenderVolumetrics = false;
 bool ShouldDoBloomPass = true;
-bool ShouldDoSSRPass = false;
+bool ShouldDoSSRPass = true;
 bool ShouldDoRefractions = true;
-bool ShouldDoWaterParallax = false;
+bool ShouldDoWaterParallax = true;
 bool ShouldDoPOM = true;
 
 bool _Bloom = true;
 bool _SSR = true;
+bool _Refractions = true;
 
 // Flags that change from frame to frame
 bool PlayerMoved = false;
@@ -93,7 +94,7 @@ float RenderScale = 0.750f;
 float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.25f;
 float WaterParallaxDepth = 8.0f;
-float WaterParallaxHeight = 0.5f;
+float WaterParallaxHeight = 0.32f;
 float Exposure = 3.25f;
 float AtmosphereRenderScale = 0.04;
 
@@ -481,6 +482,7 @@ int main()
 
 		_SSR = ShouldDoSSRPass && (!Player.InWater);
 		_Bloom = ShouldDoBloomPass && (!Player.InWater);
+		_Refractions = ShouldDoRefractions && (!Player.InWater);
 
 		Blocks::BlocksRenderBuffer& CurrentlyUsedFBO = (app.GetCurrentFrame() % 2 == 0) ? MainRenderFBO : SecondaryRenderFBO;
 		Blocks::BlocksRenderBuffer& PreviousFrameFBO = (app.GetCurrentFrame() % 2 == 0) ? SecondaryRenderFBO : MainRenderFBO;
@@ -599,7 +601,7 @@ int main()
 		// ----------
 		// Screen Space Refractions
 
-		if (ShouldDoRefractions)
+		if (_Refractions)
 		{
 			Blocks::Timer t2;
 			t2.Start();
@@ -821,7 +823,7 @@ int main()
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 
-		if (!ShouldDoRefractions)
+		if (!_Refractions)
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -848,9 +850,10 @@ int main()
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		WaterShader.SetBool("u_SSREnabled", _SSR);
-		WaterShader.SetBool("u_RefractionsEnabled", ShouldDoRefractions);
+		WaterShader.SetBool("u_RefractionsEnabled", _Refractions);
 		WaterShader.SetBool("u_EnableParallax", ShouldDoWaterParallax);
 		WaterShader.SetFloat("u_Time", glfwGetTime());
+		WaterShader.SetFloat("u_VertexTime", glfwGetTime());
 		WaterShader.SetFloat("u_MixAmount", (float)(app.GetCurrentFrame() % 4) / (float)(32.0f));
 		WaterShader.SetFloat("u_ParallaxDepth", WaterParallaxDepth);
 		WaterShader.SetFloat("u_ParallaxScale", WaterParallaxHeight);

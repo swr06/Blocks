@@ -3,7 +3,7 @@
 in vec2 v_TexCoords;
 
 //Output
-out vec3 o_Color;
+layout (location = 0) out vec3 o_Color;
 
 //Uniforms
 uniform sampler2D u_NormalTexture;
@@ -18,9 +18,9 @@ uniform float u_zNear;
 uniform float u_zFar;
 
 //Tweakable variables
-const float InitialStepAmount = 0.022f; // 0.16
-const float StepRefinementAmount = 0.25f; // 0.3
-const int MaxRefinements = 3;
+const float InitialStepAmount = 0.06f; // 0.16
+const float StepRefinementAmount = 0.6f; // 0.3
+const int MaxRefinements = 12;
 const int MaxDepth = 1;
 
 // Basic random function used to jitter the ray
@@ -70,23 +70,20 @@ vec2 ComputeReflection()
 	vec3 ScreenSpaceVectorPosition = ViewSpaceToClipSpace(ViewSpaceVectorPosition);
 	vec3 ScreenSpaceVector = InitialStepAmount * normalize(ScreenSpaceVectorPosition - ScreenSpacePosition);
 	
-	//Jitter the initial ray
-	//float Offset1 = clamp(rand(gl_FragCoord.xy), 0.0f, 1.0f) / 6000.0f;
-	//float Offset2 = clamp(rand(gl_FragCoord.yy), 0.0f, 1.0f) / 6000.0f;
-	//ScreenSpaceVector += vec3(Offset1, Offset2, 0.0f); // Jitter the ray
-
 	vec3 OldPosition = ScreenSpacePosition + ScreenSpaceVector;
 	vec3 CurrentPosition = OldPosition + ScreenSpaceVector;
 	
-	//State
+	//Current State
 	vec4 color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	vec2 final_uv = vec2(-1.0f);
 	int count = 0;
 	int NumRefinements = 0;
 	int depth = 0;
 
-	//Ray trace!
-	for (int count = 0 ; count < 40 ; count++)
+	// Ray trace until the ray intersects with the depth buffer
+	// After it intersects, do a binary refinement
+
+	for (int count = 0 ; count < 50 ; count++)
 	{
 		if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
 		   CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
@@ -101,7 +98,7 @@ vec2 ComputeReflection()
 		float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
 		float diff = CurrentDepth - SampleDepth;
 
-		if(diff >= 0 && diff < 0.5f)
+		if(diff >= 0 && diff < 1.2f)
 		{
 			ScreenSpaceVector *= StepRefinementAmount;
 			CurrentPosition = OldPosition;
@@ -124,7 +121,6 @@ vec2 ComputeReflection()
 	return final_uv;
 }
 
-//Main
 void main()
 {
 	o_Color = vec3(-1.0f);
