@@ -10,6 +10,7 @@ namespace Blocks
 	
 	void BlockDatabase::Initialize()
 	{
+		Logger::Log("Starting to parse database file");
 		std::string database_path = "blockdb.txt";
 		BlockDatabaseParser::Parse(database_path);
 
@@ -52,9 +53,23 @@ namespace Blocks
 			pbr_paths.push_back(e.second.PBRMap.right);
 		}
 
+		std::string res_str = "     |     RES : (" + std::to_string(texture_resolutions.first) + "," + std::to_string(texture_resolutions.second) + ")";
+
+		std::cout << ("\n\n\n-- STARTING TO LOAD TEXTURES --\n\n\n");
+
+		Logger::Log("Creating Albedo texture array!" + res_str);
 		BlockTextureArray.CreateArray(paths, texture_resolutions, true, true);
+		Logger::Log("Successfully created Albedo texture array!");
+
+		Logger::Log("Creating Normal texture array!" + res_str);
 		BlockNormalTextureArray.CreateArray(normal_paths, texture_resolutions, false, true, GL_LINEAR, true);
+		Logger::Log("Successfully created Albedo texture array!");
+
+		Logger::Log("Creating PBR texture array!" + res_str);
 		BlockPBRTextureArray.CreateArray(pbr_paths, texture_resolutions, false, true, GL_LINEAR, true);
+		Logger::Log("Successfully created PBR texture array!");
+
+		std::cout << ("\n\n\n-- SUCCESSFULLY LOADED TEXTURES --\n\n\n");
 	}
 
 	uint8_t BlockDatabase::GetBlockID(const std::string& block_name)

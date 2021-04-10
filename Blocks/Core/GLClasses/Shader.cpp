@@ -38,8 +38,12 @@ namespace GLClasses
 
 			if (!successful)
 			{
+				std::stringstream s;
 				glGetShaderInfoLog(gs, 512, NULL, GLInfoLog);
 				std::cout << "\nCOMPILATION ERROR IN GEOMETRY SHADER (" << m_GeometryPath << ")" << "\n" << GLInfoLog << "\n\n";
+				s << "\nCOMPILATION ERROR IN GEOMETRY SHADER (" << m_GeometryPath << ")" << "\n" << GLInfoLog << "\n\n";
+
+				Blocks::Logger::LogToFile(s.str());
 			}
 
 			GLint log_length = 0;
@@ -48,9 +52,14 @@ namespace GLClasses
 
 			if (log_length > 0)
 			{
+				std::stringstream s;
+
 				std::string shaderlog(log_length, 0);
 				glGetShaderInfoLog(gs, log_length, 0, shaderlog.data());
 				std::cout << "Geometry Shader compilation log: " << shaderlog << std::endl;
+				s << "Geometry Shader compilation log: " << shaderlog << std::endl;
+
+				Blocks::Logger::LogToFile(s.str());
 			}
 		}
 
@@ -69,8 +78,13 @@ namespace GLClasses
 
 		if (!successful)
 		{
+			std::stringstream s;
+
 			glGetShaderInfoLog(vs, 512, NULL, GLInfoLog);
 			std::cout << "\nCOMPILATION ERROR IN VERTEX SHADER (" << m_VertexPath << ")" << "\n" << GLInfoLog << "\n\n";
+			s << "\nCOMPILATION ERROR IN VERTEX SHADER (" << m_VertexPath << ")" << "\n" << GLInfoLog << "\n\n";
+
+			Blocks::Logger::LogToFile(s.str());
 		}
 
 
@@ -78,9 +92,14 @@ namespace GLClasses
 		glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &log_length);
 		if (log_length > 0)
 		{
+			std::stringstream s;
+
 			std::string shaderlog(log_length, 0);
 			glGetShaderInfoLog(vs, log_length, 0, shaderlog.data());
 			std::cout << "Shader compilation log: " << shaderlog << std::endl;
+			s << "Shader compilation log: " << shaderlog << std::endl;
+
+			Blocks::Logger::LogToFile(s.str());
 		}
 
 		glCompileShader(fs);
@@ -88,17 +107,27 @@ namespace GLClasses
 
 		if (!successful)
 		{
+			std::stringstream s;
+
 			glGetShaderInfoLog(fs, 512, NULL, GLInfoLog);
 			std::cout << "\nCOMPILATION ERROR IN FRAGMENT SHADER (" << m_FragmentPath << ")" << "\n" << GLInfoLog << "\n";
+			s << "\nCOMPILATION ERROR IN FRAGMENT SHADER (" << m_FragmentPath << ")" << "\n" << GLInfoLog << "\n";
+
+			Blocks::Logger::LogToFile(s.str());
 		}
 
 		log_length = 0;
 		glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &log_length);
 		if (log_length > 0)
 		{
+			std::stringstream s;
+
 			std::string shaderlog(log_length, 0);
 			glGetShaderInfoLog(fs, log_length, 0, shaderlog.data());
 			std::cout << "Shader compilation log: " << shaderlog << std::endl;
+			s << "Shader compilation log: " << shaderlog << std::endl;
+
+			Blocks::Logger::LogToFile(s.str());
 		}
 
 		m_Program = glCreateProgram();
@@ -116,8 +145,13 @@ namespace GLClasses
 
 		if (!successful)
 		{
+			std::stringstream s;
+
 			glGetProgramInfoLog(m_Program, 512, NULL, GLInfoLog);
 			std::cout << "ERROR : SHADER LINKING FAILED : \n" << GLInfoLog << std::endl;
+			s << "ERROR : SHADER LINKING FAILED : \n" << GLInfoLog << std::endl;
+
+			Blocks::Logger::LogToFile(s.str());
 		}
 
 		glDeleteShader(vs);
@@ -365,7 +399,11 @@ namespace GLClasses
 
 			if (loc == -1)
 			{
+				std::stringstream s;
 				std::cout << "\nERROR! : UNIFORM NOT FOUND!    |    UNIFORM : " << uniform_name << "  \n\n";
+				s << "\nERROR! : UNIFORM NOT FOUND!    |    UNIFORM : " << uniform_name << "  \n\n";
+
+				Blocks::Logger::LogToFile(s.str());
 			}
 
 			Location_map[uniform_name] = loc;

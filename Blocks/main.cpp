@@ -149,19 +149,7 @@ public:
 
 	void OnImguiRender(double ts) override
 	{
-		ImGuiWindowFlags window_flags = 0;
-
 		glm::vec3 prevSunDirection = SunDirection;
-
-		if (ImGui::Begin("Stats"))
-		{
-			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
-			ImGui::Text("Position : (%f, %f, %f)", Player.Camera.GetPosition().x, Player.Camera.GetPosition().y, Player.Camera.GetPosition().z);
-			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
-			ImGui::Text("Sun Direction : (%f, %f, %f)", SunDirection.x, SunDirection.y, SunDirection.z);
-			ImGui::Text("Moon Direction : (%f, %f, %f)", MoonDirection.x, MoonDirection.y, MoonDirection.z);
-			ImGui::End();
-		}
 
 		if (ImGui::Begin("Settings"))
 		{
@@ -211,8 +199,15 @@ public:
 			AppRenderingTime.TotalMeasured = 0.0f;
 		}
 
-		if (ImGui::Begin("Performance"))
+		if (ImGui::Begin("Performance & Stats"))
 		{
+			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
+			ImGui::Text("Position : (%f, %f, %f)", Player.Camera.GetPosition().x, Player.Camera.GetPosition().y, Player.Camera.GetPosition().z);
+			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
+			ImGui::Text("Sun Direction : (%f, %f, %f)", SunDirection.x, SunDirection.y, SunDirection.z);
+			ImGui::Text("Moon Direction : (%f, %f, %f)", MoonDirection.x, MoonDirection.y, MoonDirection.z);
+			ImGui::NewLine();
+			ImGui::NewLine();
 			ImGui::Text("SSR Render time : %f", render_time.SSR);
 			ImGui::Text("SS Refraction Render time : %f", render_time.Refractions);
 			ImGui::Text("Cubemap Reflection Map Render time : %f", render_time.CubemapReflection);
@@ -237,6 +232,20 @@ public:
 				render_time.Volumetrics + 
 				render_time.Update
 			);
+
+			ImGui::End();
+		}
+
+		if (ImGui::Begin("Custom Settings"))
+		{
+			ImGui::SliderFloat("Player Sensitivity", &Player.Sensitivity, 0.02f, 0.8f);
+			ImGui::SliderFloat("Player Speed", &Player.Speed, 0.01f, 0.25f);
+
+			if (ImGui::Button("Reset"))
+			{
+				Player.Sensitivity = 0.25f;
+				Player.Speed = 0.05f;
+			}
 
 			ImGui::End();
 		}
@@ -266,9 +275,30 @@ public:
 			glViewport(0, 0, e.wx, e.wy);
 		}
 
+
+		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_ESCAPE)
+		{
+			exit(0);
+		}
+
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F1)
 		{
+			/*bool is_locked = this->GetCursorLocked();
+
+			if (!is_locked)
+			{
+				glm::vec2 prev_coords;
+
+				prev_coords = Player.Camera.GetPrevMouseCoords();
+				glfwSetCursorPos(m_Window, prev_coords.x, prev_coords.y);
+			}*/
+
 			this->SetCursorLocked(!this->GetCursorLocked());
+		}
+
+		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F2)
+		{
+			Player.Freefly = !Player.Freefly;
 		}
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_Q)
@@ -389,7 +419,7 @@ int main()
 		WaterMaps[i].CreateTexture(name, false);
 	}
 
-	std::cout << "Created Water Textures!";
+	Blocks::Logger::Log("Created Water Textures!");
 
 	// Set up the Orthographic Player.Camera
 	OCamera.SetPosition(glm::vec3(0.0f));
@@ -1015,7 +1045,6 @@ int main()
 		// Render the 2D elements
 		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
 
-		AppRenderingTime.TotalMeasured = update_timer.End();
 
 		app.FinishFrame();
 		GLClasses::DisplayFrameRate(app.GetWindow(), "Blocks");
@@ -1025,6 +1054,9 @@ int main()
 		PlayerMoved = false;
 		BlockModified = false;
 		SunDirectionChanged = false;
+
+
+		AppRenderingTime.TotalMeasured = update_timer.End();
 	}
 }
 

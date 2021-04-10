@@ -9,8 +9,10 @@ namespace Blocks
 
 	bool Player::OnUpdate(GLFWwindow* window)
 	{
+		Camera.SetSensitivity(Sensitivity);
+
 		bool moved = false;
-		float camera_speed = 0.05f;
+		float camera_speed = Speed;
 
 		Camera.ResetAcceleration();
 		FPSCamera cam = Camera;

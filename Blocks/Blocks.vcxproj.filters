@@ -70,9 +70,6 @@
     <ClCompile Include="Core\Application\Application.cpp">
       <Filter>Source Files\Application</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Application\Logger.cpp">
-      <Filter>Source Files\Application</Filter>
-    </ClCompile>
     <ClCompile Include="Core\GLClasses\CubeTextureMap.cpp">
       <Filter>Source Files\GL Classes</Filter>
     </ClCompile>
@@ -183,6 +180,9 @@
     </ClCompile>
     <ClCompile Include="Core\BloomFBO.cpp">
       <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Application\Logger.cpp">
+      <Filter>Source Files\Application</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

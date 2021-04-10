@@ -15,6 +15,8 @@
 #include <unordered_map>
 #include <filesystem>
 
+#include "../Application/Logger.h"
+
 namespace GLClasses
 {
 	class Shader

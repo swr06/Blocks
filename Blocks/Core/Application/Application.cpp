@@ -212,6 +212,10 @@ namespace Blocks
 		}
 
 		glfwMaximizeWindow(m_Window);
+			
+#ifdef _WIN32
+		system("@del log.txt"); // Delete the already existing log file
+#endif
 
 		return;
 	}

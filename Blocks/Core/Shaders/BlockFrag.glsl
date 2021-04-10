@@ -83,18 +83,6 @@ const vec3 SUN_COLOR = vec3(1.0f * 5.25f, 1.0f * 5.25f, 0.8f * 4.0f);
 const vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 1.25f);
 const vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
-
-vec3 CalculateDirectionalLightPBR(vec3);
-vec3 RandomPointInUnitSphere();
-float nextFloat(inout int seed);
-float nextFloat(inout int seed, in float max);
-float nextFloat(inout int seed, in float min, in float max);
-vec3 CalculateCaustics();
-
-float saturate(float x);
-vec2 saturate(vec2 x);
-vec3 saturate(vec3 x);
-
 int MIN = -2147483648;
 int MAX = 2147483647;
 int RNG_SEED;
@@ -119,11 +107,27 @@ const vec2 PoissonDisk[32] = vec2[]
     vec2(0.039766, -0.396100),  vec2(0.034211, 0.979980)
 );
 
+// Function prototypes
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
 float CalculateSunShadow();
 
 // POM 
 vec2 ParallaxOcclusionMapping(vec2 TextureCoords, vec3 ViewDirection); // View direction should be in tangent space!
+
+vec3 GetAtmosphere(vec3 ray_dir_);
+
+vec3 CalculateDirectionalLightPBR(vec3);
+vec3 RandomPointInUnitSphere();
+float nextFloat(inout int seed);
+float nextFloat(inout int seed, in float max);
+float nextFloat(inout int seed, in float min, in float max);
+vec3 CalculateCaustics();
+
+float saturate(float x);
+vec2 saturate(vec2 x);
+vec3 saturate(vec3 x);
+
+/// IMPLEMENTATION ///
 
 /* Reduces aliasing with pixel art */
 vec4 BetterTexture(sampler2D tex, vec2 uv) 
@@ -240,7 +244,7 @@ void main()
     // Atmosphere lighting
     {
         vec3 R = normalize(reflect(ViewDirection, g_Normal));
-        vec3 AtmosphereColor = texture(u_AtmosphereCubemap, R).rgb;
+        vec3 AtmosphereColor = GetAtmosphere(R);
 
         o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.05f);
     }
@@ -274,6 +278,32 @@ void main()
 
     o_RefractionMask = -1.0f;
 }
+
+
+/// SKYLIGHT ///
+
+vec3 GetAtmosphere(vec3 ray_dir_)
+{
+    vec3 sun_dir = normalize(-u_SunDirection); 
+    vec3 moon_dir = normalize(u_SunDirection); 
+
+    vec3 ray_dir = normalize(ray_dir_);
+    vec3 atmosphere = texture(u_AtmosphereCubemap, ray_dir).rgb;
+
+    if(dot(ray_dir, sun_dir) > 0.9855)
+    {
+        atmosphere *= (3.5f);
+    }
+
+    if(dot(ray_dir, moon_dir) > 0.9965)
+    {
+        atmosphere *= (3.0f);
+    }
+
+    return atmosphere;
+}
+
+/// ///
 
 
 /// POM ///

@@ -227,6 +227,18 @@ namespace Blocks
 		*/
 		void OnUpdate();
 
+
+		inline glm::vec2 GetPrevMouseCoords() noexcept
+		{
+			return glm::vec2(_PrevMx, _PrevMy);
+		}
+
+		inline void SetPrevMouseCoords(float x, float y) noexcept
+		{
+			_PrevMx = x;
+			_PrevMy = y;
+		}
+
 	private : 
 
 		void RecalculateViewMatrix();

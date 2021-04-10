@@ -57,6 +57,22 @@ namespace Blocks
 		void SetCursorLocked(bool locked);
 		inline bool GetCursorLocked() noexcept { return m_CursorLocked; }
 
+		inline float GetCursorX()
+		{
+			double x, y;
+
+			glfwGetCursorPos(m_Window, &x, &y);
+			return static_cast<float>(x);
+		}
+
+		inline float GetCursorY()
+		{
+			double x, y;
+
+			glfwGetCursorPos(m_Window, &x, &y);
+			return static_cast<float>(y);
+		}
+
 	protected:
 		GLFWwindow* m_Window;
 		unsigned int m_Width = 800;

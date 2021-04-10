@@ -21,8 +21,9 @@ namespace Blocks
 		ViewFrustum PlayerViewFrustum;
 		bool TestBlockCollision(const glm::vec3& position);
 
-
 		bool InWater = false;
 		bool Freefly = false;
+		float Sensitivity = 0.25;
+		float Speed = 0.05f;
 	};
 }
