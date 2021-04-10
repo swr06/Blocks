@@ -32,6 +32,9 @@ uniform mat4 u_Projection;
 
 uniform vec3 u_ChunkPosition;
 
+uniform vec3 u_PlayerPosition;
+uniform float u_Time;
+
 out vec2 v_TexCoord;
 out vec3 v_Normal;
 out mat3 v_TBNMatrix;
@@ -40,12 +43,30 @@ out vec3 v_FragPosition;
 out float v_AO;
 out vec3 v_TangentFragPosition;
 
+float WavingWater(vec3 worldPos) 
+{
+	float frametime = 1.0f * u_Time;
+
+	float fractY = fract(worldPos.y + u_PlayerPosition.y + 0.005);
+		
+	float wave = sin(6.28 * (frametime * 0.7 + worldPos.x * 0.14 + worldPos.z * 0.07)) +
+				 sin(6.28 * (frametime * 0.5 + worldPos.x * 0.10 + worldPos.z * 0.20));
+
+	if (fractY > 0.01)
+	{ 
+		return wave * 0.0125;
+	}
+	
+	return 0.0;
+}
+
 void main()
 {
 	vec3 RealPosition;
 	RealPosition = vec3(a_Position.x + (u_ChunkPosition.x * RENDER_CHUNK_SIZE_X), a_Position.y + (u_ChunkPosition.y * RENDER_CHUNK_SIZE_Y), 
 	a_Position.z + (u_ChunkPosition.z * RENDER_CHUNK_SIZE_Z)); 
 	
+	RealPosition.y += 15.0f * WavingWater(RealPosition);
 	gl_Position = u_Projection * u_View * vec4(RealPosition, 1.0);
 
 	v_TexCoord = TexCoords[a_TexCoords];

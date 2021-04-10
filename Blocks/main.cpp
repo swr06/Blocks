@@ -856,6 +856,7 @@ int main()
 		WaterShader.SetFloat("u_ParallaxScale", WaterParallaxHeight);
 		WaterShader.SetVector3f("u_SunDirection", SunDirection);
 		WaterShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
+		WaterShader.SetVector3f("u_PlayerPosition", Player.Camera.GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());

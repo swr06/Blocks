@@ -137,7 +137,7 @@ vec3 CalculateSunLight(vec3 ldir)
 
     vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
     vec3 atmosphere = GetAtmosphere(reflected);
-    atmosphere += atmosphere * min(diff * 24.0f, 0.64f);
+    atmosphere += atmosphere * min(diff * 32.0f, 0.54f);
 
     return g_WaterColor * atmosphere;
 }

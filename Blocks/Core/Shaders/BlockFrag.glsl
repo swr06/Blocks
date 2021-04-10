@@ -162,8 +162,13 @@ vec4 BetterTexture(sampler2DArray tex, vec3 uv_)
 void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
-    float shadow_multiplier = v_IsUnderwater ? 0.25f : 1.75;
-    g_Shadow = CalculateSunShadow() * shadow_multiplier;
+    g_Shadow = CalculateSunShadow();
+
+    if (v_IsUnderwater)
+    {
+        g_Shadow *= 0.5f;
+    }
+
     g_Texcoords = v_TexCoord;
 
     vec3 ViewDirection = normalize(v_FragPosition - u_ViewerPosition);
