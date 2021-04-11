@@ -39,6 +39,7 @@ namespace Blocks
 		void RenderChunks(const glm::vec3& position, GLClasses::Shader& shader);
 		void RayCast(bool place, const glm::vec3& vposition, const glm::vec3& dir);
 		void ChangeCurrentBlock();
+		void DeleteFarawayChunks(const glm::vec3& reference);
 
 	private :
 

@@ -3,17 +3,17 @@
 namespace Blocks
 {
 #ifdef _DEBUG
-	int render_distance_x = 1;
-	int render_distance_z = 1;
-	int build_distance_x = render_distance_x + 3;
-	int build_distance_z = render_distance_z + 3;
+	int render_distance_x = 2;
+	int render_distance_z = 2;
+	int build_distance_x = render_distance_x + 2;
+	int build_distance_z = render_distance_z + 2;
 	int flora_build_distance_x = render_distance_x + 1;
 	int flora_build_distance_z = render_distance_z + 1;
 #else _RELEASE
-	int render_distance_x = 6;
-	int render_distance_z = 6;
-	int build_distance_x = render_distance_x + 3;
-	int build_distance_z = render_distance_z + 3;
+	int render_distance_x = 8;
+	int render_distance_z = 8;
+	int build_distance_x = render_distance_x + 2;
+	int build_distance_z = render_distance_z + 2;
 	int flora_build_distance_x = render_distance_x + 1;
 	int flora_build_distance_z = render_distance_z + 1;
 #endif
@@ -157,6 +157,34 @@ namespace Blocks
 		}
 
 		return true;
+	}
+
+	void World::DeleteFarawayChunks(const glm::vec3& reference)
+	{
+		int player_chunk_x = (int)floor(reference.x / CHUNK_SIZE_X);
+		int player_chunk_z = (int)floor(reference.z / CHUNK_SIZE_Z);
+
+		std::vector<std::pair<int, int>> to_erase;
+
+		for (auto &e : m_WorldChunks)
+		{
+			const auto& ref = e.first;
+			glm::vec2 chunk_pos = e.second.m_Position;
+
+			float diff_x = abs(chunk_pos.x - player_chunk_x);
+			float diff_z = abs(chunk_pos.y - player_chunk_z);
+			
+			if (diff_x > flora_build_distance_x + 1 ||
+				diff_z > flora_build_distance_z + 1)
+			{
+				to_erase.push_back(ref);
+			}
+		}
+
+		for (int i = 0 ; i < to_erase.size() ; i++)
+		{
+			m_WorldChunks.erase(to_erase[i]);
+		}
 	}
 
 	void World::ChangeCurrentBlock()

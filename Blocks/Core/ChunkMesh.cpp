@@ -1,6 +1,8 @@
 #include "ChunkMesh.h"
 
 extern uint32_t _App_PolygonCount;
+extern uint64_t _App_PolygonsRendered;
+extern uint32_t _App_ChunkDrawCalls;
 
 namespace Blocks
 {
@@ -244,10 +246,13 @@ namespace Blocks
 	{
 		if (m_PolygonCount > 0)
 		{
+			_App_PolygonsRendered += m_PolygonCount;
+
 			m_VAO.Bind();
-			
 			glDrawElements(GL_TRIANGLES, m_PolygonCount * 6, GL_UNSIGNED_INT, NULL);
 			m_VAO.Unbind();
+
+			_App_ChunkDrawCalls += 1;
 		}
 	}
 
@@ -255,9 +260,13 @@ namespace Blocks
 	{
 		if (m_WaterPolygonCount > 0)
 		{
+			_App_PolygonsRendered += m_WaterPolygonCount;
+
 			m_WaterVAO.Bind();
 			glDrawElements(GL_TRIANGLES, m_WaterPolygonCount * 6, GL_UNSIGNED_INT, NULL);
 			m_WaterVAO.Unbind(); 
+
+			_App_ChunkDrawCalls += 1;
 		}
 	}
 

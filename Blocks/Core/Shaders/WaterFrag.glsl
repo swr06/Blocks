@@ -53,6 +53,9 @@ vec3 g_F0;
 
 const float freq = 0.6f;
 
+const vec3 SUN_COLOR = vec3(1.0f * 6.25f, 1.0f * 6.25f, 0.8f * 1.2f);
+const vec3 MOON_COLOR =  vec3(0.3f, 0.3f, 1.25f) * 1.0f;
+
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -108,8 +111,9 @@ vec3 GetAtmosphere(vec3 ray_direction)
     atmosphere = max(atmosphere, 0.15f);
 
     // Water specular highlights
-    atmosphere *= max(RenderDisc(ray_dir, sun_dir, 0.00395) * 100.0f, 1.0f);
-    atmosphere *= max(RenderDisc(ray_dir, moon_dir, 0.00195) * 100.0f, 1.0f);
+    atmosphere *= SUN_COLOR * max(RenderDisc(ray_dir, sun_dir, 0.00295) * 75.0f, 1.0f);
+    atmosphere *= MOON_COLOR * max(RenderDisc(ray_dir, moon_dir, 0.00195) * 80.0f, 1.0f);
+    atmosphere *= 0.2f;
 
     return atmosphere;
 }
@@ -222,7 +226,7 @@ void main()
             {
                 vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
                 float distance_to_edge = distance(SSR_UV.x, 1.0f);
-                float ReflectionMixFactor_1 = (1.0f - SSR_UV.y) * 5.8f;
+                float ReflectionMixFactor_1 = (1.0f - SSR_UV.y);
                 float ReflectionMixFactor;
 
                 if (distance_to_edge < 0.5f)
@@ -236,7 +240,7 @@ void main()
                 }
 
                 ReflectionColor = clamp(ReflectionColor, 0.0f, 1.0f);
-                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 6.4, 0.64f)); 
+                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 100.4, 0.64f)); 
             }
         }
     }

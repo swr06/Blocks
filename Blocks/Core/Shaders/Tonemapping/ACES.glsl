@@ -143,7 +143,7 @@ void main()
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
 
     // Apply gamma correction
-    o_Color.rgb = mix(pow(o_Color.rgb, vec3(1.0f / 2.2f)), o_Color.rgb, float(PixelDepth == 1.0f));
+    o_Color.rgb = pow(o_Color.rgb, vec3(1.0f / 2.2f));
 }
 
 vec4 cubic(float v)

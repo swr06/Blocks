@@ -79,9 +79,9 @@ float g_AO = 1.0f;
 float g_Shadow = 0.0f;
 vec3 g_LightColor;
 
-const vec3 SUN_COLOR = vec3(1.0f * 5.25f, 1.0f * 5.25f, 0.8f * 4.0f);
-const vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 1.25f);
-const vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
+vec3 SUN_COLOR = vec3(1.0f * 5.25f, 1.0f * 5.0f, 0.8f * 3.0f);
+vec3 MOON_COLOR =  vec3(0.3f, 0.3f, 1.25f) * 0.4f;
+vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
 int MIN = -2147483648;
 int MAX = 2147483647;
@@ -163,10 +163,11 @@ void main()
 {
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
     g_Shadow = CalculateSunShadow();
-
-    if (v_IsUnderwater)
+    
+    if (v_IsUnderwater == 1)
     {
         g_Shadow *= 0.5f;
+        SUN_COLOR *= 0.25f;
     }
 
     g_Texcoords = v_TexCoord;
@@ -234,7 +235,7 @@ void main()
     float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
     vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
-    g_LightColor = mix(vec3(4.15f, 4.15f, 5.5), vec3(0.7f, 0.7f, 1.25f), min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    g_LightColor = mix(SUN_COLOR, MOON_COLOR, min(distance(u_SunDirection.y, -1.0f), 0.99f));
 
     vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection);
     vec3 Moonlightfactor = CalculateDirectionalLightPBR(u_SunDirection);
@@ -451,7 +452,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR(vec3 light_dir)
 {
-    float ShadowIntensity = 0.5f;
+    float ShadowIntensity = 0.9f;
     float Shadow = g_Shadow * ShadowIntensity;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);

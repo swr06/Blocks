@@ -127,6 +127,9 @@ struct RenderingTime
 };
 
 extern uint32_t _App_PolygonCount; // Internal! Do not touch.
+uint64_t _App_PolygonsRendered; // Internal! Do not touch.
+uint32_t _App_ChunkDrawCalls; // Internal! Do not touch.
+
 RenderingTime AppRenderingTime;
 
 class BlocksApp : public Blocks::Application
@@ -147,7 +150,6 @@ public:
 
 	void OnUserUpdate(double ts) override
 	{
-
 	}
 
 	void OnImguiRender(double ts) override
@@ -180,8 +182,9 @@ public:
 			ImGui::SliderFloat("Atmosphere Render Scale", &AtmosphereRenderScale, 0.03f, 0.4f);
 			ImGui::SliderInt("Atmosphere Sample Count", &AtmosphereSteps, 2, 100);
 			ImGui::SliderInt("Atmosphere Light Sample Count", &AtmosphereLightSteps, 2, 40);
-			ImGui::End();
 		}
+
+		ImGui::End();
 
 		static RenderingTime render_time;
 
@@ -203,9 +206,20 @@ public:
 			AppRenderingTime.TotalMeasured = 0.0f;
 		}
 
+		static int imgui_polygonsrendered = 0;
+		static int imgui_chunkdrawcall = 0;
+
+		if (GetCurrentFrame() % 6 == 0)
+		{
+			imgui_polygonsrendered = _App_PolygonsRendered;
+			imgui_chunkdrawcall = _App_ChunkDrawCalls;
+		}
+
 		if (ImGui::Begin("Performance & Stats"))
 		{
 			ImGui::Text("Polygon Count : %d", _App_PolygonCount);
+			ImGui::Text("Polygons Rendered : %d", imgui_polygonsrendered);
+			ImGui::Text("Chunk Draw Calls : %d", imgui_chunkdrawcall);
 			ImGui::Text("Position : (%f, %f, %f)", Player.Camera.GetPosition().x, Player.Camera.GetPosition().y, Player.Camera.GetPosition().z);
 			ImGui::Text("Player.Camera Direction : (%f, %f, %f)", Player.Camera.GetFront().x, Player.Camera.GetFront().y, Player.Camera.GetFront().z);
 			ImGui::Text("Sun Direction : (%f, %f, %f)", SunDirection.x, SunDirection.y, SunDirection.z);
@@ -237,10 +251,11 @@ public:
 				render_time.Update
 			);
 
-			ImGui::End();
 		}
 
-		if (ImGui::Begin("Custom Settings"))
+		ImGui::End();
+
+		if (ImGui::Begin("Other Settings"))
 		{
 			ImGui::SliderFloat("Player Sensitivity", &Player.Sensitivity, 0.02f, 0.8f);
 			ImGui::SliderFloat("Player Speed", &Player.Speed, 0.01f, 0.25f);
@@ -251,13 +266,17 @@ public:
 				Player.Speed = 0.05f;
 			}
 
-			ImGui::End();
 		}
 		
+		ImGui::End();
+
 		if (prevSunDirection != SunDirection)
 		{
 			SunDirectionChanged = true;
 		}
+
+		_App_PolygonsRendered = 0;
+		_App_ChunkDrawCalls = 0;
 	}
 
 	void OnEvent(Blocks::Event e) override
@@ -443,7 +462,7 @@ int main()
 
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
-		// Set MainRenderFBO Sizes
+		// Tick the sun and moon
 
 		if (TickSun)
 		{
@@ -468,6 +487,8 @@ int main()
 
 		float wx = app.GetWidth(), wy = app.GetHeight();
 
+		// Set MainRenderFBO Sizes
+
 		MainRenderFBO.SetDimensions(wx * RenderScale, wy * RenderScale);
 		SecondaryRenderFBO.SetDimensions(wx * RenderScale, wy * RenderScale);
 		TempFBO.SetSize(wx * RenderScale, wy * RenderScale);
@@ -478,7 +499,6 @@ int main()
 		BloomFBO.SetSize(floor(wx), floor(wy));
 
 		// ----------------- //
-
 
 		Blocks::Timer total_timer;
 		total_timer.Start();
@@ -1059,19 +1079,25 @@ int main()
 
 		// Render the 2D elements
 		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
-
-
 		app.FinishFrame();
 		GLClasses::DisplayFrameRate(app.GetWindow(), "Blocks");
 		Player.Camera.Refresh();
+
+		AppRenderingTime.TotalMeasured = update_timer.End();
+
+		//////////////////////
+		/// Frame cleanup  ///
+		//////////////////////
+
+		if (app.GetCurrentFrame() % 5 == 0)
+		{
+			MainWorld.DeleteFarawayChunks(Player.Camera.GetPosition());
+		}
 
 		// Write the default values for flags that change from frame to frame
 		PlayerMoved = false;
 		BlockModified = false;
 		SunDirectionChanged = false;
-
-
-		AppRenderingTime.TotalMeasured = update_timer.End();
 	}
 }
 

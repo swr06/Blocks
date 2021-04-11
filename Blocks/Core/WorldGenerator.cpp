@@ -53,9 +53,8 @@ void Blocks::WorldGenerator::GenerateChunk(Chunk* chunk)
 	if (gen_type)
 	{
 		NoiseGenerator.SetNoiseType(FastNoise::SimplexFractal);
-		NoiseGenerator.SetFrequency(0.006);
+		NoiseGenerator.SetFrequency(0.0035);
 		NoiseGenerator.SetFractalOctaves(5);
-		NoiseGenerator.SetFractalLacunarity(2.0f);
 
 		for (int x = 0; x < CHUNK_SIZE_X; x++)
 		{
