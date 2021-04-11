@@ -1,6 +1,7 @@
 /* -- The Blocks Voxel Engine -- 
 Contributors : 
 Samuel Rasquinha 
+DCUB3
 UglySwedishFish (WorldTeller)
 Dekrain
 ShadaxStack (fuzdex)
@@ -93,8 +94,9 @@ float VolumetricScattering = 0.6f;
 float RenderScale = 0.750f;
 float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.25f;
+float SSRefractionRenderScale = 0.2f;
 float WaterParallaxDepth = 8.0f;
-float WaterParallaxHeight = 0.32f;
+float WaterParallaxHeight = 0.2f;
 float Exposure = 3.25f;
 float AtmosphereRenderScale = 0.04;
 
@@ -170,7 +172,8 @@ public:
 			ImGui::Checkbox("Freefly (Shouldn't do collisions) ?", &Player.Freefly);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
 			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
-			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.1f);
+			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.0f);
+			ImGui::SliderFloat("SS Refractions Render Resolution", &SSRefractionRenderScale, 0.1f, 1.0f);
 			ImGui::Checkbox("Water Parallax?", &ShouldDoWaterParallax);
 			ImGui::SliderFloat("Water Parallax Depth", &WaterParallaxDepth, 8.0f, 96.0f);
 			ImGui::SliderFloat("Water Parallax Height", &WaterParallaxHeight, 0.25f, 4.0f);
@@ -471,7 +474,7 @@ int main()
 		VolumetricLightingFBO.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		VolumetricLightingFBOBlurred.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
-		RefractionFBO.SetSize(wx * 0.2f, wy * 0.2f);
+		RefractionFBO.SetSize(wx * SSRefractionRenderScale, wy * SSRefractionRenderScale);
 		BloomFBO.SetSize(floor(wx), floor(wy));
 
 		// ----------------- //

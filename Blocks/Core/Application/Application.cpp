@@ -4,7 +4,7 @@ uint32_t _App_PolygonCount = 0;
 
 // LINE 322 : imgui_impl_glfw.cpp // To disable imgui mouse input when the cursor is disabled. This is a hack
 bool blocks_mouse_enabled; 
-
+bool blocks_keyboard_enabled;
 
 namespace Blocks
 {
@@ -227,6 +227,7 @@ namespace Blocks
 	void Application::OnUpdate()
 	{
 		blocks_mouse_enabled = !GetCursorLocked();
+		blocks_keyboard_enabled = !GetCursorLocked();
 
 		glfwGetFramebufferSize(m_Window, &m_CurrentWidth, &m_CurrentHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -72,7 +72,15 @@
 #define GLFW_HAS_MOUSE_PASSTHROUGH    (0)
 #endif
 
+/////////////////////////////////////
+//////// BLOCKS SPECIFIC ////////////
+
 extern bool blocks_mouse_enabled;
+extern bool blocks_keyboard_enabled;
+
+////////                 ////////////
+/////////////////////////////////////
+
 
 // Data
 enum GlfwClientApi
@@ -134,6 +142,8 @@ void ImGui_ImplGlfw_KeyCallback(GLFWwindow* window, int key, int scancode, int a
 {
     if (g_PrevUserCallbackKey != NULL && window == g_Window)
         g_PrevUserCallbackKey(window, key, scancode, action, mods);
+
+    if (!blocks_keyboard_enabled) { return; }
 
     ImGuiIO& io = ImGui::GetIO();
     if (action == GLFW_PRESS)
