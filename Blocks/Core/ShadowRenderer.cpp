@@ -17,8 +17,8 @@ void Blocks::ShadowMapRenderer::InitializeShadowRenderer()
 
 void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_buffer, const glm::vec3& center, const glm::vec3& light_direction, World* world)
 {
-	float SHADOW_DISTANCE_X = 160;
-	float SHADOW_DISTANCE_Y = 160;
+	float SHADOW_DISTANCE_X = 210;
+	float SHADOW_DISTANCE_Y = 210;
 	float SHADOW_DISTANCE_Z = 1000.0f;
 
 	glm::vec3 center_ = center;

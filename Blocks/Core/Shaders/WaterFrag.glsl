@@ -203,14 +203,44 @@ void main()
 
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
     g_SpecularStrength = 196.0f;
+
+    // Set the water color
     g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
-    g_WaterColor *= 0.64f;
+    g_WaterColor *= 0.925f;
 
     o_Color = vec4(CalculateSunLight(-u_SunDirection), 1.0f); // Calculate water, ray traced lighting
     g_F0 = vec3(0.02f);
     g_F0 = mix(g_F0, g_WaterColor, 0.025f);
 
-    // Mix reflection color 
+    // Refractions
+
+    if (u_RefractionsEnabled)
+    {
+        vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
+
+        if (RefractedUV != vec2(-1.0f))
+        {
+            RefractedUV += g_Normal.xz * 0.02f;
+            RefractedUV = clamp(RefractedUV, 0.0f, 1.0f);
+
+            vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
+            o_Color = mix(o_Color, RefractedColor, 0.2f); 
+        }
+
+        else 
+        {
+            vec4 RefractedColor = vec4(texture(u_RefractionTexture, ScreenSpaceCoordinates + (g_Normal.xz * 0.01f)).rgb, 1.0);
+            o_Color = mix(o_Color, RefractedColor, 0.14f); 
+        }
+    }
+
+    else 
+    {
+        o_Color.a = 0.92f;
+    }
+
+
+        // Mix reflection color 
 	if (u_SSREnabled) 
     {
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
@@ -240,37 +270,13 @@ void main()
                 }
 
                 ReflectionColor = clamp(ReflectionColor, 0.0f, 1.0f);
-                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 100.4, 0.64f)); 
+                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 4.5, 0.64f)); 
             }
         }
     }
 
-    // Refractions
 
-    if (u_RefractionsEnabled)
-    {
-        vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
 
-        if (RefractedUV != vec2(-1.0f))
-        {
-            RefractedUV += g_Normal.xz * 0.02f;
-            RefractedUV = clamp(RefractedUV, 0.0f, 1.0f);
-
-            vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
-            o_Color = mix(o_Color, RefractedColor, 0.2f); 
-        }
-
-        else 
-        {
-            vec4 RefractedColor = vec4(texture(u_RefractionTexture, ScreenSpaceCoordinates + (g_Normal.xz * 0.01f)).rgb, 1.0);
-            o_Color = mix(o_Color, RefractedColor, 0.14f); 
-        }
-    }
-
-    else 
-    {
-        o_Color.a = 0.92f;
-    }
     
     // Output values
     o_SSRMask = 1.0f;

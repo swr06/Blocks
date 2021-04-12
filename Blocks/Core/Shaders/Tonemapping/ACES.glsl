@@ -1,5 +1,36 @@
 #version 330 core
 
+// Tonemapping by 
+#define CG_RR 255 
+#define CG_RG 0 
+#define CG_RB 0 
+#define CG_RI 1.00 
+#define CG_RM 0 
+#define CG_RC 1.00 
+
+#define CG_GR 0 
+#define CG_GG 255 
+#define CG_GB 0 
+#define CG_GI 1.00 
+#define CG_GM 0 
+#define CG_GC 1.00 
+
+#define CG_BR 0 
+#define CG_BG 0 
+#define CG_BB 255
+#define CG_BI 1.00 
+#define CG_BM 0 
+#define CG_BC 1.00 
+
+#define CG_TR 255 
+#define CG_TG 255 
+#define CG_TB 255 
+#define CG_TI 1.00 
+#define CG_TM 0.0 
+
+#define SATURATION 1.2f
+#define VIBRANCE 2.1f
+
 in vec2 v_TexCoords;
 in vec3 v_RayPosition;
 in vec3 v_RayDirection;
@@ -103,11 +134,90 @@ vec4 BetterTexture_1( sampler2D tex, vec2 uv)
     return texture(tex, uv/res);
 }
 
+float GetLuminance(vec3 color) {
+	return dot(color, vec3(0.299, 0.587, 0.114));
+}
+
+void ColorGrading(inout vec3 color)
+{
+	vec3 cgColor = pow(color.r, CG_RC) * pow(vec3(CG_RR, CG_RG, CG_RB) / 255.0, vec3(2.2)) +
+				   pow(color.g, CG_GC) * pow(vec3(CG_GR, CG_GG, CG_GB) / 255.0, vec3(2.2)) +
+				   pow(color.b, CG_BC) * pow(vec3(CG_BR, CG_BG, CG_BB) / 255.0, vec3(2.2));
+	vec3 cgMin = pow(vec3(CG_RM, CG_GM, CG_BM) / 255.0, vec3(2.2));
+	color = (cgColor * (1.0 - cgMin) + cgMin) * vec3(CG_RI, CG_GI, CG_BI);
+	
+	vec3 cgTint = pow(vec3(CG_TR, CG_TG, CG_TB) / 255.0, vec3(2.2)) * GetLuminance(color) * CG_TI;
+	color = mix(color, cgTint, CG_TM);
+}
+
+void ColorSaturation(inout vec3 color) 
+{
+	float grayVibrance = (color.r + color.g + color.b) / 3.0;
+	float graySaturation = grayVibrance;
+	if (SATURATION < 1.00) graySaturation = dot(color, vec3(0.299, 0.587, 0.114));
+
+	float mn = min(color.r, min(color.g, color.b));
+	float mx = max(color.r, max(color.g, color.b));
+	float sat = (1.0 - (mx - mn)) * (1.0 - mx) * grayVibrance * 5.0;
+	vec3 lightness = vec3((mn + mx) * 0.5);
+
+	color = mix(color, mix(color, lightness, 1.0 - VIBRANCE), sat);
+	color = mix(color, lightness, (1.0 - lightness) * (2.0 - VIBRANCE) / 2.0 * abs(VIBRANCE - 1.0));
+	color = color * SATURATION - graySaturation * (SATURATION - 1.0);
+}
+
+void UnderwaterDistort(inout vec2 TexCoord) 
+{
+	vec2 OriginalTexCoords = TexCoord;
+
+	TexCoord += vec2(
+		cos(TexCoord.y * 32.0 + u_Time * 3.0),
+		sin(TexCoord.x * 32.0 + u_Time * 1.7)
+	) * 0.005;
+
+	float mask = float(
+		TexCoord.x > 0.0 && TexCoord.x < 1.0 &&
+	    TexCoord.y > 0.0 && TexCoord.y < 1.0
+	);
+
+	if (mask < 0.5) 
+    { 
+        TexCoord = OriginalTexCoords;
+    }
+}
+
+vec2 sharpenOffsets[4] = vec2[4](
+	vec2( 1.0,  0.0),
+	vec2( 0.0,  1.0),
+	vec2(-1.0,  0.0),
+	vec2( 0.0, -1.0)
+);
+
+void SharpenFilter(inout vec3 color) 
+{
+	float mult = 1.0f * 0.025f;
+	vec2 view = 1.0 / textureSize(u_FramebufferTexture, 0);
+
+	color *= 1.0f * 0.1f + 1.0f;
+
+	for(int i = 0; i < 4; i++) 
+    {
+		vec2 offset = sharpenOffsets[i] * view;
+		color -= texture2D(u_FramebufferTexture, v_TexCoords + offset).rgb * mult;
+	}
+}
+
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
     vec3 Bloom[4] = vec3[](vec3(0.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f));
     float PixelDepth = texture(u_DepthTexture, v_TexCoords).r;
+    vec2 g_TexCoords = v_TexCoords;
+
+    if (u_PlayerInWater)
+    {
+        UnderwaterDistort(g_TexCoords);
+    }
 
     if (u_VolumetricEnabled)
     {
@@ -118,13 +228,20 @@ void main()
     if (u_BloomEnabled)
     {
          // Bicubic upsampling for the bloom textures
-         Bloom[0] = textureBicubic(u_BloomTextures[0], v_TexCoords).xyz;
-         Bloom[1] = textureBicubic(u_BloomTextures[1], v_TexCoords).xyz;
-         Bloom[2] = textureBicubic(u_BloomTextures[2], v_TexCoords).xyz;
-         Bloom[3] = textureBicubic(u_BloomTextures[3], v_TexCoords).xyz;
+         Bloom[0] = texture(u_BloomTextures[0], g_TexCoords).xyz;
+         Bloom[1] = texture(u_BloomTextures[1], g_TexCoords).xyz;
+         Bloom[2] = textureBicubic(u_BloomTextures[2], g_TexCoords).xyz;
+         Bloom[3] = textureBicubic(u_BloomTextures[3], g_TexCoords).xyz;
     }
    
-    vec3 HDR = BetterTexture(u_FramebufferTexture, v_TexCoords).rgb;
+    vec3 HDR = BetterTexture(u_FramebufferTexture, g_TexCoords).rgb;
+
+    if (PixelDepth != 1.0f)
+    {
+        ColorGrading(HDR.xyz);
+        ColorSaturation(HDR.xyz);
+        //SharpenFilter(HDR.xyz);
+    }
 
     if (u_PlayerInWater)
     {
@@ -133,14 +250,22 @@ void main()
         HDR = HDR * water_col;
     }
 
+    float exposure = u_Exposure;
+    exposure = mix(4.0f, 0.9f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+
     vec3 final_color;
     final_color = HDR + 
                   (Bloom[0] * 1.0f) + (Bloom[1] * 0.65f) + (Bloom[2] * 0.45f) + (Bloom[3] * 0.20f) +
-                  (Volumetric * 0.15f);
+                  (Volumetric * 0.035f);
+
+    // Make night time more blue
+    float blueness_multiplier = 0.0f;
+    blueness_multiplier = mix(0.2f, 0.0f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
 
     Vignette(final_color);
 
-    o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), u_Exposure));
+    o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), exposure));
 
     // Apply gamma correction
     o_Color.rgb = pow(o_Color.rgb, vec3(1.0f / 2.2f));

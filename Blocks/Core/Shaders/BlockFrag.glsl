@@ -79,8 +79,8 @@ float g_AO = 1.0f;
 float g_Shadow = 0.0f;
 vec3 g_LightColor;
 
-vec3 SUN_COLOR = vec3(1.0f * 5.25f, 1.0f * 5.0f, 0.8f * 3.0f);
-vec3 MOON_COLOR =  vec3(0.3f, 0.3f, 1.25f) * 0.4f;
+vec3 SUN_COLOR = vec3(2.0f);
+vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 0.8f);
 vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
 int MIN = -2147483648;
@@ -452,7 +452,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 CalculateDirectionalLightPBR(vec3 light_dir)
 {
-    float ShadowIntensity = 0.9f;
+    float ShadowIntensity = 0.98f;
     float Shadow = g_Shadow * ShadowIntensity;
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);

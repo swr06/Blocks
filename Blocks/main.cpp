@@ -89,7 +89,7 @@ glm::vec3 SunDirection = glm::vec3(0.0f);
 glm::vec3 MoonDirection = glm::vec3(0.0f);
 
 // ImGui Adjustable Variables
-float ShadowBias = 0.00125f;
+float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
 float RenderScale = 0.750f;
 float VolumetricRenderScale = 0.5f;
@@ -731,7 +731,10 @@ int main()
 		AtmosphereCombineShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
 		AtmosphereCombineShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
 		AtmosphereCombineShader.SetInteger("u_AtmosphereTexture", 3);
+		AtmosphereCombineShader.SetFloat("u_Time", glfwGetTime());
 		AtmosphereCombineShader.SetVector3f("u_SunDir", SunDirection);
+		AtmosphereCombineShader.SetVector3f("u_Frontvec", Player.Camera.GetFront());
+		AtmosphereCombineShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
@@ -1044,7 +1047,7 @@ int main()
 		PPShader.SetFloat("u_Time", glfwGetTime());
 		PPShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
 		PPShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
-		PPShader.SetVector3f("u_SunDirection", -SunDirection);
+		PPShader.SetVector3f("u_SunDirection", SunDirection);
 		PPShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetWidth(), CurrentlyUsedFBO.GetHeight()));
 
 		glActiveTexture(GL_TEXTURE0);
