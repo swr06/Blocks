@@ -79,7 +79,7 @@ float g_AO = 1.0f;
 float g_Shadow = 0.0f;
 vec3 g_LightColor;
 
-vec3 SUN_COLOR = vec3(2.0f);
+vec3 SUN_COLOR = vec3(255.0f / 255.0f, 160.0f / 255.0f, 80.0f / 255.0f) * 1.25f;
 vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 0.8f);
 vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
@@ -465,7 +465,7 @@ vec3 CalculateDirectionalLightPBR(vec3 light_dir)
     vec3 F = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), g_F0);
        
     vec3 nominator = NDF * G * F; 
-    float denominator = 4 * max(dot(g_Normal, V), 0.0) * max(dot(g_Normal, L), 0.0);
+    float denominator = 4.0f * max(dot(g_Normal, V), 0.0) * max(dot(g_Normal, L), 0.0);
     vec3 specular = nominator / max(denominator, 0.001f);
     
     vec3 kS = F;

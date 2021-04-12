@@ -148,12 +148,12 @@ bool GetAtmosphere(inout vec3 atmosphere_color)
     vec3 atmosphere = texture(u_AtmosphereTexture, ray_dir).rgb;
     bool intersect = false;
 
-    if(dot(ray_dir, sun_dir) > 0.9920)
+    if(dot(ray_dir, sun_dir) > 0.9970)
     {
         atmosphere *= SUN_COLOR * 3.0f; intersect = true;
     }
 
-    if(dot(ray_dir, moon_dir) > 0.9965)
+    if(dot(ray_dir, moon_dir) > 0.9995)
     {
         atmosphere *= MOON_COLOR * 10.0f; intersect = true;
     }

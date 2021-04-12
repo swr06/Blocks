@@ -31,7 +31,7 @@ namespace Blocks
         glDisable(GL_DEPTH_TEST);
 
         glm::mat4 projection_matrix = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 600.0f);
-        glm::vec3 center = glm::vec3(0.0f);
+        glm::vec3 center = glm::vec3(0.0f, 5000.0f, 0.0f);
 
         std::array<glm::mat4, 6> view_matrices =
         {
