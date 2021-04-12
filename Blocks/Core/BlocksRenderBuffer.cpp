@@ -70,6 +70,9 @@ namespace Blocks
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_RefractionMaskTexture, 0);
 
 		// SSR normal texture
+		// Contains Unit normals. The alpha component is used to tell if the current pixel is water or not
+		// (TO SAVE SPACE)
+
 		glGenTextures(1, &m_SSRNormalTexture);
 		glBindTexture(GL_TEXTURE_2D, m_SSRNormalTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, NULL);

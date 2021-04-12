@@ -1,10 +1,12 @@
 #version 330 core
 
+#define STAR_REFLECTIONS
+
 layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
 layout (location = 2) out float o_SSRMask;
 layout (location = 3) out float o_RefractionMask;
-layout (location = 4) out vec3 o_SSRNormal;
+layout (location = 4) out vec4 o_SSRNormal;
 
 in vec2 v_TexCoord;
 in vec3 v_Normal;
@@ -119,6 +121,67 @@ vec3 GetAtmosphere(vec3 ray_direction)
 }
 
 
+// Return random noise in the range [0.0, 1.0], as a function of x.
+float Noise2d( in vec2 x )
+{
+    float xhash = cos( x.x * 37.0 );
+    float yhash = cos( x.y * 57.0 );
+    return fract( 415.92653 * ( xhash + yhash ) );
+}
+
+// Convert Noise2d() into a "star field" by stomping everthing below fThreshhold to zero.
+float NoisyStarField( in vec2 vSamplePos, float fThreshhold )
+{
+    float StarVal = Noise2d( vSamplePos );
+    if ( StarVal >= fThreshhold )
+        StarVal = pow( (StarVal - fThreshhold)/(1.0 - fThreshhold), 6.0 );
+    else
+        StarVal = 0.0;
+    return StarVal;
+}
+
+// Original star shader by : https://www.shadertoy.com/view/Md2SR3
+// Modifed and optimized by me
+
+// Stabilize NoisyStarField() by only sampling at integer values.
+float StableStarField( in vec2 vSamplePos, float fThreshhold )
+{
+    // Linear interpolation between four samples.
+    // Note: This approach has some visual artifacts.
+    // There must be a better way to "anti alias" the star field.
+    float fractX = fract( vSamplePos.x );
+    float fractY = fract( vSamplePos.y );
+    vec2 floorSample = floor( vSamplePos );
+    float v1 = NoisyStarField( floorSample, fThreshhold );
+    float v2 = NoisyStarField( floorSample + vec2( 0.0, 1.0 ), fThreshhold );
+    float v3 = NoisyStarField( floorSample + vec2( 1.0, 0.0 ), fThreshhold );
+    float v4 = NoisyStarField( floorSample + vec2( 1.0, 1.0 ), fThreshhold );
+
+    float StarVal =   v1 * ( 1.0 - fractX ) * ( 1.0 - fractY )
+        			+ v2 * ( 1.0 - fractX ) * fractY
+        			+ v3 * fractX * ( 1.0 - fractY )
+        			+ v4 * fractX * fractY;
+	return StarVal;
+}
+
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float stars(vec3 fragpos)
+{
+	float elevation = clamp(fragpos.y, 0.0f, 1.0f);
+	vec2 uv = fragpos.xz / (1.0f + elevation);
+
+    float star = StableStarField(uv * 700.0f, 0.999);
+    
+    // Star shimmer
+    float rand_val = rand(fragpos.xy);
+    star *= (rand_val + sin(u_Time * rand_val) * 1.5f);
+
+	return star * 5.0f;
+}
+
 vec3 CalculateSunLight(vec3 ldir)
 {
     vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
@@ -142,6 +205,15 @@ vec3 CalculateSunLight(vec3 ldir)
 
     vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
     vec3 atmosphere = (GetAtmosphere(reflected) * 1.55f) * (1.0f - min(diff * 70.0f, 0.6f));
+
+    #ifdef STAR_REFLECTIONS
+
+    float star_visibility;
+    star_visibility = mix(0.0f, 1.5f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    float stars = stars(reflected) * 2.0f;
+    atmosphere += stars * star_visibility;
+
+    #endif
 
     return g_WaterColor * atmosphere;
 }
@@ -285,9 +357,10 @@ void main()
     // Set output normals
     o_Normal = g_Normal + (perlin_noise * 0.05f);
 
-    o_SSRNormal = vec3(v_Normal.x, 
+    o_SSRNormal.xyz = vec3(v_Normal.x, 
                        v_Normal.y,  
                        v_Normal.z);
+    o_SSRNormal.w = 1.0f;
 }
 
 

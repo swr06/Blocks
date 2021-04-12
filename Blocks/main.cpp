@@ -1033,6 +1033,7 @@ int main()
 		PPShader.SetInteger("u_VolumetricTexture", 1);
 		PPShader.SetInteger("u_AtmosphereTexture", 3);
 		PPShader.SetInteger("u_DepthTexture", 4);
+		PPShader.SetInteger("u_SSRNormal", 10);
 
 		// Bloom textures
 		PPShader.SetInteger("u_BloomTextures[0]", 5);
@@ -1073,6 +1074,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE8);
 		glBindTexture(GL_TEXTURE_2D, BloomFBO.m_Mip3);
+
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetSSRNormalTexture());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);

@@ -1,6 +1,6 @@
 #version 330 core
 
-// Tonemapping by 
+// Tonemapping by Capt Tatsu
 #define CG_RR 255 
 #define CG_RG 0 
 #define CG_RB 0 
@@ -42,6 +42,8 @@ uniform sampler2D u_VolumetricTexture;
 uniform sampler2D u_BloomTextures[4];
 uniform sampler2D u_DepthTexture;
 uniform samplerCube u_AtmosphereTexture;
+uniform sampler2D u_SSRNormal; // Contains Unit normals. The alpha component is used to tell if the current pixel is liquid or not
+
 uniform float u_Exposure = 1.0f;
 
 uniform bool u_BloomEnabled;
@@ -213,6 +215,7 @@ void main()
     vec3 Bloom[4] = vec3[](vec3(0.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f));
     float PixelDepth = texture(u_DepthTexture, v_TexCoords).r;
     vec2 g_TexCoords = v_TexCoords;
+    bool PixelIsWater = texture(u_SSRNormal, v_TexCoords).w > 0.5f;
 
     if (u_PlayerInWater)
     {
@@ -236,7 +239,7 @@ void main()
    
     vec3 HDR = BetterTexture(u_FramebufferTexture, g_TexCoords).rgb;
 
-    if (PixelDepth != 1.0f)
+    if (PixelDepth != 1.0f && !PixelIsWater)
     {
         ColorGrading(HDR.xyz);
         ColorSaturation(HDR.xyz);

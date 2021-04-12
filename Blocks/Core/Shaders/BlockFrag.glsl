@@ -20,7 +20,7 @@ layout (location = 0) out vec4 o_Color;
 layout (location = 1) out vec3 o_Normal;
 layout (location = 2) out float o_SSRMask;
 layout (location = 3) out float o_RefractionMask;
-layout (location = 4) out vec3 o_SSRNormal;
+layout (location = 4) out vec4 o_SSRNormal;
 
 in vec2 v_TexCoord;
 in float v_TexIndex;
@@ -243,7 +243,8 @@ void main()
 
     o_Color = vec4(Ambient + FinalLighting, 1.0f);
     o_Normal = g_Normal;
-    o_SSRNormal = v_Normal;
+    o_SSRNormal.xyz = v_Normal;
+    o_SSRNormal.w = 0.0f; // Used to tell if the currect pixel is water or not
 
     bool reflective_block = v_TexIndex == u_GraniteTexIndex;
 
@@ -335,6 +336,16 @@ vec2 ParallaxOcclusionMapping(vec2 TextureCoords, vec3 ViewDirection) // View di
 
 /// /// 
 
+vec4 smoothfilter(in sampler2D tex, in vec2 uv, in vec2 textureResolution)
+{
+	uv = uv * textureResolution + 0.5;
+	vec2 iuv = floor( uv );
+	vec2 fuv = fract( uv );
+	uv = iuv + (fuv * fuv) * (3.0 - 2.0 * fuv); 
+	uv = uv / textureResolution - 0.5 / textureResolution;
+	return texture2D( tex, uv);
+}
+
 float CalculateSunShadow()
 {
 	float shadow = 0.0;
@@ -362,7 +373,7 @@ float CalculateSunShadow()
 	    	vec2 jitter_value;
             jitter_value = PoissonDisk[x] * dither;
 
-            float pcf = texture(u_LightShadowMap, v_LightFragProjectionPos.xy + jitter_value * TexelSize).r; 
+            float pcf = smoothfilter(u_LightShadowMap, v_LightFragProjectionPos.xy + jitter_value * TexelSize, vec2(4096)).r; 
 	    	shadow += (Depth - u_ShadowBias) > pcf ? 1.0 : 0.0;        
 	    }
 
