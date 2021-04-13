@@ -49,6 +49,7 @@ Kiroma
 #include "Core/CubemapReflectionRenderer.h"
 #include "Core/Utils/Timer.h"
 #include "Core/BloomRenderer.h"
+#include "Core/ShaderManager.h"
 
 // World, Camera, Player..
 Blocks::Player Player;
@@ -56,15 +57,21 @@ Blocks::OrthographicCamera OCamera(0.0f, 800.0f, 0.0f, 600.0f);
 Blocks::World MainWorld;
 
 // Framebuffers, Renderbuffers and depth buffers
-Blocks::BlocksRenderBuffer MainRenderFBO(800, 600);
-Blocks::BlocksRenderBuffer SecondaryRenderFBO(800, 600);
-GLClasses::Framebuffer TempFBO(800, 600, false, true);
 
-GLClasses::FramebufferRed VolumetricLightingFBO(800, 600);
-GLClasses::FramebufferRed VolumetricLightingFBOBlurred(800, 600);
-GLClasses::Framebuffer SSRFBO(800, 600, true);
-GLClasses::Framebuffer RefractionFBO(800, 600, true);
-GLClasses::Framebuffer BloomFBO(133, 100, true); // 1/6th resolution
+/*
+* These framebuffers get resized every frame (if the size was changed)
+* so making their initial dimensions larger has no use.
+*/
+
+Blocks::BlocksRenderBuffer MainRenderFBO(16, 16);
+Blocks::BlocksRenderBuffer SecondaryRenderFBO(16, 16);
+GLClasses::Framebuffer TempFBO(16, 16, false, true);
+
+GLClasses::FramebufferRed VolumetricLightingFBO(16, 16);
+GLClasses::FramebufferRed VolumetricLightingFBOBlurred(16, 16);
+GLClasses::Framebuffer SSRFBO(16, 16, true);
+GLClasses::Framebuffer RefractionFBO(16, 16, true);
+GLClasses::Framebuffer BloomFBO(16, 16, true);
 
 // Flags 
 bool ShouldRenderSkybox = true;
@@ -306,22 +313,18 @@ public:
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F1)
 		{
-			/*bool is_locked = this->GetCursorLocked();
-
-			if (!is_locked)
-			{
-				glm::vec2 prev_coords;
-
-				prev_coords = Player.Camera.GetPrevMouseCoords();
-				glfwSetCursorPos(m_Window, prev_coords.x, prev_coords.y);
-			}*/
-
 			this->SetCursorLocked(!this->GetCursorLocked());
 		}
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F2)
 		{
 			Player.Freefly = !Player.Freefly;
+		}
+
+		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_F5)
+		{
+			Blocks::ShaderManager::RecompileShaders();
+			Blocks::Logger::Log("Recompiled All Shaders!");
 		}
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_Q)
@@ -356,6 +359,8 @@ int main()
 	app.Initialize();
 	app.SetCursorLocked(true);
 
+	Blocks::ShaderManager::CreateShaders();
+
 	Blocks::AtmosphereRenderer AtmosphereRenderer;
 	Blocks::AtmosphereRenderMap AtmosphereCubemap(64);
 
@@ -371,16 +376,15 @@ int main()
 	GLClasses::Texture WaterMaps[100];
 
 	// Shaders
-	GLClasses::Shader RenderShader;
-	GLClasses::Shader PPShader;
-	GLClasses::Shader VolumetricShader;
-	GLClasses::Shader BloomShader;
-	GLClasses::Shader SSRShader;
-	GLClasses::Shader WaterShader;
-	GLClasses::Shader RefractionShader;
-	GLClasses::Shader DepthPrepassShader;
-	GLClasses::Shader AtmosphereCombineShader;
-	GLClasses::Shader BilateralBlur;
+	GLClasses::Shader& RenderShader = Blocks::ShaderManager::GetShader("RENDER_SHADER");
+	GLClasses::Shader& PPShader = Blocks::ShaderManager::GetShader("POST_PROCESSING");
+	GLClasses::Shader& VolumetricShader = Blocks::ShaderManager::GetShader("VOLUMETRICS");
+	GLClasses::Shader& SSRShader = Blocks::ShaderManager::GetShader("SSR");
+	GLClasses::Shader& WaterShader = Blocks::ShaderManager::GetShader("WATER");
+	GLClasses::Shader& RefractionShader = Blocks::ShaderManager::GetShader("SS_REFRACTIONS");
+	GLClasses::Shader& DepthPrepassShader = Blocks::ShaderManager::GetShader("DEPTH_PREPASS");
+	GLClasses::Shader& AtmosphereCombineShader = Blocks::ShaderManager::GetShader("ATMOSPHERE_COMBINE");
+	GLClasses::Shader& BilateralBlur = Blocks::ShaderManager::GetShader("BILATERAL_BLUR");
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -404,28 +408,6 @@ int main()
 	FBOVBO.VertexAttribPointer(0, 2, GL_FLOAT, 0, 4 * sizeof(GLfloat), 0);
 	FBOVBO.VertexAttribPointer(1, 2, GL_FLOAT, 0, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
 	FBOVAO.Unbind();
-
-	// Create and compile the shaders
-	RenderShader.CreateShaderProgramFromFile("Core/Shaders/BlockVert.glsl", "Core/Shaders/BlockFrag.glsl");
-	RenderShader.CompileShaders();
-	PPShader.CreateShaderProgramFromFile("Core/Shaders/Tonemapping/TonemapVert.glsl", "Core/Shaders/Tonemapping/ACES.glsl");
-	PPShader.CompileShaders();
-	VolumetricShader.CreateShaderProgramFromFile("Core/Shaders/VolumetricLightingVert.glsl", "Core/Shaders/VolumetricLightingFrag.glsl");
-	VolumetricShader.CompileShaders();
-	BloomShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BloomBrightFrag.glsl");
-	BloomShader.CompileShaders();
-	SSRShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/SSRFrag.glsl");
-	SSRShader.CompileShaders();
-	RefractionShader.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/SSRefractionsFrag.glsl");
-	RefractionShader.CompileShaders();
-	WaterShader.CreateShaderProgramFromFile("Core/Shaders/WaterVert.glsl", "Core/Shaders/WaterFrag.glsl");
-	WaterShader.CompileShaders();
-	DepthPrepassShader.CreateShaderProgramFromFile("Core/Shaders/DepthPrepassVert.glsl", "Core/Shaders/DepthPrepassFrag.glsl");
-	DepthPrepassShader.CompileShaders();
-	AtmosphereCombineShader.CreateShaderProgramFromFile("Core/Shaders/AtmosphereCombineVert.glsl", "Core/Shaders/AtmosphereCombineFrag.glsl");
-	AtmosphereCombineShader.CompileShaders();
-	BilateralBlur.CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BilateralBlurFrag.glsl");
-	BilateralBlur.CompileShaders();
 
 	// Create the texture
 	Crosshair.CreateTexture("Res/Misc/crosshair.png", false);

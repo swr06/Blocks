@@ -38,6 +38,6 @@ namespace Blocks
 		uint8_t IsUnderwater = 0;
 
 		// Misc
-		uint8_t T1 = 0;
+		uint8_t ID = 0;
 	};
 }

@@ -79,6 +79,7 @@ namespace Blocks
 		m_VBO.VertexAttribIPointer(6, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, AO));
 		m_VBO.VertexAttribIPointer(7, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Light));
 		m_VBO.VertexAttribIPointer(8, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, IsUnderwater));
+		m_VBO.VertexAttribIPointer(9, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, ID));
 		m_VAO.Unbind();
 
 		m_WaterVAO.Bind();
@@ -87,7 +88,6 @@ namespace Blocks
 		m_WaterVBO.VertexAttribIPointer(0, 3, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 		m_WaterVBO.VertexAttribIPointer(1, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 		m_WaterVBO.VertexAttribIPointer(2, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-		m_WaterVBO.VertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (void*)offsetof(Vertex, T1));
 		m_WaterVAO.Unbind();
 
 		FrontFace[0] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); FrontFaceAO[0][0] = glm::vec3(-1.0f, 0.0f, 0.0f); FrontFaceAO[0][1] = glm::vec3(0.0f, -1.0f, 0.0f);
@@ -425,6 +425,11 @@ namespace Blocks
 		v2.Normal = (float)facetype;
 		v3.Normal = (float)facetype;
 		v4.Normal = (float)facetype;
+
+		v1.ID = block.ID;
+		v2.ID = block.ID;
+		v3.ID = block.ID;
+		v4.ID = block.ID;
 		
 		if (isliquid)
 		{

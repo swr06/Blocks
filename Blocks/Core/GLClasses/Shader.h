@@ -54,6 +54,7 @@ namespace GLClasses
 
 		void Destroy();
 		void ValidateProgram();
+		void Recompile();
 		void SetFloat(const std::string& name, GLfloat value, GLboolean useShader = GL_FALSE);
 		void SetInteger(const std::string& name, GLint value, GLboolean useShader = GL_FALSE);
 		void SetBool(const std::string& name, bool value, GLboolean useShader = GL_FALSE);
@@ -74,11 +75,11 @@ namespace GLClasses
 		GLuint m_Program = 0;
 
 		GLint GetUniformLocation(const std::string& uniform_name);
-		std::string m_VertexData;
-		std::string m_VertexPath;
-		std::string m_FragmentData;
-		std::string m_FragmentPath;
-		std::string m_GeometryData;
-		std::string m_GeometryPath;
+		std::string m_VertexData = "";
+		std::string m_VertexPath = "";
+		std::string m_FragmentData = "";
+		std::string m_FragmentPath = "";
+		std::string m_GeometryData = "";
+		std::string m_GeometryPath = "";
 	};
 }

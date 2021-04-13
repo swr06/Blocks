@@ -184,6 +184,9 @@
     <ClCompile Include="Core\Application\Logger.cpp">
       <Filter>Source Files\Application</Filter>
     </ClCompile>
+    <ClCompile Include="Core\ShaderManager.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -343,6 +346,9 @@
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
     <ClInclude Include="Core\BloomFBO.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ShaderManager.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
   </ItemGroup>

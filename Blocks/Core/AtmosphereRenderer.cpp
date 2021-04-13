@@ -4,7 +4,7 @@
 
 namespace Blocks
 {
-    AtmosphereRenderer::AtmosphereRenderer() : m_VBO(GL_ARRAY_BUFFER)
+    AtmosphereRenderer::AtmosphereRenderer() : m_VBO(GL_ARRAY_BUFFER), m_AtmosphereShader(ShaderManager::GetShader("ATMOSPHERE"))
 	{
         float QuadVertices[] =
         {
@@ -12,9 +12,6 @@ namespace Blocks
              1.0f, -1.0f,  1.0f, 0.0f, -1.0f,  1.0f,  0.0f, 1.0f,
              1.0f, -1.0f,  1.0f, 0.0f,  1.0f,  1.0f,  1.0f, 1.0f
         };
-
-        m_AtmosphereShader.CreateShaderProgramFromFile("Core/Shaders/AtmosphereVertex.glsl", "Core/Shaders/AtmosphereFrag.glsl");
-        m_AtmosphereShader.CompileShaders();
 
         m_VBO.BufferData(sizeof(QuadVertices), QuadVertices, GL_STATIC_DRAW);
         m_VAO.Bind();

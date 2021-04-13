@@ -215,11 +215,12 @@ namespace GLClasses
 		m_GeometryData = geometry_data;
 		m_VertexPath = "PASSED_VIA_DATA";
 		m_FragmentPath = "PASSED_VIA_DATA";
-		m_GeometryData = "PASSED_VIA_DATA";
+		m_GeometryPath = "PASSED_VIA_DATA";
 	}
 
 	void Shader::Destroy()
 	{
+		Location_map.clear();
 		glDeleteProgram(m_Program);
 		glUseProgram(0);
 	}
@@ -250,6 +251,13 @@ namespace GLClasses
 		}
 
 		return;
+	}
+
+	void Shader::Recompile()
+	{
+		Destroy();
+		CreateShaderProgramFromFile(m_VertexPath, m_FragmentPath, m_GeometryPath);
+		CompileShaders();
 	}
 
 	void Shader::SetFloat(const std::string& name, GLfloat value, GLboolean useShader)

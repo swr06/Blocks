@@ -79,7 +79,8 @@ float g_AO = 1.0f;
 float g_Shadow = 0.0f;
 vec3 g_LightColor;
 
-vec3 SUN_COLOR = vec3(255.0f / 255.0f, 160.0f / 255.0f, 80.0f / 255.0f) * 1.25f;
+//vec3 SUN_COLOR = vec3(255.0f / 255.0f, 160.0f / 255.0f, 80.0f / 255.0f) * 1.25f;
+vec3 SUN_COLOR = vec3(2.0f);
 vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 0.8f);
 vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
@@ -137,10 +138,10 @@ vec4 BetterTexture(sampler2D tex, vec2 uv)
 
     vec2 fl = floor(uv);
     vec2 fr = fract(uv);
-    vec2 aa = fwidth(uv)*0.75;
-    fr = smoothstep( vec2(0.5)-aa, vec2(0.5)+aa, fr);
+    vec2 aa = fwidth(uv) * 0.75f;
+    fr = smoothstep( vec2(0.5f) - aa, vec2(0.5f) + aa, fr);
     
-    uv = (fl+fr-0.5) / res;
+    uv = (fl + fr - 0.5f) / res;
     return texture(tex, uv);
 }
 

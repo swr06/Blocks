@@ -10,6 +10,7 @@
 #include "GLClasses/VertexArray.h"
 #include "FpsCamera.h"
 #include "AtmosphereRenderCubemap.h"
+#include "ShaderManager.h"
 
 namespace Blocks
 {
@@ -23,6 +24,6 @@ namespace Blocks
 	private :
 		GLClasses::VertexBuffer m_VBO;
 		GLClasses::VertexArray m_VAO;
-		GLClasses::Shader m_AtmosphereShader;
+		GLClasses::Shader& m_AtmosphereShader;
 	};
 }

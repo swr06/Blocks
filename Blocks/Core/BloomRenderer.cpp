@@ -1,12 +1,11 @@
 #include "BloomRenderer.h"
 
+#include "ShaderManager.h"
+
 namespace Blocks
 {
 	namespace BloomRenderer
 	{
-		static std::unique_ptr<GLClasses::Shader> BloomBrightShader;
-		static std::unique_ptr<GLClasses::Shader> GaussianHorizontalBlur;
-		static std::unique_ptr<GLClasses::Shader> GaussianVerticalBlur;
 		static std::unique_ptr<GLClasses::VertexBuffer> BloomFBOVBO;
 		static std::unique_ptr<GLClasses::VertexArray> BloomFBOVAO;
 		static std::unique_ptr<GLClasses::Framebuffer> BloomAlternateFBO;
@@ -16,9 +15,6 @@ namespace Blocks
 
 		void Initialize()
 		{
-			BloomBrightShader = std::unique_ptr<GLClasses::Shader>(new GLClasses::Shader);
-			GaussianHorizontalBlur = std::unique_ptr<GLClasses::Shader>(new GLClasses::Shader);
-			GaussianVerticalBlur = std::unique_ptr<GLClasses::Shader>(new GLClasses::Shader);
 			BloomFBOVBO = std::unique_ptr<GLClasses::VertexBuffer>(new GLClasses::VertexBuffer);
 			BloomFBOVAO = std::unique_ptr<GLClasses::VertexArray>(new GLClasses::VertexArray);
 			BloomAlternateFBO = std::unique_ptr<GLClasses::Framebuffer>(new GLClasses::Framebuffer(64, 64, true));
@@ -29,16 +25,6 @@ namespace Blocks
 			BloomAlternateFBO2->CreateFramebuffer();
 			BloomAlternateFBO3 = std::unique_ptr<GLClasses::Framebuffer>(new GLClasses::Framebuffer(64, 64, true));
 			BloomAlternateFBO3->CreateFramebuffer();
-
-			// Create and compile the shaders
-			BloomBrightShader->CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/BloomMaskFrag.glsl");
-			BloomBrightShader->CompileShaders();
-
-			GaussianHorizontalBlur->CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/GaussianBlurHorizontal.glsl");
-			GaussianHorizontalBlur->CompileShaders();
-
-			GaussianVerticalBlur->CreateShaderProgramFromFile("Core/Shaders/FBOVert.glsl", "Core/Shaders/GaussianBlurVertical.glsl");
-			GaussianVerticalBlur->CompileShaders();
 
 			float QuadVertices[] =
 			{
@@ -57,6 +43,10 @@ namespace Blocks
 
 		void RenderBloom(BloomFBO& bloom_fbo, GLuint source_tex)
 		{
+			GLClasses::Shader& BloomBrightShader = ShaderManager::GetShader("BLOOM_BRIGHT");
+			GLClasses::Shader& GaussianHorizontalBlur = ShaderManager::GetShader("GAUSSIAN_HORIZONTAL");
+			GLClasses::Shader& GaussianVerticalBlur = ShaderManager::GetShader("GAUSSIAN_VERTICAL");
+
 			/////////////////////////
 			//////// PASS 1 /////////
 			/////////////////////////
@@ -73,8 +63,8 @@ namespace Blocks
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 			glViewport(0, 0, w, h);
 
-			BloomBrightShader->Use();
-			BloomBrightShader->SetInteger("u_Texture", 0);
+			BloomBrightShader.Use();
+			BloomBrightShader.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, source_tex);
@@ -87,8 +77,8 @@ namespace Blocks
 
 			BloomAlternateFBO->Bind();
 
-			GaussianHorizontalBlur->Use();
-			GaussianHorizontalBlur->SetInteger("u_Texture", 0);
+			GaussianHorizontalBlur.Use();
+			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip0);
@@ -102,8 +92,8 @@ namespace Blocks
 			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
-			GaussianVerticalBlur->Use();
-			GaussianVerticalBlur->SetInteger("u_Texture", 0);
+			GaussianVerticalBlur.Use();
+			GaussianVerticalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO->GetTexture());
@@ -128,8 +118,8 @@ namespace Blocks
 			glDrawBuffer(GL_COLOR_ATTACHMENT1);
 			glViewport(0, 0, w, h);
 
-			BloomBrightShader->Use();
-			BloomBrightShader->SetInteger("u_Texture", 0);
+			BloomBrightShader.Use();
+			BloomBrightShader.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, source_tex);
@@ -142,8 +132,8 @@ namespace Blocks
 
 			BloomAlternateFBO1->Bind();
 
-			GaussianHorizontalBlur->Use();
-			GaussianHorizontalBlur->SetInteger("u_Texture", 0);
+			GaussianHorizontalBlur.Use();
+			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip1);
@@ -157,8 +147,8 @@ namespace Blocks
 			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
 			glDrawBuffer(GL_COLOR_ATTACHMENT1);
 
-			GaussianVerticalBlur->Use();
-			GaussianVerticalBlur->SetInteger("u_Texture", 0);
+			GaussianVerticalBlur.Use();
+			GaussianVerticalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO1->GetTexture());
@@ -183,8 +173,8 @@ namespace Blocks
 			glDrawBuffer(GL_COLOR_ATTACHMENT2);
 			glViewport(0, 0, w, h);
 
-			BloomBrightShader->Use();
-			BloomBrightShader->SetInteger("u_Texture", 0);
+			BloomBrightShader.Use();
+			BloomBrightShader.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, source_tex);
@@ -197,8 +187,8 @@ namespace Blocks
 
 			BloomAlternateFBO2->Bind();
 
-			GaussianHorizontalBlur->Use();
-			GaussianHorizontalBlur->SetInteger("u_Texture", 0);
+			GaussianHorizontalBlur.Use();
+			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip2);
@@ -212,8 +202,8 @@ namespace Blocks
 			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
 			glDrawBuffer(GL_COLOR_ATTACHMENT2);
 
-			GaussianVerticalBlur->Use();
-			GaussianVerticalBlur->SetInteger("u_Texture", 0);
+			GaussianVerticalBlur.Use();
+			GaussianVerticalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO2->GetTexture());
@@ -238,8 +228,8 @@ namespace Blocks
 			glDrawBuffer(GL_COLOR_ATTACHMENT3);
 			glViewport(0, 0, w, h);
 
-			BloomBrightShader->Use();
-			BloomBrightShader->SetInteger("u_Texture", 0);
+			BloomBrightShader.Use();
+			BloomBrightShader.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, source_tex);
@@ -252,8 +242,8 @@ namespace Blocks
 
 			BloomAlternateFBO3->Bind();
 
-			GaussianHorizontalBlur->Use();
-			GaussianHorizontalBlur->SetInteger("u_Texture", 0);
+			GaussianHorizontalBlur.Use();
+			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip3);
@@ -267,8 +257,8 @@ namespace Blocks
 			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
 			glDrawBuffer(GL_COLOR_ATTACHMENT3);
 
-			GaussianVerticalBlur->Use();
-			GaussianVerticalBlur->SetInteger("u_Texture", 0);
+			GaussianVerticalBlur.Use();
+			GaussianVerticalBlur.SetInteger("u_Texture", 0);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO3->GetTexture());
