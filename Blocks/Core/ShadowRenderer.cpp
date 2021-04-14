@@ -4,6 +4,7 @@
 static glm::mat4 LightProjectionMatrix;
 static glm::mat4 LightViewMatrix;
 static glm::vec3 LightPosition;
+static glm::vec2 LightDistortionBiasPosition;
 
 void Blocks::ShadowMapRenderer::InitializeShadowRenderer()
 {
@@ -16,27 +17,38 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 {
 	GLClasses::Shader& DepthShader = ShaderManager::GetShader("DEPTH");
 
-	float SHADOW_DISTANCE_X = 210;
-	float SHADOW_DISTANCE_Y = 210;
+	float SHADOW_DISTANCE_X = 190;
+	float SHADOW_DISTANCE_Y = 190;
 	float SHADOW_DISTANCE_Z = 1000.0f;
 
 	glm::vec3 center_ = center;
+	float SHADOW_POSITION_BIAS = 40.0f;
+	uint8_t aligned = 0;
+
+	LightPosition = glm::vec3(
+		center.x,
+		SHADOW_DISTANCE_Y - 2,
+		center.z);
 
 	// Align the orthographic projected "cube" 
-	if (light_direction.z < 0.0f)
+	if (light_direction.z < -0.86f)
 	{
 		LightPosition = glm::vec3(
-			center.x + (SHADOW_DISTANCE_X / 2),
-			SHADOW_DISTANCE_Y - 5,
-			center.z + (SHADOW_DISTANCE_X / 2));
+			center.x + SHADOW_POSITION_BIAS,
+			SHADOW_DISTANCE_Y - 2,
+			center.z + SHADOW_POSITION_BIAS);
+
+		aligned = 1;
 	}
 
-	else
+	else if (light_direction.z > 0.86f)
 	{
 		LightPosition = glm::vec3(
-			center.x - (SHADOW_DISTANCE_X / 2),
-			SHADOW_DISTANCE_Y - 5,
-			center.z - (SHADOW_DISTANCE_X / 2));
+			center.x - SHADOW_POSITION_BIAS,
+			SHADOW_DISTANCE_Y - 2,
+			center.z - SHADOW_POSITION_BIAS);
+
+		aligned = 2;
 	}
 
 	LightProjectionMatrix = glm::ortho(-SHADOW_DISTANCE_X, SHADOW_DISTANCE_X,
@@ -44,6 +56,17 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 		0.0f, SHADOW_DISTANCE_Z);
 
 	LightViewMatrix = glm::lookAt(LightPosition, LightPosition + light_direction, glm::vec3(0.0f, 1.0f, 0.0f));
+	LightDistortionBiasPosition = glm::vec2(0.0f);
+
+	if (aligned == 1)
+	{
+		LightDistortionBiasPosition = glm::vec2(-0.9f);
+	}
+
+	if (aligned == 2)
+	{
+		LightDistortionBiasPosition = glm::vec2(0.9f);
+	}
 
 	// Render
 
@@ -62,6 +85,7 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 	DepthShader.SetMatrix4("u_ViewMatrix", LightViewMatrix);
 	DepthShader.SetMatrix4("u_ViewProjectionMatrix", LightProjectionMatrix * LightViewMatrix);
 	DepthShader.SetInteger("u_BlockTextures", 0);
+	DepthShader.SetVector2f("u_ShadowDistortBiasPos", LightDistortionBiasPosition);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, BlockDatabase::GetTextureArray());
@@ -80,4 +104,9 @@ glm::mat4 Blocks::ShadowMapRenderer::GetLightProjectionMatrix()
 glm::mat4 Blocks::ShadowMapRenderer::GetLightViewMatrix()
 {
 	return LightViewMatrix;
+}
+
+glm::vec2 Blocks::ShadowMapRenderer::GetShadowDistortBiasPosition()
+{
+	return LightDistortionBiasPosition;
 }

@@ -18,5 +18,6 @@ namespace Blocks
 		void RenderShadowMap(GLClasses::DepthBuffer& depth_buffer, const glm::vec3& center, const glm::vec3& light_direction, World* world);
 		glm::mat4 GetLightProjectionMatrix();
 		glm::mat4 GetLightViewMatrix();
+		glm::vec2 GetShadowDistortBiasPosition();
 	}
 }

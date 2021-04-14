@@ -388,7 +388,7 @@ int main()
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(4096, 4096);
+	GLClasses::DepthBuffer ShadowMap(2048, 2048);
 	GLClasses::CubeReflectionMap ReflectionMap(256);
 
 	Blocks::BloomFBO BloomFBO(800, 600);
@@ -773,6 +773,8 @@ int main()
 
 		RenderShader.SetVector3f("u_SunDirection", SunDirection);
 		RenderShader.SetVector3f("u_MoonDirection", MoonDirection);
+
+		RenderShader.SetVector2f("u_ShadowDistortBiasPos", Blocks::ShadowMapRenderer::GetShadowDistortBiasPosition());
 
 		// Bind Textures
 

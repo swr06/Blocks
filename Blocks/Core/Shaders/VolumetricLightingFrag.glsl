@@ -22,6 +22,9 @@ uniform vec3 u_LightDirection;
 uniform int u_Width;
 uniform int u_Height;
 
+// Shadows
+uniform vec2 u_ShadowDistortBiasPos;
+
 // We want to tile the noise texture over the screen
 vec2 NoiseScale = vec2(float(u_Width) / 256.0f, float(u_Height) / 256.0f);
 
@@ -47,6 +50,13 @@ vec3 WorldPosFromDepth(float depth)
     vec4 worldSpacePosition = u_InverseViewMatrix * viewSpacePosition;
 
     return worldSpacePosition.xyz;
+}
+
+vec2 DistortPosition(in vec2 position)
+{
+    float CenterDistance = distance(position, u_ShadowDistortBiasPos);
+    float DistortionFactor = mix(1.0f, CenterDistance, 0.9f);
+    return position / DistortionFactor;
 }
 
 void main()
@@ -75,7 +85,8 @@ void main()
 	{
 		// Check if the fragment is in shadow
 		vec4 FragPosLightSpace = u_LightViewProjection * vec4(CurrentPosition, 1.0f);
-		vec3 ProjectionCoordinates = FragPosLightSpace.xyz / FragPosLightSpace.w;
+		vec3 ProjectionCoordinates = FragPosLightSpace.xyz;
+		ProjectionCoordinates.xy = DistortPosition(ProjectionCoordinates.xy);
 		ProjectionCoordinates = ProjectionCoordinates * 0.5f + 0.5f;
 
 		float SampledDepth = texture(u_ShadowMap, ProjectionCoordinates.xy).r; 

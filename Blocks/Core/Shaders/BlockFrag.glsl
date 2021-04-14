@@ -6,7 +6,7 @@
 
 // Flags
 #define USE_PCF
-#define PCF_COUNT 8 
+#define PCF_COUNT 12
 
 //#define rot(a) mat2(cos(a + PI * vec4(0,1.5,0.5,0)))
  
@@ -33,9 +33,6 @@ in float v_AO;
 in float v_LampLightValue;
 flat in int v_IsUnderwater;
 in vec3 v_TangentFragPosition;
-
-// Shadows
-in vec4 v_LightFragProjectionPos;
 
 uniform vec3 u_ViewerPosition;
 uniform sampler2DArray u_BlockTextures;
@@ -66,6 +63,10 @@ uniform vec2 u_Dimensions;
 uniform bool u_UsePOM;
 uniform float u_Time;
 
+uniform mat4 u_LightViewMatrix;
+uniform mat4 u_LightProjectionMatrix;
+
+uniform vec2 u_ShadowDistortBiasPos;
 
 // Globals
 vec3 g_Albedo;
@@ -347,16 +348,29 @@ vec4 smoothfilter(in sampler2D tex, in vec2 uv, in vec2 textureResolution)
 	return texture2D( tex, uv);
 }
 
+
+vec2 DistortPosition(in vec2 position)
+{
+    float CenterDistance = distance(position, u_ShadowDistortBiasPos);
+    float DistortionFactor = mix(1.0f, CenterDistance, 0.9f);
+    return position / DistortionFactor;
+}
+
 float CalculateSunShadow()
 {
 	float shadow = 0.0;
+    vec4 ProjectionCoords;
 
-	if (v_LightFragProjectionPos.z > 1.0)
-	{
-		return 0.0f;
-	}
+    ProjectionCoords = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f);
+	ProjectionCoords.xyz = ProjectionCoords.xyz / ProjectionCoords.w; // Perspective division is not really needed for orthagonal projection but whatever
+    ProjectionCoords = ProjectionCoords * 0.5f + 0.5f;
 
-    float Depth = v_LightFragProjectionPos.z;
+    vec4 DistortedPosition;
+
+    DistortedPosition = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f);
+    DistortedPosition.xy = DistortPosition(DistortedPosition.xy);
+    DistortedPosition.xyz = DistortedPosition.xyz * 0.5f + 0.5f;
+    float Depth = DistortedPosition.z;
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
@@ -374,14 +388,15 @@ float CalculateSunShadow()
 	    	vec2 jitter_value;
             jitter_value = PoissonDisk[x] * dither;
 
-            float pcf = smoothfilter(u_LightShadowMap, v_LightFragProjectionPos.xy + jitter_value * TexelSize, vec2(4096)).r; 
-	    	shadow += (Depth - u_ShadowBias) > pcf ? 1.0 : 0.0;        
+            float pcf = texture(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize).r; 
+	    	shadow += 1.0f - (step(DistortedPosition.z - 0.001f, pcf));        
 	    }
 
 	    shadow /= float(PCF_COUNT);
     #else
-        float ClosestDepth = texture(u_LightShadowMap, v_LightFragProjectionPos.xy).r; 
-	    shadow = Depth - u_ShadowBias > ClosestDepth ? 1.0 : 0.0;    
+    
+        float ClosestDepth = texture(u_LightShadowMap, DistortedPosition.xy).r; 
+	    shadow = 1.0f - (step(DistortedPosition.z - 0.001f, ClosestDepth));
     #endif
 
     return shadow;
