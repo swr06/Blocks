@@ -372,6 +372,8 @@ float CalculateSunShadow()
     DistortedPosition.xyz = DistortedPosition.xyz * 0.5f + 0.5f;
     float Depth = DistortedPosition.z;
 
+    vec2 TexSize = textureSize(u_LightShadowMap, 0).xy;
+
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
 
@@ -388,7 +390,7 @@ float CalculateSunShadow()
 	    	vec2 jitter_value;
             jitter_value = PoissonDisk[x] * dither;
 
-            float pcf = texture(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize).r; 
+            float pcf = smoothfilter(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize, TexSize).r; 
 	    	shadow += 1.0f - (step(DistortedPosition.z - 0.001f, pcf));        
 	    }
 
