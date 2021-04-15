@@ -391,7 +391,7 @@ float CalculateSunShadow()
             jitter_value = PoissonDisk[x] * dither;
 
             float pcf = smoothfilter(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize, TexSize).r; 
-	    	shadow += 1.0f - (step(DistortedPosition.z - 0.001f, pcf));        
+	    	shadow += DistortedPosition.z - 0.001f > pcf ? 1.0f : 0.0f;        
 	    }
 
 	    shadow /= float(PCF_COUNT);
@@ -482,7 +482,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 vec3 CalculateDirectionalLightPBR(vec3 light_dir)
 {
     float ShadowIntensity = 0.98f;
-    float Shadow = g_Shadow * ShadowIntensity;
+    float Shadow = min(g_Shadow * ShadowIntensity, 1.0f);
 
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
     vec3 L = normalize(light_dir);
