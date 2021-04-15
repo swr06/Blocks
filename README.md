@@ -47,10 +47,11 @@ Target FPS : 60 FPS <br>
 
 # Special Thanks (In no particular order)
 - Dekrain
-- Kiroma
-- g h o s t
 - UglySwedishFish (WorldTeller)
+- g h o s t
+- DCUB3 
 - ShadaxStack (fuzdex)
+- Kiroma
 
 # Note 
-This project is purely educational (To Learn more about Computer Graphics). I own none of the assets. </br>
+This project is purely educational (To Learn more about Computer Graphics). I own none of the assets (Most of the assets were taken from CC0 and quixel megascans). </br>
