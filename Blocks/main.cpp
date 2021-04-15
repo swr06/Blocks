@@ -1035,6 +1035,11 @@ int main()
 		PPShader.SetVector3f("u_SunDirection", SunDirection);
 		PPShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetWidth(), CurrentlyUsedFBO.GetHeight()));
 
+		// For bilateral upsample
+		PPShader.SetInteger("u_CurrentFrame", 10);
+		PPShader.SetFloat("u_zNear", 0.1f);
+		PPShader.SetFloat("u_zFar", 1000.0f);
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
 		

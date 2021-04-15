@@ -258,13 +258,17 @@ void main()
 
     vec3 final_color;
     final_color = HDR + 
-                  (Bloom[0] * 1.0f) + (Bloom[1] * 0.65f) + (Bloom[2] * 0.45f) + (Bloom[3] * 0.20f) +
+                  (Bloom[0] * 1.0f) + (Bloom[1] * 0.7f) + (Bloom[2] * 0.5f) + (Bloom[3] * 0.25f) +
                   (Volumetric * 0.035f);
 
     // Make night time more blue
-    float blueness_multiplier = 0.0f;
-    blueness_multiplier = mix(0.2f, 0.0f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
-    final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
+
+    if (PixelDepth != 1.0f)
+    {
+        float blueness_multiplier = 0.0f;
+        blueness_multiplier = mix(0.45f, 0.0f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+        final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
+    }
 
     Vignette(final_color);
 

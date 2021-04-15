@@ -306,7 +306,7 @@ vec3 GetAtmosphere(vec3 ray_dir_)
 
 float GetDisplacementAt(vec2 tx)
 {
-    return texture(u_BlockPBRTextures, vec3(tx, v_PBRTexIndex)).b * 0.25f;
+    return texture(u_BlockPBRTextures, vec3(tx, v_PBRTexIndex)).b * 0.2f;
 }
 
 vec2 ParallaxOcclusionMapping(vec2 TextureCoords, vec3 ViewDirection) // View direction should be in tangent space!
