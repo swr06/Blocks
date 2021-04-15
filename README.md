@@ -26,11 +26,13 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Parallax Occlusion Mapping ✓
 - Parallax Self Shadowing
 - Global Cubemaps ✓
+- Distorted Shadow maps ✓
 - Parallax Corrected Cubemaps
 - Temporal Anti Aliasing 
 - Weather
 - CSM 
 - VSM Shadows
+- LPV (For indirect)
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
