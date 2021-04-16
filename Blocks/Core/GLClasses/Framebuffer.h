@@ -26,13 +26,13 @@ namespace GLClasses
 		{
 			m_FBO = v.m_FBO;
 			m_TextureAttachment = v.m_TextureAttachment;
-			m_DepthStencilBuffer = v.m_DepthStencilBuffer;
+			m_DepthBuffer = v.m_DepthBuffer;
 			m_FBWidth = v.m_FBWidth;
 			m_FBHeight = v.m_FBHeight;
 
 			v.m_FBO = 0;
 			v.m_TextureAttachment = 0;
-			v.m_DepthStencilBuffer = 0;
+			v.m_DepthBuffer = 0;
 		}
 
 		void Bind() const
@@ -53,11 +53,11 @@ namespace GLClasses
 			{
 				glDeleteFramebuffers(1, &m_FBO);
 				glDeleteTextures(1, &m_TextureAttachment);
-				glDeleteRenderbuffers(1, &m_DepthStencilBuffer);
+				glDeleteTextures(1, &m_DepthBuffer);
 
 				m_FBO = 0;
 				m_TextureAttachment = 0;
-				m_DepthStencilBuffer = 0;
+				m_DepthBuffer = 0;
 				m_FBWidth = width;
 				m_FBHeight = height;
 				CreateFramebuffer();
@@ -69,9 +69,9 @@ namespace GLClasses
 			return m_TextureAttachment;
 		}
 
-		inline GLuint GetDepthStencilBuffer() const
+		inline GLuint GetDepthBuffer() const
 		{
-			return m_DepthStencilBuffer;
+			return m_DepthBuffer;
 		}
 
 		inline GLuint GetFramebuffer() const noexcept { return m_FBO; }
@@ -105,7 +105,7 @@ namespace GLClasses
 
 		GLuint m_FBO; // The Framebuffer object
 		GLuint m_TextureAttachment; // The actual texture attachment
-		GLuint m_DepthStencilBuffer;
+		GLuint m_DepthBuffer;
 		int m_FBWidth;
 		int m_FBHeight;
 		const bool m_IsHDR;

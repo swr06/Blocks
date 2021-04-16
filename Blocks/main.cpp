@@ -819,7 +819,7 @@ int main()
 
 		CurrentlyUsedFBO.Bind();
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, TempFBO.GetFramebuffer());
-		glBlitFramebuffer(0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), 0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), 0, 0, TempFBO.GetWidth(), TempFBO.GetHeight(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		
 		// ----------------
 		// Water rendering
@@ -856,6 +856,7 @@ int main()
 		WaterShader.SetInteger("u_RefractionUVTexture", 10);
 		WaterShader.SetInteger("u_PreviousFrameDepthTexture", 11);
 		WaterShader.SetInteger("u_AtmosphereCubemap", 12);
+		WaterShader.SetInteger("u_CurrentFrameDepthTexture", 13);
 		WaterShader.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
@@ -909,6 +910,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE12);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());
+
+		glActiveTexture(GL_TEXTURE13);
+		glBindTexture(GL_TEXTURE_2D, TempFBO.GetDepthBuffer());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 

@@ -24,6 +24,7 @@ uniform sampler2D u_WaterMap[2];
 uniform sampler2D u_RefractionUVTexture;
 uniform sampler2D u_PreviousFrameDepthTexture;
 uniform samplerCube u_AtmosphereCubemap;
+uniform sampler2D u_CurrentFrameDepthTexture;
 
 uniform bool u_SSREnabled;
 uniform bool u_RefractionsEnabled;
@@ -57,6 +58,25 @@ const float freq = 0.6f;
 
 const vec3 SUN_COLOR = vec3(1.0f * 6.25f, 1.0f * 6.25f, 0.8f * 1.2f);
 const vec3 MOON_COLOR =  vec3(0.3f, 0.3f, 1.25f) * 1.0f;
+
+vec3 WorldPosFromDepth(float depth) 
+{
+    vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
+    ScreenSpaceCoordinates.x = clamp(ScreenSpaceCoordinates.x, 0.0f, 1.0f);
+    ScreenSpaceCoordinates.y = clamp(ScreenSpaceCoordinates.y, 0.0f, 1.0f);
+
+    float z = depth * 2.0 - 1.0;
+
+    vec4 clipSpacePosition = vec4(ScreenSpaceCoordinates * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = u_InverseProjection * clipSpacePosition;
+
+    // Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+
+    vec4 worldSpacePosition = u_InverseView * viewSpacePosition;
+
+    return worldSpacePosition.xyz;
+}
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
@@ -204,7 +224,7 @@ vec3 CalculateSunLight(vec3 ldir)
     float diff = max(dot(normal, vec3(0.0f, -0.8269f, 0.5620f)), 0.0); 
 
     vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
-    vec3 atmosphere = (GetAtmosphere(reflected) * 1.55f) * (1.0f - min(diff * 70.0f, 0.6f));
+    vec3 atmosphere = (GetAtmosphere(reflected) * 1.55f) * (1.0f - min(diff * 55.0f, 0.56f));
 
     #ifdef STAR_REFLECTIONS
 
@@ -277,32 +297,41 @@ void main()
     g_SpecularStrength = 196.0f;
 
     // Set the water color
-    g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 127.0f / 255.0f);
-    g_WaterColor *= 0.925f;
+    g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 185.0f / 255.0f);
 
     o_Color = vec4(CalculateSunLight(-u_SunDirection), 1.0f); // Calculate water, ray traced lighting
     g_F0 = vec3(0.02f);
     g_F0 = mix(g_F0, g_WaterColor, 0.025f);
 
     // Refractions
+    
+    vec4 RefractedColor;
+    vec4 ReflectionColor;
 
     if (u_RefractionsEnabled)
     {
         vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
 
+        vec3 WorldPosAt = WorldPosFromDepth(texture(u_CurrentFrameDepthTexture, ScreenSpaceCoordinates).r);
+        float distance_to_point = distance(WorldPosAt, v_FragPosition); 
+        vec3 transmittance = exp(vec3(-distance_to_point * 0.09f));
+
         if (RefractedUV != vec2(-1.0f))
         {
             RefractedUV += g_Normal.xz * 0.02f;
             RefractedUV = clamp(RefractedUV, 0.0f, 1.0f);
-
-            vec4 RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
-            o_Color = mix(o_Color, RefractedColor, 0.2f); 
+            RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
+            RefractedColor.rgb *= min(transmittance, 1.0f);
+            
+            o_Color = mix(o_Color, RefractedColor, 0.24f); 
         }
 
         else 
         {
-            vec4 RefractedColor = vec4(texture(u_RefractionTexture, ScreenSpaceCoordinates + (g_Normal.xz * 0.01f)).rgb, 1.0);
-            o_Color = mix(o_Color, RefractedColor, 0.14f); 
+
+            RefractedColor = vec4(texture(u_RefractionTexture, ScreenSpaceCoordinates + (g_Normal.xz * 0.01f)).rgb, 1.0);
+            RefractedColor.rgb *= min(transmittance, 1.0f);
+            o_Color = mix(o_Color, RefractedColor, 0.24f); 
         }
     }
 
@@ -311,8 +340,7 @@ void main()
         o_Color.a = 0.92f;
     }
 
-
-        // Mix reflection color 
+    // Mix reflection color 
 	if (u_SSREnabled) 
     {
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
@@ -324,9 +352,9 @@ void main()
 
             float reflected_depth = texture(u_PreviousFrameDepthTexture, SSR_UV).r;
 
-            if (reflected_depth < 0.999f)
+            if (reflected_depth != 1.0f)
             {
-                vec4 ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
+                ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
                 float distance_to_edge = distance(SSR_UV.x, 1.0f);
                 float ReflectionMixFactor_1 = (1.0f - SSR_UV.y);
                 float ReflectionMixFactor;
@@ -346,9 +374,6 @@ void main()
             }
         }
     }
-
-
-
     
     // Output values
     o_SSRMask = 1.0f;
