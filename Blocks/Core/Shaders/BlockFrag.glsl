@@ -32,6 +32,7 @@ in vec3 v_FragPosition;
 in float v_AO;
 in float v_LampLightValue;
 flat in int v_IsUnderwater;
+flat in int v_BlockID;
 in vec3 v_TangentFragPosition;
 
 uniform vec3 u_ViewerPosition;
@@ -68,6 +69,9 @@ uniform mat4 u_LightProjectionMatrix;
 
 uniform vec2 u_ShadowDistortBiasPos;
 
+
+uniform int u_FoliageBlockID;
+
 // Globals
 vec3 g_Albedo;
 vec3 g_Normal;
@@ -79,6 +83,7 @@ float g_Displacement = 0.0f;
 float g_AO = 1.0f;
 float g_Shadow = 0.0f;
 vec3 g_LightColor;
+bool g_IsFoliage;
 
 //vec3 SUN_COLOR = vec3(255.0f / 255.0f, 160.0f / 255.0f, 80.0f / 255.0f) * 1.25f;
 vec3 SUN_COLOR = vec3(2.0f);
@@ -163,8 +168,15 @@ vec4 BetterTexture(sampler2DArray tex, vec3 uv_)
 
 void main()
 {
+    g_IsFoliage = false;
+
+    if (v_BlockID == u_FoliageBlockID)
+    {
+        g_IsFoliage = true;
+    }
+
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
-    g_Shadow = CalculateSunShadow();
+    g_Shadow = clamp(CalculateSunShadow(), 0.0f, 1.01f);
     
     if (v_IsUnderwater == 1)
     {
@@ -194,6 +206,17 @@ void main()
     else
     {
         SampledAlbedo = BetterTexture(u_BlockTextures, vec3(g_Texcoords, v_TexIndex));
+    }
+
+    // Subsurface scattering
+    if (g_IsFoliage)
+    {
+	    vec3 V = normalize(u_ViewerPosition - v_FragPosition);
+        float VdotL = clamp(dot(normalize(V), u_SunDirection), 0.0, 1.0);
+        float subsurface = pow(VdotL, 48.0);
+        subsurface *= 24.0f;
+        subsurface = clamp(subsurface, 0.0f, 1.8f);
+        SampledAlbedo.rgb *= (g_Shadow * subsurface) + 1.0f;
     }
 
 	g_Normal = v_Normal;

@@ -13,6 +13,7 @@ layout (location = 5) in uint a_NormalIndex;
 layout (location = 6) in uint a_AO;
 layout (location = 7) in uint a_LampLightValue;
 layout (location = 8) in uint a_IsUnderwater;
+layout (location = 9) in uint a_BlockID;
 
 vec3 Normals[6] = vec3[]( vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f),
 					vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), 
@@ -49,6 +50,7 @@ out vec3 v_FragPosition;
 out float v_AO;
 out float v_LampLightValue;
 flat out int v_IsUnderwater;
+flat out int v_BlockID;
 
 out vec3 v_TangentFragPosition;
 
@@ -83,4 +85,5 @@ void main()
 	v_LampLightValue = float(a_LampLightValue) / 8.0f;
 
 	v_IsUnderwater = int(a_IsUnderwater);
+	v_BlockID = int(a_BlockID);
 }

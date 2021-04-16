@@ -767,6 +767,7 @@ int main()
 		RenderShader.SetInteger("u_SSRTexture", 6);
 		RenderShader.SetInteger("u_ReflectionCubemap", 7);
 		RenderShader.SetInteger("u_AtmosphereCubemap", 8);
+		RenderShader.SetInteger("u_FoliageBlockID", Blocks::BlockDatabase::GetBlockID("oak_leaves"));
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", _SSR);
 		RenderShader.SetBool("u_UsePOM", ShouldDoPOM);
