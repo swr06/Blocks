@@ -209,6 +209,26 @@ void SharpenFilter(inout vec3 color)
 	}
 }
 
+//Due to low sample count we "tonemap" the inputs to preserve colors and smoother edges
+vec3 WeightedSample(sampler2D colorTex, vec2 texcoord)
+{
+	vec3 wsample = texture2D(colorTex,texcoord).rgb * 1.0f;
+	return wsample / (1.0f + GetLuminance(wsample));
+
+}
+
+//Modified texture interpolation from inigo quilez
+vec3 smoothfilter(in sampler2D tex, in vec2 uv)
+{
+	vec2 textureResolution = textureSize(tex, 0);
+	uv = uv*textureResolution + 0.5;
+	vec2 iuv = floor( uv );
+	vec2 fuv = fract( uv );
+	uv = iuv + fuv*fuv*fuv*(fuv*(fuv*6.0-15.0)+10.0);
+	uv = (uv - 0.5)/textureResolution;
+	return WeightedSample( tex, uv);
+}
+
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
@@ -237,7 +257,7 @@ void main()
          Bloom[3] = textureBicubic(u_BloomTextures[3], g_TexCoords).xyz;
     }
    
-    vec3 HDR = BetterTexture(u_FramebufferTexture, g_TexCoords).rgb;
+    vec3 HDR = smoothfilter(u_FramebufferTexture, g_TexCoords).rgb;
 
     if (PixelDepth != 1.0f && !PixelIsWater)
     {

@@ -68,12 +68,12 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 
 	if (aligned == 1)
 	{
-		LightDistortionBiasPosition = glm::vec2(-0.9f);
+		LightDistortionBiasPosition = glm::vec2(-0.25f);
 	}
 
 	if (aligned == 2)
 	{
-		LightDistortionBiasPosition = glm::vec2(0.9f);
+		LightDistortionBiasPosition = glm::vec2(0.25f);
 	}
 
 	// Render
