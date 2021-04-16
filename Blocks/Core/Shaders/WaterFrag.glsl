@@ -347,7 +347,8 @@ void main()
 
         if (SSR_UV != vec2(-1.0f))
         {
-            SSR_UV += g_Normal.xz * 0.15f;
+            SSR_UV.x += g_Normal.x * 0.05f;
+            SSR_UV.t += g_Normal.z * 0.02f;
             SSR_UV = clamp(SSR_UV, 0.0f, 1.0f);
 
             float reflected_depth = texture(u_PreviousFrameDepthTexture, SSR_UV).r;
