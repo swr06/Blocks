@@ -553,14 +553,16 @@ int main()
 
 			SSRShader.SetInteger("u_NormalTexture", 1);
 			SSRShader.SetInteger("u_DepthTexture", 2);
-			SSRShader.SetInteger("u_SSRMaskTexture", 3);
+			SSRShader.SetInteger("u_SSRMaskTexture", 3); 
 			SSRShader.SetInteger("u_NoiseTexture", 4);
 
 			SSRShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
 			SSRShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
 			SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
-			SSRShader.SetFloat("u_zNear", 0.1f);
-			SSRShader.SetFloat("u_zFar", 1000.0f);
+
+			// Setting these high as a hack to increase the SSR distance :p
+			SSRShader.SetFloat("u_zNear", 2.0f);
+			SSRShader.SetFloat("u_zFar", 5000.0f);
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetSSRNormalTexture());

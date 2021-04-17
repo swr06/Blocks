@@ -199,7 +199,7 @@ float stars(vec3 fragpos)
     float rand_val = rand(fragpos.xy);
     star *= (rand_val + sin(u_Time * rand_val) * 1.5f);
 
-	return star * 5.0f;
+	return star * 4.0f;
 }
 
 vec3 CalculateSunLight(vec3 ldir)
@@ -229,8 +229,8 @@ vec3 CalculateSunLight(vec3 ldir)
     #ifdef STAR_REFLECTIONS
 
     float star_visibility;
-    star_visibility = mix(0.0f, 1.5f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
-    float stars = stars(reflected) * 2.0f;
+    star_visibility = mix(0.0f, 0.8f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    float stars = stars(reflected);
     atmosphere += stars * star_visibility;
 
     #endif

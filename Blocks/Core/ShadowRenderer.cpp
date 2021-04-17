@@ -22,15 +22,15 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 {
 	GLClasses::Shader& DepthShader = ShaderManager::GetShader("DEPTH");
 
-	float SHADOW_DISTANCE_X = 190;
-	float SHADOW_DISTANCE_Y = 190;
+	float SHADOW_DISTANCE_X = 210;
+	float SHADOW_DISTANCE_Y = 210;
 	float SHADOW_DISTANCE_Z = 1000.0f;
 
 	glm::vec3 center_ = center;
 	center_.x = Align(center_.x, 16);
 	center_.z = Align(center_.z, 16);
 
-	float SHADOW_POSITION_BIAS = 35.0f;
+	float SHADOW_POSITION_BIAS = 40.0f;
 	uint8_t aligned = 0;
 
 	LightPosition = glm::vec3(
@@ -39,6 +39,12 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 		center_.z);
 
 	// Align the orthographic projected "cube" 
+
+	if (std::fabs(light_direction.z) > 0.90)
+	{
+		SHADOW_POSITION_BIAS += 20;
+	}
+
 	if (light_direction.z < -0.86f)
 	{
 		LightPosition = glm::vec3(
