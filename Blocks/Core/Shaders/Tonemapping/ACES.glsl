@@ -248,11 +248,14 @@ void main()
          Volumetric = (volumetric_value * SUN_COLOR);
     }
 
+    float bloom_multiplier = PixelIsWater ? 0.4f : 1.0f;
+
     if (u_BloomEnabled)
     {
-         // Bicubic upsampling for the bloom textures
          Bloom[0] = texture(u_BloomTextures[0], g_TexCoords).xyz;
          Bloom[1] = texture(u_BloomTextures[1], g_TexCoords).xyz;
+
+         // Bicubic upsampling for the smaller bloom textures
          Bloom[2] = textureBicubic(u_BloomTextures[2], g_TexCoords).xyz;
          Bloom[3] = textureBicubic(u_BloomTextures[3], g_TexCoords).xyz;
     }
@@ -278,8 +281,8 @@ void main()
 
     vec3 final_color;
     final_color = HDR + 
-                  (Bloom[0] * 1.0f) + (Bloom[1] * 0.7f) + (Bloom[2] * 0.5f) + (Bloom[3] * 0.25f) +
-                  (Volumetric * 0.035f);
+                  (Bloom[0] * 1.0f * bloom_multiplier) + (Bloom[1] * 0.7f * bloom_multiplier) + (Bloom[2] * 0.5f * bloom_multiplier) 
+                  + (Bloom[3] * 0.25f * bloom_multiplier) + (Volumetric * 0.035f);
 
     // Make night time more blue
 

@@ -224,7 +224,7 @@ vec3 CalculateSunLight(vec3 ldir)
     float diff = max(dot(normal, vec3(0.0f, -0.8269f, 0.5620f)), 0.0); 
 
     vec3 reflected = normalize(reflect(normalize(g_ViewDirection), normal));
-    vec3 atmosphere = (GetAtmosphere(reflected) * 1.55f) * (1.0f - min(diff * 55.0f, 0.56f));
+    vec3 atmosphere = (GetAtmosphere(reflected) * 1.55f) * (1.0f - min(diff * 55.0f, 0.3f));
 
     #ifdef STAR_REFLECTIONS
 
@@ -317,6 +317,8 @@ void main()
         float distance_to_point = distance(WorldPosAt, v_FragPosition); 
         vec3 transmittance = exp(vec3(-distance_to_point * 0.09f));
 
+        transmittance *= 1.425f;
+
         if (RefractedUV != vec2(-1.0f) && valid)
         {
             RefractedUV += g_Normal.xz * 0.02f;
@@ -373,11 +375,16 @@ void main()
                 }
 
                 ReflectionColor = clamp(ReflectionColor, 0.0f, 1.0f);
-                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 4.5, 0.64f)); 
+                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 4.5, 0.45f)); 
             }
         }
     }
     
+    // 
+
+    float darken = WaterMapValue.z * 1.25;
+    o_Color.xyz *= darken;
+
     // Output values
     o_SSRMask = 1.0f;
     o_RefractionMask = 1.0f;
