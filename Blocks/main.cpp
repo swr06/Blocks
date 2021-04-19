@@ -98,7 +98,7 @@ glm::vec3 MoonDirection = glm::vec3(0.0f);
 // ImGui Adjustable Variables
 float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
-float RenderScale = 0.750f;
+float RenderScale = 0.8f;
 float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.25f;
 float SSRefractionRenderScale = 0.2f;

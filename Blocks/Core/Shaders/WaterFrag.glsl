@@ -311,18 +311,19 @@ void main()
     if (u_RefractionsEnabled)
     {
         vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
+        bool valid = RefractedUV.x >= 0.0f && RefractedUV.y >= 0.0f && RefractedUV.x <= 1.0f && RefractedUV.y <= 1.0f;
 
         vec3 WorldPosAt = WorldPosFromDepth(texture(u_CurrentFrameDepthTexture, ScreenSpaceCoordinates).r);
         float distance_to_point = distance(WorldPosAt, v_FragPosition); 
         vec3 transmittance = exp(vec3(-distance_to_point * 0.09f));
 
-        if (RefractedUV != vec2(-1.0f))
+        if (RefractedUV != vec2(-1.0f) && valid)
         {
             RefractedUV += g_Normal.xz * 0.02f;
             RefractedUV = clamp(RefractedUV, 0.0f, 1.0f);
             RefractedColor = vec4(texture(u_RefractionTexture, RefractedUV).rgb, 1.0);
             RefractedColor.rgb *= min(transmittance, 1.0f);
-            
+
             o_Color = mix(o_Color, RefractedColor, 0.24f); 
         }
 
@@ -344,8 +345,9 @@ void main()
 	if (u_SSREnabled) 
     {
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
+        bool valid = SSR_UV.x >= 0.0f && SSR_UV.y >= 0.0f && SSR_UV.x <= 1.0f && SSR_UV.y <= 1.0f;
 
-        if (SSR_UV != vec2(-1.0f))
+        if (SSR_UV != vec2(-1.0f) && valid)
         {
             SSR_UV.x += g_Normal.x * 0.05f;
             SSR_UV.t += g_Normal.z * 0.02f;
