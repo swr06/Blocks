@@ -309,6 +309,7 @@ void main()
     //o_Color = vec4(vec3(g_Displacement), 1.0f);
 
     o_RefractionMask = -1.0f;
+    o_SSRNormal.a = 0.0f; // Used to tell if the currect pixel is water or not
 }
 
 

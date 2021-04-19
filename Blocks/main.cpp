@@ -744,6 +744,7 @@ int main()
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CW);
+		glDisable(GL_BLEND);
 
 		RenderShader.Use();
 
@@ -835,6 +836,7 @@ int main()
 
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
 
 		if (!_Refractions)
 		{
@@ -1087,6 +1089,8 @@ int main()
 		Player.Camera.Refresh();
 
 		AppRenderingTime.TotalMeasured = update_timer.End();
+
+		glDisable(GL_BLEND);
 
 		//////////////////////
 		/// Frame cleanup  ///

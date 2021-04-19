@@ -235,7 +235,7 @@ void main()
     vec3 Bloom[4] = vec3[](vec3(0.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f));
     float PixelDepth = texture(u_DepthTexture, v_TexCoords).r;
     vec2 g_TexCoords = v_TexCoords;
-    bool PixelIsWater = texture(u_SSRNormal, v_TexCoords).w > 0.5f;
+    bool PixelIsWater = texture(u_SSRNormal, v_TexCoords).a == 1.0f;
 
     if (u_PlayerInWater)
     {
