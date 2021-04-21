@@ -112,8 +112,11 @@ bool VSync = true;
 
 bool TickSun = true;
 
+bool ShouldBilateralBlurVolumetrics = true;
+
 int AtmosphereLightSteps = 2;
 int AtmosphereSteps = 30;
+int VolumetricSteps = 16;
 
 float FakeSunTime = 0.0f;
 
@@ -175,12 +178,14 @@ public:
 			ImGui::Text("\n");
 			ImGui::Checkbox("Render Skybox?", &ShouldRenderSkybox);
 			ImGui::Checkbox("Render Volumetrics?", &ShouldRenderVolumetrics);
+			ImGui::Checkbox("Bilateral Blur Volumetrics?", &ShouldBilateralBlurVolumetrics);
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
 			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
 			ImGui::Checkbox("SS Refractions?", &ShouldDoRefractions);
 			ImGui::Checkbox("Freefly (Shouldn't do collisions) ?", &Player.Freefly);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
 			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
+			ImGui::SliderInt("Volumetric Lighting Step count", &VolumetricSteps, 8, 200);
 			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.0f);
 			ImGui::SliderFloat("SS Refractions Render Resolution", &SSRefractionRenderScale, 0.1f, 1.0f);
 			ImGui::Checkbox("Water Parallax?", &ShouldDoWaterParallax);
@@ -953,6 +958,7 @@ int main()
 			VolumetricShader.SetVector3f("u_LightDirection", glm::normalize(LightDirectionToUse));
 			VolumetricShader.SetInteger("u_Width", VolumetricLightingFBO.GetWidth());
 			VolumetricShader.SetInteger("u_Height", VolumetricLightingFBO.GetHeight());
+			VolumetricShader.SetInteger("NB_STEPS", VolumetricSteps);
 			VolumetricShader.SetFloat("u_Scattering", VolumetricScattering);
 
 			glActiveTexture(GL_TEXTURE0);
@@ -974,25 +980,28 @@ int main()
 			///////////////////////////
 			// Perform a bilateral blur 
 
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);
+			if (ShouldBilateralBlurVolumetrics)
+			{
+				glDisable(GL_CULL_FACE);
+				glDisable(GL_DEPTH_TEST);
 
-			VolumetricLightingFBOBlurred.Bind();
+				VolumetricLightingFBOBlurred.Bind();
 
-			BilateralBlur.Use();
-			BilateralBlur.SetVector2f("u_SketchSize",
-				glm::vec2(VolumetricLightingFBOBlurred.GetWidth(), VolumetricLightingFBOBlurred.GetHeight()));
-			BilateralBlur.SetInteger("u_Texture", 0);
-			BilateralBlur.SetFloat("u_BSIGMA", 1.0f);
+				BilateralBlur.Use();
+				BilateralBlur.SetVector2f("u_SketchSize",
+					glm::vec2(VolumetricLightingFBOBlurred.GetWidth(), VolumetricLightingFBOBlurred.GetHeight()));
+				BilateralBlur.SetInteger("u_Texture", 0);
+				BilateralBlur.SetFloat("u_BSIGMA", 1.0f);
 
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
 
-			FBOVAO.Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			FBOVAO.Unbind();
+				FBOVAO.Bind();
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+				FBOVAO.Unbind();
 
-			VolumetricLightingFBOBlurred.Unbind();
+				VolumetricLightingFBOBlurred.Unbind();
+			}
 
 			AppRenderingTime.Volumetrics = t5.End();
 		}
@@ -1053,7 +1062,16 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
 		
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBOBlurred.GetTexture());
+
+		if (ShouldBilateralBlurVolumetrics)
+		{
+			glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBOBlurred.GetTexture());
+		}
+
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());
+		}
 
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, AtmosphereCubemap.GetTexture());

@@ -1,7 +1,6 @@
 #version 330 core
 
 #define PI 3.14159265359f
-#define NB_STEPS 15
 
 layout(location = 0) out float o_VolumetricFog; // outputs to the volumetric texture that is in half resolution
 in vec2 v_TexCoords;
@@ -21,6 +20,7 @@ uniform vec3 u_LightDirection;
 
 uniform int u_Width;
 uniform int u_Height;
+uniform int NB_STEPS;
 
 // Shadows
 uniform vec2 u_ShadowDistortBiasPos;
@@ -52,11 +52,18 @@ vec3 WorldPosFromDepth(float depth)
     return worldSpacePosition.xyz;
 }
 
-vec2 DistortPosition(in vec2 position)
+vec2 DistortPosition(in vec2 worldpos)
 {
-    float CenterDistance = distance(position, u_ShadowDistortBiasPos);
-    float DistortionFactor = mix(1.0f, CenterDistance, 0.9f);
-    return position / DistortionFactor;
+	const float Nearshadowplane = 0.05f;
+	const float Farshadowplane = 0.5f;
+	const float shadowDistance = 210.0f;
+	const float k = 1.8f;
+
+	float a = exp(Nearshadowplane);
+    float b = (exp(Farshadowplane) - a) * shadowDistance / 128.0;
+    float distortion = 1.0 / (log(distance(worldpos,  vec2(0.0f)) * b + a) * k);
+
+	return worldpos * distortion;
 }
 
 void main()
