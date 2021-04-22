@@ -390,23 +390,25 @@ vec2 DistortPosition(in vec2 worldpos)
 float CalculateSunShadow()
 {
 	float shadow = 0.0;
-    vec4 ProjectionCoords;
-
-    ProjectionCoords = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f);
-	ProjectionCoords.xyz = ProjectionCoords.xyz / ProjectionCoords.w; // Perspective division is not really needed for orthagonal projection but whatever
-    ProjectionCoords = ProjectionCoords * 0.5f + 0.5f;
 
     vec4 DistortedPosition;
 
-    DistortedPosition = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f);
+    DistortedPosition = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f); 
     DistortedPosition.xy = DistortPosition(DistortedPosition.xy);
-    DistortedPosition.xyz = DistortedPosition.xyz * 0.5f + 0.5f;
+    DistortedPosition.xyz = DistortedPosition.xyz * 0.5f + 0.5f; // Convert to screen space
+
     float Depth = DistortedPosition.z;
+
+    if (Depth > 1.0f)
+    {
+        shadow = 0.0f;
+        return shadow;
+    }
 
     vec2 TexSize = textureSize(u_LightShadowMap, 0).xy;
 
     #ifdef USE_PCF
-	    vec2 TexelSize = 1.0 / textureSize(u_LightShadowMap, 0); // LOD = 0
+	    vec2 TexelSize = 1.0 / TexSize; // LOD = 0
 
 	    // Take the average of the surrounding texels to create the PCF effect
 	    for(int x = 0; x <= PCF_COUNT; x++)
@@ -422,7 +424,7 @@ float CalculateSunShadow()
             jitter_value = PoissonDisk[x] * dither;
 
             float pcf = smoothfilter(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize, TexSize).r; 
-	    	shadow += DistortedPosition.z - 0.001f > pcf ? 1.0f : 0.0f;        
+	    	shadow += DistortedPosition.z - 0.0005f > pcf ? 1.0f : 0.0f;        
 	    }
 
 	    shadow /= float(PCF_COUNT);
