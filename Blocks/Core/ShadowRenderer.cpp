@@ -22,65 +22,36 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 {
 	GLClasses::Shader& DepthShader = ShaderManager::GetShader("DEPTH");
 
-	float SHADOW_DISTANCE_X = 210;
-	float SHADOW_DISTANCE_Y = 210;
-	float SHADOW_DISTANCE_Z = 1000.0f;
+	float SHADOW_DISTANCE_X = 210.0f;
+	float SHADOW_DISTANCE_Y = 210.0f;
+	float SHADOW_DISTANCE_Z = 2000.0f; // We dont want to loose precision by making this too high
+
+	float MODIFIER_X = 0.0f;
+	float MODIFIER_Y = 124.0f;
+	float MODIFIER_Z = 160.0;
 
 	glm::vec3 center_ = center;
-	center_.x = Align(center_.x, 16);
-	center_.z = Align(center_.z, 16);
+	center_.x = Align(center_.x, 2);
+	center_.z = Align(center_.z, 2);
 
-	float SHADOW_POSITION_BIAS = 40.0f;
-	uint8_t aligned = 0;
-
-	LightPosition = glm::vec3(
-		center_.x,
-		SHADOW_DISTANCE_Y - 2,
-		center_.z);
+	if (fabs(light_direction.z) <= 0.8077f)
+	{
+		MODIFIER_Z = 121.0;
+		MODIFIER_Y = 160.0f;
+	}
 
 	// Align the orthographic projected "cube" 
-
-	if (std::fabs(light_direction.z) > 0.90)
-	{
-		SHADOW_POSITION_BIAS += 20;
-	}
-
-	if (light_direction.z < -0.86f)
-	{
-		LightPosition = glm::vec3(
-			center_.x + SHADOW_POSITION_BIAS,
-			SHADOW_DISTANCE_Y - 2,
-			center_.z + SHADOW_POSITION_BIAS);
-
-		aligned = 1;
-	}
-
-	else if (light_direction.z > 0.86f)
-	{
-		LightPosition = glm::vec3(
-			center_.x - SHADOW_POSITION_BIAS,
-			SHADOW_DISTANCE_Y - 2,
-			center_.z - SHADOW_POSITION_BIAS);
-
-		aligned = 2;
-	}
+	LightPosition = glm::vec3(
+		center_.x + ((-light_direction.x) * MODIFIER_X),
+		((-light_direction.y) * MODIFIER_Y),
+		center_.z + ((-light_direction.z) * MODIFIER_Z));
 
 	LightProjectionMatrix = glm::ortho(-SHADOW_DISTANCE_X, SHADOW_DISTANCE_X,
 		SHADOW_DISTANCE_Y, -SHADOW_DISTANCE_Y,
 		0.0f, SHADOW_DISTANCE_Z);
 
-	LightViewMatrix = glm::lookAt(LightPosition, LightPosition + light_direction, glm::vec3(0.0f, 1.0f, 0.0f));
+	LightViewMatrix = glm::lookAt(LightPosition, LightPosition + glm::normalize(light_direction), glm::vec3(0.0f, 1.0f, 0.0f));
 	LightDistortionBiasPosition = glm::vec2(0.0f);
-
-	if (aligned == 1)
-	{
-		LightDistortionBiasPosition = glm::vec2(-0.25f);
-	}
-
-	if (aligned == 2)
-	{
-		LightDistortionBiasPosition = glm::vec2(0.25f);
-	}
 
 	// Render
 
@@ -103,8 +74,12 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, BlockDatabase::GetTextureArray());
+	
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_CULL_FACE);
 
-	world->RenderChunks(center_, DepthShader);
+	world->RenderChunks(center, DepthShader);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(0);
