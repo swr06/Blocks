@@ -176,8 +176,9 @@ void main()
     }
 
     RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
-    g_Shadow = clamp(CalculateSunShadow(), 0.0f, 1.01f);
-    
+    g_Shadow = CalculateSunShadow();
+    g_Shadow = clamp(pow(g_Shadow, 1.5f), 0.0f, 1.0f);
+
     if (v_IsUnderwater == 1)
     {
         g_Shadow *= 0.5f;

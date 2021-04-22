@@ -80,7 +80,7 @@ bool ShouldDoBloomPass = true;
 bool ShouldDoSSRPass = true;
 bool ShouldDoRefractions = true;
 bool ShouldDoWaterParallax = true;
-bool ShouldDoPOM = true;
+bool ShouldDoPOM = false;
 
 bool _Bloom = true;
 bool _SSR = true;
@@ -771,11 +771,13 @@ int main()
 		RenderShader.SetInteger("u_BlueNoiseTexture", 4);
 		RenderShader.SetFloat("u_GraniteTexIndex", Blocks::BlockDatabase::GetBlockTexture("polished_granite", Blocks::BlockFaceType::Top));
 		RenderShader.SetFloat("u_Time", glfwGetTime());
+		RenderShader.SetFloat("u_VertTime", glfwGetTime());
 		RenderShader.SetInteger("u_PreviousFrameColorTexture", 5);
 		RenderShader.SetInteger("u_SSRTexture", 6);
 		RenderShader.SetInteger("u_ReflectionCubemap", 7);
 		RenderShader.SetInteger("u_AtmosphereCubemap", 8);
 		RenderShader.SetInteger("u_FoliageBlockID", Blocks::BlockDatabase::GetBlockID("oak_leaves"));
+		RenderShader.SetInteger("u_VertFoliageBlockID", Blocks::BlockDatabase::GetBlockID("oak_leaves"));
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", _SSR);
 		RenderShader.SetBool("u_UsePOM", ShouldDoPOM);

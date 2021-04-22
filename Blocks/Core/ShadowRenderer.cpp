@@ -71,6 +71,8 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 	DepthShader.SetMatrix4("u_ViewProjectionMatrix", LightProjectionMatrix * LightViewMatrix);
 	DepthShader.SetInteger("u_BlockTextures", 0);
 	DepthShader.SetVector2f("u_ShadowDistortBiasPos", LightDistortionBiasPosition);
+	DepthShader.SetFloat("u_VertTime", glfwGetTime());
+	DepthShader.SetInteger("u_VertFoliageBlockID", Blocks::BlockDatabase::GetBlockID("oak_leaves"));
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, BlockDatabase::GetTextureArray());

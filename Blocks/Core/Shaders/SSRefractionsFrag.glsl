@@ -18,8 +18,8 @@ uniform float u_zNear;
 uniform float u_zFar;
 
 //Tweakable variables
-const float InitialStepAmount = 0.05f;
-const float StepRefinementAmount = 0.7f;
+const float InitialStepAmount = 0.025f;
+const float StepRefinementAmount = 0.26f;
 const int MaxRefinements = 8;
 
 vec3 ViewPosFromDepth(float depth)

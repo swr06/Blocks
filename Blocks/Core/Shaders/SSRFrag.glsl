@@ -97,11 +97,9 @@ vec2 ComputeReflection()
 		float CurrentDepth = linearizeDepth(CurrentPosition.z);
 		float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
 		float diff = CurrentDepth - SampleDepth;
-		//float error = 1.2;
-		//float error = length(ScreenSpaceVector);
-		float error = 0.15f;
+		float error = length(ViewSpaceVector / pow(2.0f, NumRefinements - 1.0f));
 
-		if(diff >= 0 && diff < error)
+		if(diff >= 0 && diff < error * 2.0f)
 		{
 			ScreenSpaceVector *= StepRefinementAmount;
 			CurrentPosition = OldPosition;

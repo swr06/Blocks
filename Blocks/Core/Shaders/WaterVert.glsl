@@ -47,7 +47,7 @@ float WavingWater(vec3 worldPos)
 {
 	float frametime = 1.0f * u_VertexTime;
 
-	float fractY = fract(worldPos.y + u_PlayerPosition.y + 0.005);
+	float fractY = fract(worldPos.y + 0.005);
 		
 	float wave = sin(6.28 * (frametime * 0.7 + worldPos.x * 0.14 + worldPos.z * 0.07)) +
 				 sin(6.28 * (frametime * 0.5 + worldPos.x * 0.10 + worldPos.z * 0.20));
