@@ -126,15 +126,15 @@ float RenderDisc(vec3 ray_dir, vec3 light_dir, float disc_size)
 vec3 GetAtmosphere(vec3 ray_direction)
 {
     vec3 sun_dir = normalize(-u_SunDirection); 
-    vec3 moon_dir = normalize(u_SunDirection); 
+    vec3 moon_dir = vec3(-sun_dir.x, -sun_dir.y, sun_dir.z); 
 
     vec3 ray_dir = ray_direction;
     vec3 atmosphere = texture(u_AtmosphereCubemap, ray_dir).rgb;
     atmosphere = max(atmosphere, 0.15f);
 
     // Water specular highlights
-    atmosphere *= SUN_COLOR * max(RenderDisc(ray_dir, sun_dir, 0.00295) * 75.0f, 1.0f);
-    atmosphere *= MOON_COLOR * max(RenderDisc(ray_dir, moon_dir, 0.00195) * 80.0f, 1.0f);
+    atmosphere *= SUN_COLOR * max(RenderDisc(ray_dir, sun_dir, 0.00140f) * 75.0f, 1.0f);
+    atmosphere *= MOON_COLOR * max(RenderDisc(ray_dir, moon_dir, 0.00110f) * 80.0f, 1.0f);
     atmosphere *= 0.2f;
 
     return atmosphere;

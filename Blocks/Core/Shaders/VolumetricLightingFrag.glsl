@@ -52,18 +52,16 @@ vec3 WorldPosFromDepth(float depth)
     return worldSpacePosition.xyz;
 }
 
-vec2 DistortPosition(in vec2 worldpos)
+vec3 DistortPosition(in vec3 pos)
 {
-	const float Nearshadowplane = 0.05f;
-	const float Farshadowplane = 0.5f;
-	const float shadowDistance = 210.0f;
-	const float k = 1.8f;
+	const float SHADOW_MAP_BIAS = 0.9f;
+	float dist = sqrt(pos.x * pos.x + pos.y * pos.y);
 
-	float a = exp(Nearshadowplane);
-    float b = (exp(Farshadowplane) - a) * shadowDistance / 128.0;
-    float distortion = 1.0 / (log(distance(worldpos,  vec2(0.0f)) * b + a) * k);
+	float distortFactor = (1.0f - SHADOW_MAP_BIAS) + dist * SHADOW_MAP_BIAS;
+	pos.xy *= 0.95f / distortFactor;
+	pos.z = mix(pos.z, 0.5f, 0.8f);
 
-	return worldpos * distortion;
+	return pos;
 }
 
 void main()
@@ -93,12 +91,12 @@ void main()
 		// Check if the fragment is in shadow
 		vec4 FragPosLightSpace = u_LightViewProjection * vec4(CurrentPosition, 1.0f);
 		vec3 ProjectionCoordinates = FragPosLightSpace.xyz;
-		ProjectionCoordinates.xy = DistortPosition(ProjectionCoordinates.xy);
+		ProjectionCoordinates.xyz = DistortPosition(ProjectionCoordinates.xyz);
 		ProjectionCoordinates = ProjectionCoordinates * 0.5f + 0.5f;
 
 		float SampledDepth = texture(u_ShadowMap, ProjectionCoordinates.xy).r; 
 		float CurrentDepth = ProjectionCoordinates.z;
-		float bias = 0.0005f;
+		float bias = 0.00015f;
 
 		bool inshadow = (CurrentDepth - bias) < SampledDepth;
 		

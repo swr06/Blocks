@@ -210,15 +210,17 @@ void main()
     }
 
     // Subsurface scattering
-    if (g_IsFoliage)
-    {
-	    vec3 V = normalize(u_ViewerPosition - v_FragPosition);
-        float VdotL = clamp(dot(normalize(V), u_SunDirection), 0.0, 1.0);
-        float subsurface = pow(VdotL, 48.0);
-        subsurface *= 24.0f;
-        subsurface = clamp(subsurface, 0.0f, 1.8f);
-        SampledAlbedo.rgb *= (g_Shadow * subsurface) + 1.0f;
-    }
+    // TODO : REWORK THIS!
+
+    //if (g_IsFoliage)
+    //{
+	//    vec3 V = normalize(u_ViewerPosition - v_FragPosition);
+    //    float VdotL = clamp(dot(normalize(V), u_SunDirection), 0.0, 1.0);
+    //    float subsurface = pow(VdotL, 48.0);
+    //    subsurface *= 24.0f;
+    //    subsurface = clamp(subsurface, 0.0f, 1.8f);
+    //    SampledAlbedo.rgb *= (g_Shadow * subsurface) + 1.0f;
+    //}
 
 	g_Normal = v_Normal;
 
@@ -264,7 +266,7 @@ void main()
     g_LightColor = mix(SUN_COLOR, MOON_COLOR, min(distance(u_SunDirection.y, -1.0f), 0.99f));
 
     vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection);
-    vec3 Moonlightfactor = CalculateDirectionalLightPBR(u_SunDirection);
+    vec3 Moonlightfactor = CalculateDirectionalLightPBR(vec3(u_SunDirection.x, u_SunDirection.y, -u_SunDirection.z));
     vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, min(distance(u_SunDirection.y, -1.0f), 0.99f));
 
     o_Color = vec4(Ambient + FinalLighting, 1.0f);
@@ -374,18 +376,16 @@ vec4 smoothfilter(in sampler2D tex, in vec2 uv, in vec2 textureResolution)
 }
 
 
-vec2 DistortPosition(in vec2 worldpos)
+vec3 DistortPosition(in vec3 pos)
 {
-	const float Nearshadowplane = 0.05f;
-	const float Farshadowplane = 0.5f;
-	const float shadowDistance = 210.0f;
-	const float k = 1.8f;
+	const float SHADOW_MAP_BIAS = 0.9f;
+	float dist = sqrt(pos.x * pos.x + pos.y * pos.y);
 
-	float a = exp(Nearshadowplane);
-    float b = (exp(Farshadowplane) - a) * shadowDistance / 128.0;
-    float distortion = 1.0 / (log(distance(worldpos,  vec2(0.0f)) * b + a) * k);
+	float distortFactor = (1.0f - SHADOW_MAP_BIAS) + dist * SHADOW_MAP_BIAS;
+	pos.xy *= 0.95f / distortFactor;
+	pos.z = mix(pos.z, 0.5f, 0.8f);
 
-	return worldpos * distortion;
+	return pos;
 }
 
 float CalculateSunShadow()
@@ -395,7 +395,7 @@ float CalculateSunShadow()
     vec4 DistortedPosition;
 
     DistortedPosition = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f); 
-    DistortedPosition.xy = DistortPosition(DistortedPosition.xy);
+    DistortedPosition.xyz = DistortPosition(DistortedPosition.xyz);
     DistortedPosition.xyz = DistortedPosition.xyz * 0.5f + 0.5f; // Convert to screen space
 
     float Depth = DistortedPosition.z;
@@ -410,12 +410,7 @@ float CalculateSunShadow()
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / TexSize; // LOD = 0
-        float sbias = 0.0005f;
-
-        if (v_BlockID == u_FoliageBlockID)
-        {
-            sbias -= 0.000325f;
-        }
+        float sbias = 0.00015f;
 
 	    // Take the average of the surrounding texels to create the PCF effect
 	    for(int x = 0; x <= PCF_COUNT; x++)

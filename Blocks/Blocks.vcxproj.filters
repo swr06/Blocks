@@ -187,6 +187,9 @@
     <ClCompile Include="Core\ShaderManager.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\AORenderer.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -351,6 +354,9 @@
     <ClInclude Include="Core\ShaderManager.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="Core\AORenderer.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">
@@ -477,6 +483,9 @@
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Core\Shaders\AtmosphereCombineVert.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Core\Shaders\SSAO.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>

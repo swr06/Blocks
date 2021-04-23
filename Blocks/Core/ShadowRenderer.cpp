@@ -6,6 +6,10 @@ static glm::mat4 LightViewMatrix;
 static glm::vec3 LightPosition;
 static glm::vec2 LightDistortionBiasPosition;
 
+extern float MX;
+extern float MY;
+extern float MZ;
+
 void Blocks::ShadowMapRenderer::InitializeShadowRenderer()
 {
 	LightProjectionMatrix = glm::mat4(1.0f);
@@ -24,21 +28,15 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 
 	float SHADOW_DISTANCE_X = 210.0f;
 	float SHADOW_DISTANCE_Y = 210.0f;
-	float SHADOW_DISTANCE_Z = 2000.0f; // We dont want to loose precision by making this too high
+	float SHADOW_DISTANCE_Z = 1000.0f; // We dont want to loose precision by making this too high
 
-	float MODIFIER_X = 0.0f;
-	float MODIFIER_Y = 124.0f;
-	float MODIFIER_Z = 160.0;
+	float MODIFIER_X = MX;
+	float MODIFIER_Y = MY;
+	float MODIFIER_Z = MZ;
 
 	glm::vec3 center_ = center;
 	center_.x = Align(center_.x, 2);
 	center_.z = Align(center_.z, 2);
-
-	if (fabs(light_direction.z) <= 0.8077f)
-	{
-		MODIFIER_Z = 121.0;
-		MODIFIER_Y = 160.0f;
-	}
 
 	// Align the orthographic projected "cube" 
 	LightPosition = glm::vec3(

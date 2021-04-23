@@ -83,18 +83,18 @@ float stars(vec3 fragpos)
 bool GetAtmosphere(inout vec3 atmosphere_color)
 {
     vec3 sun_dir = normalize(-u_SunDir); 
-    vec3 moon_dir = normalize(u_SunDir); 
+    vec3 moon_dir = vec3(-sun_dir.x, -sun_dir.y, sun_dir.z); 
 
     vec3 ray_dir = normalize(v_RayDirection);
     vec3 atmosphere = texture(u_AtmosphereTexture, ray_dir).rgb;
     bool intersect = false;
 
-    if(dot(ray_dir, sun_dir) > 0.9970)
+    if(dot(ray_dir, sun_dir) > 0.9990f)
     {
         atmosphere *= SUN_COLOR * 3.0f; intersect = true;
     }
 
-    if(dot(ray_dir, moon_dir) > 0.9995)
+    if(dot(ray_dir, moon_dir) > 0.9998f)
     {
         atmosphere *= MOON_COLOR * 10.0f; intersect = true;
     }

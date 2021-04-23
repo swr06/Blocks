@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\AORenderer.cpp" />
     <ClCompile Include="Core\Application\Application.cpp" />
     <ClCompile Include="Core\Application\Logger.cpp" />
     <ClCompile Include="Core\AtmosphereRenderCubemap.cpp" />
@@ -201,6 +202,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\AORenderer.h" />
     <ClInclude Include="Core\Application\Application.h" />
     <ClInclude Include="Core\Application\Logger.h" />
     <ClInclude Include="Core\AtmosphereRenderCubemap.h" />
@@ -280,6 +282,7 @@
     <None Include="Core\Shaders\GaussianBlurVertical.glsl" />
     <None Include="Core\Shaders\SkyboxFrag.glsl" />
     <None Include="Core\Shaders\SkyboxVertex.glsl" />
+    <None Include="Core\Shaders\SSAO.glsl" />
     <None Include="Core\Shaders\SSRefractionsFrag.glsl" />
     <None Include="Core\Shaders\SSRFrag.glsl" />
     <None Include="Core\Shaders\Tonemapping\ACES.glsl" />

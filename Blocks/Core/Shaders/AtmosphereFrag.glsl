@@ -98,7 +98,7 @@ bool get_sun_light(in ray_t ray, inout float opticalDepthR, inout float opticalD
 vec3 get_incident_light(in ray_t ray)
 {
     vec3 sun_dir = u_SunDirection ; 
-    vec3 moon_dir = -sun_dir; 
+    vec3 moon_dir = vec3(-sun_dir.x, -sun_dir.y, sun_dir.z); 
     
     float t0,t1;
 

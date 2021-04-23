@@ -27,18 +27,16 @@ uniform vec2 u_ShadowDistortBiasPos;
 vec2 TexCoords[4] = vec2[]( vec2(0.0f, 1.0f), vec2(1.0f, 1.0f),
 					  vec2(1.0f, 0.0f), vec2(0.0f, 0.0f) );
 
-vec2 DistortPosition(in vec2 worldpos)
+vec3 DistortPosition(in vec3 pos)
 {
-	const float Nearshadowplane = 0.05f;
-	const float Farshadowplane = 0.5f;
-	const float shadowDistance = 210.0f;
-	const float k = 1.8f;
+	const float SHADOW_MAP_BIAS = 0.9f;
+	float dist = sqrt(pos.x * pos.x + pos.y * pos.y);
 
-	float a = exp(Nearshadowplane);
-    float b = (exp(Farshadowplane) - a) * shadowDistance / 128.0;
-    float distortion = 1.0 / (log(distance(worldpos, vec2(0.0f)) * b + a) * k);
+	float distortFactor = (1.0f - SHADOW_MAP_BIAS) + dist * SHADOW_MAP_BIAS;
+	pos.xy *= 0.95f / distortFactor;
+	pos.z = mix(pos.z, 0.5f, 0.8f);
 
-	return worldpos * distortion;
+	return pos;
 }
 
 void main()
@@ -66,7 +64,7 @@ void main()
 	}
 
 	gl_Position = u_ViewProjectionMatrix * vec4(RealPosition, 1.0f);
-	gl_Position.xy = DistortPosition(gl_Position.xy);
+	gl_Position.xyz = DistortPosition(gl_Position.xyz);
 
 	v_TexCoords = TexCoords[a_TexCoords];
 	v_TexIndex = float(a_TexIndex);

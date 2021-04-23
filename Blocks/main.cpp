@@ -120,6 +120,10 @@ int VolumetricSteps = 16;
 
 float FakeSunTime = 0.0f;
 
+float MX;
+float MY;
+float MZ;
+
 struct RenderingTime
 {
 	float SSR;
@@ -169,7 +173,7 @@ public:
 		if (ImGui::Begin("Settings"))
 		{
 			ImGui::Checkbox("Tick Sun", &TickSun);
-			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 64.0f);
+			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 256.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
 			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);
@@ -271,6 +275,9 @@ public:
 		{
 			ImGui::SliderFloat("Player Sensitivity", &Player.Sensitivity, 0.02f, 0.8f);
 			ImGui::SliderFloat("Player Speed", &Player.Speed, 0.01f, 0.25f);
+			ImGui::SliderFloat("MX", &MX, -200, 200.0f);
+			ImGui::SliderFloat("MY", &MY, -200, 200.0f);
+			ImGui::SliderFloat("MZ", &MZ, -200, 200.0f);
 
 			if (ImGui::Button("Reset"))
 			{
@@ -450,26 +457,28 @@ int main()
 	while (!glfwWindowShouldClose(app.GetWindow()))
 	{
 		// Tick the sun and moon
+		glm::vec4 smpos = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 		if (TickSun)
 		{
-			SunDirection = glm::vec3(
-				0.0f,
-				glm::sin(glfwGetTime() * 0.1f),
-				glm::cos(glfwGetTime() * 0.1f)
-			);
+			float time_angle = glfwGetTime() * 4.0f;
+			glm::mat4 sun_rotation_matrix;
+
+			sun_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(time_angle), glm::vec3(0.0f, 0.0f, 1.0f));
+			SunDirection = glm::vec3(sun_rotation_matrix * smpos);
+			MoonDirection = glm::vec3(-SunDirection.x, -SunDirection.y, SunDirection.z);
 		}
 
 		else
 		{
-			SunDirection = glm::vec3(
-				0.0f,
-				glm::sin(FakeSunTime * 0.1f),
-				glm::cos(FakeSunTime * 0.1f)
-			);
+			float time_angle = FakeSunTime * 2.0f;
+			glm::mat4 sun_rotation_matrix;
+
+			sun_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(time_angle), glm::vec3(0.0f, 0.0f, 1.0f));
+			SunDirection = glm::vec3(sun_rotation_matrix * smpos);
+			MoonDirection = glm::vec3(-SunDirection.x, -SunDirection.y, SunDirection.z);
 		}
 
-		MoonDirection = -SunDirection;
 		glm::vec3 LightDirectionToUse = -SunDirection.y < 0.01f ? MoonDirection : SunDirection;
 
 		float wx = app.GetWidth(), wy = app.GetHeight();
@@ -537,7 +546,7 @@ int main()
 		Blocks::Timer atmosphere_timer;
 
 		atmosphere_timer.Start();
-		AtmosphereRenderer.RenderAtmosphere(AtmosphereCubemap, -SunDirection, AtmosphereSteps, AtmosphereLightSteps);
+		AtmosphereRenderer.RenderAtmosphere(AtmosphereCubemap, glm::normalize(-SunDirection), AtmosphereSteps, AtmosphereLightSteps);
 		AppRenderingTime.Atmosphere = atmosphere_timer.End();
 
 		// ---------
