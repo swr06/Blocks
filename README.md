@@ -8,6 +8,7 @@ A Voxel Engine that has emphasis on graphics and performance.
 - PBR Lighting ✓
 - Normal Mapping ✓
 - SSR ✓
+- SS Refractions ✓
 - Sun casting ✓
 - Shadow Mapping ✓
 - Water with reflections ✓
