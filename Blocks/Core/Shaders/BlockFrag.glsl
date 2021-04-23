@@ -410,6 +410,12 @@ float CalculateSunShadow()
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / TexSize; // LOD = 0
+        float sbias = 0.0005f;
+
+        if (v_BlockID == u_FoliageBlockID)
+        {
+            sbias -= 0.000325f;
+        }
 
 	    // Take the average of the surrounding texels to create the PCF effect
 	    for(int x = 0; x <= PCF_COUNT; x++)
@@ -425,7 +431,7 @@ float CalculateSunShadow()
             jitter_value = PoissonDisk[x] * dither;
 
             float pcf = smoothfilter(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize, TexSize).r; 
-	    	shadow += DistortedPosition.z - 0.0005f > pcf ? 1.0f : 0.0f;        
+	    	shadow += DistortedPosition.z - sbias > pcf ? 1.0f : 0.0f;        
 	    }
 
 	    shadow /= float(PCF_COUNT);
