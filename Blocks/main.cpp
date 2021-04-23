@@ -120,10 +120,6 @@ int VolumetricSteps = 16;
 
 float FakeSunTime = 0.0f;
 
-float MX;
-float MY;
-float MZ;
-
 struct RenderingTime
 {
 	float SSR;
@@ -275,9 +271,6 @@ public:
 		{
 			ImGui::SliderFloat("Player Sensitivity", &Player.Sensitivity, 0.02f, 0.8f);
 			ImGui::SliderFloat("Player Speed", &Player.Speed, 0.01f, 0.25f);
-			ImGui::SliderFloat("MX", &MX, -200, 200.0f);
-			ImGui::SliderFloat("MY", &MY, -200, 200.0f);
-			ImGui::SliderFloat("MZ", &MZ, -200, 200.0f);
 
 			if (ImGui::Button("Reset"))
 			{
@@ -363,12 +356,25 @@ public:
 	}
 };
 
+bool _WORLD_GEN_TYPE;
 
 int main()
 {
 	BlocksApp app;
 
 	app.Initialize();
+
+	std::cout << "\n\nWhat type of world do you want? (0 : FLAT, 1 : SIMPLEX FRACTAL) : ";
+	std::cin >> _WORLD_GEN_TYPE;
+
+#ifdef NDEBUG
+	std::cout << "\nRUNNING IN RELEASE MODE!\n";
+#endif
+
+#ifdef DEBUG
+	std::cout << "\nRUNNING IN DEBUG MODE!\n";
+#endif
+	
 	app.SetCursorLocked(true);
 
 	Blocks::ShaderManager::CreateShaders();

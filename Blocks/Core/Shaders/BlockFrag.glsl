@@ -6,7 +6,7 @@
 
 // Flags
 #define USE_PCF
-#define PCF_COUNT 12
+#define PCF_COUNT 8
 
 //#define rot(a) mat2(cos(a + PI * vec4(0,1.5,0.5,0)))
  
@@ -407,10 +407,10 @@ float CalculateSunShadow()
     }
 
     vec2 TexSize = textureSize(u_LightShadowMap, 0).xy;
+    const float sbias = 0.00015f;
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / TexSize; // LOD = 0
-        float sbias = 0.00015f;
 
 	    // Take the average of the surrounding texels to create the PCF effect
 	    for(int x = 0; x <= PCF_COUNT; x++)
@@ -433,7 +433,7 @@ float CalculateSunShadow()
     #else
     
         float ClosestDepth = texture(u_LightShadowMap, DistortedPosition.xy).r; 
-	    shadow = 1.0f - (step(DistortedPosition.z - 0.001f, ClosestDepth));
+	    shadow = 1.0f - (step(DistortedPosition.z - sbias, ClosestDepth));
     #endif
 
     return shadow;

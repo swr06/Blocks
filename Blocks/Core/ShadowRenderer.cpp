@@ -6,10 +6,6 @@ static glm::mat4 LightViewMatrix;
 static glm::vec3 LightPosition;
 static glm::vec2 LightDistortionBiasPosition;
 
-extern float MX;
-extern float MY;
-extern float MZ;
-
 void Blocks::ShadowMapRenderer::InitializeShadowRenderer()
 {
 	LightProjectionMatrix = glm::mat4(1.0f);
@@ -28,11 +24,11 @@ void Blocks::ShadowMapRenderer::RenderShadowMap(GLClasses::DepthBuffer& depth_bu
 
 	float SHADOW_DISTANCE_X = 210.0f;
 	float SHADOW_DISTANCE_Y = 210.0f;
-	float SHADOW_DISTANCE_Z = 1000.0f; // We dont want to loose precision by making this too high
+	float SHADOW_DISTANCE_Z = 900.0f; // We dont want to loose precision by making this too high
 
-	float MODIFIER_X = MX;
-	float MODIFIER_Y = MY;
-	float MODIFIER_Z = MZ;
+	float MODIFIER_X = 1.0f;
+	float MODIFIER_Y = 1.0f;
+	float MODIFIER_Z = 1.0f;
 
 	glm::vec3 center_ = center;
 	center_.x = Align(center_.x, 2);

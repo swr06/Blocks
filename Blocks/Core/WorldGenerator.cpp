@@ -5,6 +5,8 @@ static Random StructureGenerator;
 
 const int MAX_WATER_Y = 32;
 
+extern bool _WORLD_GEN_TYPE;
+
 void Blocks::WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int y_level)
 {
 	for (int y = 0; y < y_level; y++)
@@ -48,7 +50,7 @@ void Blocks::WorldGenerator::GenerateChunk(Chunk* chunk)
 {
 	chunk->m_ChunkGenerationState = ChunkGenerationState::Generated;
 
-	bool gen_type = 1;
+	bool gen_type = _WORLD_GEN_TYPE;
 
 	if (gen_type)
 	{
