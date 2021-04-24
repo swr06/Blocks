@@ -101,22 +101,33 @@ namespace Blocks
 			// Define the tree structure
 
 			// Leaves
-			SetBlocksHorizontal(glm::vec3(0, 5, 0), 5, 5, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlocksHorizontal(glm::vec3(0, 4, 0), 5, 5, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(1, 5, 2, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(1, 6, 2, BlockDatabase::GetBlockID("oak_leaves"));
 
-			SetBlock(0, 6, 0, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(0, 6, 4, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(4, 6, 0, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(4, 6, 4, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlocksHorizontal(glm::vec3(1, 6, 1), 3, 3, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(2, 5, 1, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(2, 6, 1, BlockDatabase::GetBlockID("oak_leaves"));
+
+			SetBlock(3, 5, 2, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(3, 6, 2, BlockDatabase::GetBlockID("oak_leaves"));
+
+			SetBlock(2, 5, 3, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(2, 6, 3, BlockDatabase::GetBlockID("oak_leaves"));
+
+			SetBlock(1, 5, 1, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(3, 5, 1, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(3, 5, 3, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(1, 5, 3, BlockDatabase::GetBlockID("oak_leaves"));
+
+			SetBlock(0, 5, 2, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(2, 5, 0, BlockDatabase::GetBlockID("oak_leaves"));
+
+			SetBlock(4, 5, 2, BlockDatabase::GetBlockID("oak_leaves"));
+			SetBlock(2, 5, 4, BlockDatabase::GetBlockID("oak_leaves"));
 			SetBlock(2, 7, 2, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(2 + 1, 7, 2, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(2 - 1, 7, 2, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(2, 7, 2 + 1, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(2, 7, 2 - 1, BlockDatabase::GetBlockID("oak_leaves"));
-			SetBlock(2, 8, 2, BlockDatabase::GetBlockID("oak_leaves"));
 
 			// Bark
-			SetBlocksY(glm::vec3(2, 0, 2), 8, BlockDatabase::GetBlockID("oak_log"));
+			SetBlocksY(glm::vec3(2, 0, 2), 7, BlockDatabase::GetBlockID("oak_log"));
 		}
 	};
 

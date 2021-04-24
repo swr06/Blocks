@@ -4,6 +4,8 @@ extern uint32_t _App_PolygonCount;
 extern uint64_t _App_PolygonsRendered;
 extern uint32_t _App_ChunkDrawCalls;
 
+extern bool SmartLeafMesh;
+
 namespace Blocks
 {
 	static glm::vec4 FrontFace[4], BackFace[4], TopFace[4], BottomFace[4], LeftFace[4], RightFace[4];
@@ -121,6 +123,18 @@ namespace Blocks
 		RightFace[3] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); RightFaceAO[3][0] = glm::vec3(0.0f, 0.0f, 1.0f);  RightFaceAO[3][1] = glm::vec3(0.0f, -1.0f, 0.0f);
 	}
 
+	uint8_t foliage_id = 0;
+
+	bool FaceCheck(uint8_t& id1, uint8_t& id2)
+	{
+		if (id1 == foliage_id && id2 == foliage_id && !SmartLeafMesh)
+		{
+			return true;
+		}
+
+		return id1 != id2;
+	}
+
 	void ChunkMesh::GenerateMesh(std::array<Block, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z>& chunk_data, int section, const glm::vec2& chunk_pos)
 	{
 		m_PolygonCount = 0;
@@ -131,7 +145,7 @@ namespace Blocks
 
 		m_ChunkMeshPosition = glm::vec3(chunk_pos.x, 0.0f, chunk_pos.y);
 
-		m_Vertices.reserve(CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z * 4);
+		foliage_id = BlockDatabase::GetBlockID("oak_leaves");
 
 		for (int x = 0; x < CHUNK_SIZE_X; x++)
 		{
@@ -149,12 +163,12 @@ namespace Blocks
 
 					if (x == 0 || x == CHUNK_SIZE_X - 1 || y == 0 || y == CHUNK_SIZE_Y - 1 || z == 0 || z == CHUNK_SIZE_Z - 1)
 					{
-						if (temp_block = GetWorldBlock(glm::vec3(world_x - 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetWorldBlock(glm::vec3(world_x - 1, y, world_z)); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x - 1, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Left, block, temp_block);
 						}
 
-						if (temp_block = GetWorldBlock(glm::vec3(world_x + 1, y, world_z)); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetWorldBlock(glm::vec3(world_x + 1, y, world_z)); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x + 1, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Right, block, temp_block);
 						}
@@ -164,7 +178,7 @@ namespace Blocks
 							//AddFace(glm::vec3(world_x, y, world_z), BlockFaceType::Bottom);
 						}
 
-						else if (temp_block = GetWorldBlock(glm::vec3(world_x, y - 1, world_z)); y > 0 && temp_block.IsTransparent() && temp_block.ID != block.ID)
+						else if (temp_block = GetWorldBlock(glm::vec3(world_x, y - 1, world_z)); y > 0 && temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y - 1, world_z), glm::ivec3(x, y, z), BlockFaceType::Bottom, block, temp_block);
 						}
@@ -174,17 +188,17 @@ namespace Blocks
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Top, block, { 0 });
 						}
 
-						else if (temp_block = GetWorldBlock(glm::vec3(world_x, y + 1, world_z)); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && temp_block.ID != block.ID)
+						else if (temp_block = GetWorldBlock(glm::vec3(world_x, y + 1, world_z)); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y + 1, world_z), glm::ivec3(x, y, z), BlockFaceType::Top, block, temp_block);
 						}
 
-						if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z + 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z + 1)); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z + 1), glm::ivec3(x, y, z), BlockFaceType::Front, block, temp_block);
 						}
 
-						if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z - 1)); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetWorldBlock(glm::vec3(world_x, y, world_z - 1)); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z - 1), glm::ivec3(x, y, z), BlockFaceType::Back, block, temp_block);
 						}
@@ -192,32 +206,32 @@ namespace Blocks
 
 					else
 					{
-						if (temp_block = GetChunkBlock(glm::vec3(x - 1, y, z), chunk_data); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetChunkBlock(glm::vec3(x - 1, y, z), chunk_data); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x - 1, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Left, block, temp_block);
 						}
 
-						if (temp_block = GetChunkBlock(glm::vec3(x + 1, y, z), chunk_data); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetChunkBlock(glm::vec3(x + 1, y, z), chunk_data); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x + 1, y, world_z), glm::ivec3(x, y, z), BlockFaceType::Right, block, temp_block);
 						}
 
-						if (temp_block = GetChunkBlock(glm::vec3(x, y - 1, z), chunk_data); y > 0 && temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetChunkBlock(glm::vec3(x, y - 1, z), chunk_data); y > 0 && temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y - 1, world_z), glm::ivec3(x, y, z), BlockFaceType::Bottom, block, temp_block);
 						}
 
-						if (temp_block = GetChunkBlock(glm::vec3(x, y + 1, z), chunk_data); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetChunkBlock(glm::vec3(x, y + 1, z), chunk_data); y < CHUNK_SIZE_Y - 1 && temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y + 1, world_z), glm::ivec3(x, y, z), BlockFaceType::Top, block, temp_block);
 						}
 
-						if (temp_block = GetChunkBlock(glm::vec3(x, y, z + 1), chunk_data); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetChunkBlock(glm::vec3(x, y, z + 1), chunk_data); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z + 1), glm::ivec3(x, y, z), BlockFaceType::Front, block, temp_block);
 						}
 
-						if (temp_block = GetChunkBlock(glm::vec3(x, y, z - 1), chunk_data); temp_block.IsTransparent() && temp_block.ID != block.ID)
+						if (temp_block = GetChunkBlock(glm::vec3(x, y, z - 1), chunk_data); temp_block.IsTransparent() && FaceCheck(temp_block.ID, block.ID))
 						{
 							AddFace(glm::vec3(world_x, y, world_z), glm::vec3(world_x, y, world_z - 1), glm::ivec3(x, y, z), BlockFaceType::Back, block, temp_block);
 						}

@@ -109,11 +109,12 @@ float WaterParallaxHeight = 0.2f;
 float Exposure = 3.25f;
 float AtmosphereRenderScale = 0.04;
 
-bool SSAOPass = true;
+bool SSAOPass = false;
 bool DepthPrePass = false;
 bool VSync = true;
 
 bool TickSun = true;
+bool SmartLeafMesh = false;
 
 bool ShouldBilateralBlurVolumetrics = true;
 
@@ -178,6 +179,7 @@ public:
 		{
 			ImGui::Checkbox("Tick Sun", &TickSun);
 			ImGui::Checkbox("Whiteworld (Makes all textures white)", &WhiteWorld);
+			ImGui::Checkbox("Smart Leaf Mesh (APPLIES AFTER CHUNK REMESH!)", &SmartLeafMesh);
 			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 256.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
