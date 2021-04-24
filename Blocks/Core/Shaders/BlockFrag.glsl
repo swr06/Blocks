@@ -72,6 +72,8 @@ uniform vec2 u_ShadowDistortBiasPos;
 
 uniform int u_FoliageBlockID;
 
+uniform bool u_WhiteWorld;
+
 // Globals
 vec3 g_Albedo;
 vec3 g_Normal;
@@ -197,16 +199,19 @@ void main()
         g_Texcoords = (ParallaxOcclusionMapping(v_TexCoord, TangentViewDirection));
     }
 
-    vec4 SampledAlbedo;
+    vec4 SampledAlbedo = vec4(1.0f);
 
-    if (v_IsUnderwater == 1)
+    if (!u_WhiteWorld)
     {
-        SampledAlbedo = vec4(CalculateCaustics(), 1.0f);
-    }
+        if (v_IsUnderwater == 1)
+        {
+            SampledAlbedo = vec4(CalculateCaustics(), 1.0f);
+        }
 
-    else
-    {
-        SampledAlbedo = BetterTexture(u_BlockTextures, vec3(g_Texcoords, v_TexIndex));
+        else
+        {
+            SampledAlbedo = BetterTexture(u_BlockTextures, vec3(g_Texcoords, v_TexIndex));
+        }
     }
 
     // Subsurface scattering

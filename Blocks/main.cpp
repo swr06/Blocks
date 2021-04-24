@@ -50,6 +50,7 @@ Kiroma
 #include "Core/Utils/Timer.h"
 #include "Core/BloomRenderer.h"
 #include "Core/ShaderManager.h"
+#include "Core/AORenderer.h"
 
 // World, Camera, Player..
 Blocks::Player Player;
@@ -69,6 +70,7 @@ GLClasses::Framebuffer TempFBO(16, 16, false, true);
 
 GLClasses::FramebufferRed VolumetricLightingFBO(16, 16);
 GLClasses::FramebufferRed VolumetricLightingFBOBlurred(16, 16);
+GLClasses::FramebufferRed SSAOFBO(16, 16);
 GLClasses::Framebuffer SSRFBO(16, 16, true);
 GLClasses::Framebuffer RefractionFBO(16, 16, true);
 GLClasses::Framebuffer BloomFBO(16, 16, true);
@@ -107,6 +109,7 @@ float WaterParallaxHeight = 0.2f;
 float Exposure = 3.25f;
 float AtmosphereRenderScale = 0.04;
 
+bool SSAOPass = true;
 bool DepthPrePass = false;
 bool VSync = true;
 
@@ -119,6 +122,11 @@ int AtmosphereSteps = 30;
 int VolumetricSteps = 16;
 
 float FakeSunTime = 0.0f;
+
+float SSAORenderScale = 0.75f;
+float SSAOStrength = 1.0f;
+
+bool WhiteWorld = false;
 
 struct RenderingTime
 {
@@ -169,6 +177,7 @@ public:
 		if (ImGui::Begin("Settings"))
 		{
 			ImGui::Checkbox("Tick Sun", &TickSun);
+			ImGui::Checkbox("Whiteworld (Makes all textures white)", &WhiteWorld);
 			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 256.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
@@ -182,8 +191,11 @@ public:
 			ImGui::Checkbox("Bloom?", &ShouldDoBloomPass);
 			ImGui::Checkbox("SSR Pass?", &ShouldDoSSRPass);
 			ImGui::Checkbox("SS Refractions?", &ShouldDoRefractions);
+			ImGui::Checkbox("SSAO? (Screen Space Ambient Occlusion?)", &SSAOPass);
 			ImGui::Checkbox("Freefly (Shouldn't do collisions) ?", &Player.Freefly);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
+			ImGui::SliderFloat("SSAO Render Scale", &SSAORenderScale, 0.1f, 1.5f);
+			ImGui::SliderFloat("SSAO Strength", &SSAOStrength, 0.6f, 2.0f);
 			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
 			ImGui::SliderInt("Volumetric Lighting Step count", &VolumetricSteps, 8, 200);
 			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.0f);
@@ -403,6 +415,8 @@ int main()
 	GLClasses::Shader& DepthPrepassShader = Blocks::ShaderManager::GetShader("DEPTH_PREPASS");
 	GLClasses::Shader& AtmosphereCombineShader = Blocks::ShaderManager::GetShader("ATMOSPHERE_COMBINE");
 	GLClasses::Shader& BilateralBlur = Blocks::ShaderManager::GetShader("BILATERAL_BLUR");
+	GLClasses::Shader& SSAO = Blocks::ShaderManager::GetShader("SSAO");
+	GLClasses::Shader& SSAO_Blur = Blocks::ShaderManager::GetShader("SSAO_BLUR");
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -411,8 +425,11 @@ int main()
 
 	Blocks::BloomFBO BloomFBO(800, 600);
 
-	// Setup the basic vao
+	// SSAO
+	GLuint SSAO_NoiseTexture = Blocks::SSAORenderer::GenerateSSAONoiseTexture();
+	GLuint SSAO_KernelTexture = Blocks::SSAORenderer::GenerateSSAOKernelTexture();
 
+	// Setup the basic vao
 	float QuadVertices[] =
 	{
 		-1.0f,  1.0f,  0.0f, 1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
@@ -487,7 +504,7 @@ int main()
 
 		glm::vec3 LightDirectionToUse = -SunDirection.y < 0.01f ? MoonDirection : SunDirection;
 
-		float wx = app.GetWidth(), wy = app.GetHeight();
+		float wx = floor(app.GetWidth()), wy = floor(app.GetHeight());
 
 		// Set MainRenderFBO Sizes
 
@@ -499,6 +516,7 @@ int main()
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * SSRefractionRenderScale, wy * SSRefractionRenderScale);
 		BloomFBO.SetSize(floor(wx), floor(wy));
+		SSAOFBO.SetSize(floor(wx * SSAORenderScale), floor(wy * SSAORenderScale));
 
 		// ----------------- //
 
@@ -796,6 +814,7 @@ int main()
 		RenderShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
 		RenderShader.SetBool("u_SSREnabled", _SSR);
 		RenderShader.SetBool("u_UsePOM", ShouldDoPOM);
+		RenderShader.SetBool("u_WhiteWorld", WhiteWorld);
 
 		RenderShader.SetVector3f("u_SunDirection", SunDirection);
 		RenderShader.SetVector3f("u_MoonDirection", MoonDirection);
@@ -949,6 +968,47 @@ int main()
 		AppRenderingTime.Water = t4.End();
 
 		// ----------------
+		// SSAO Pass
+
+		if (SSAOPass)
+		{
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
+
+			SSAO.Use();
+			SSAOFBO.Bind();
+
+			SSAO.SetInteger("u_DepthTexture", 0);
+			SSAO.SetInteger("u_NormalTexture", 1);
+			SSAO.SetInteger("u_NoiseTexture", 2);
+			SSAO.SetInteger("u_SSAOKernel", 3);
+			SSAO.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+			SSAO.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
+			SSAO.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
+			SSAO.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
+			SSAO.SetVector2f("u_Dimensions", glm::vec2(SSAOFBO.GetWidth(), SSAOFBO.GetHeight()));
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetNormalTexture());
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, SSAO_NoiseTexture);
+
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, SSAO_KernelTexture);
+
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
+
+			SSAOFBO.Unbind();
+		}
+		
+		// ----------------
 		// Volumetric lighting pass
 
 		if (ShouldRenderVolumetrics)
@@ -1053,6 +1113,7 @@ int main()
 		PPShader.SetInteger("u_AtmosphereTexture", 3);
 		PPShader.SetInteger("u_DepthTexture", 4);
 		PPShader.SetInteger("u_SSRNormal", 10);
+		PPShader.SetInteger("u_SSAOTexture", 12);
 
 		// Bloom textures
 		PPShader.SetInteger("u_BloomTextures[0]", 5);
@@ -1063,8 +1124,10 @@ int main()
 		PPShader.SetBool("u_BloomEnabled", _Bloom);
 		PPShader.SetBool("u_VolumetricEnabled", ShouldRenderVolumetrics);
 		PPShader.SetBool("u_PlayerInWater", Player.InWater);
+		PPShader.SetBool("u_SSAOEnabled", SSAOPass);
 		PPShader.SetFloat("u_Exposure", Exposure);
 		PPShader.SetFloat("u_Time", glfwGetTime());
+		PPShader.SetFloat("u_SSAOStrength", SSAOStrength);
 		PPShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
 		PPShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
 		PPShader.SetVector3f("u_SunDirection", SunDirection);
@@ -1110,6 +1173,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetSSRNormalTexture());
+
+		glActiveTexture(GL_TEXTURE12);
+		glBindTexture(GL_TEXTURE_2D, SSAOFBO.GetTexture());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);

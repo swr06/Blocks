@@ -20,6 +20,8 @@ void Blocks::ShaderManager::CreateShaders()
 	AddShader("BLOOM_BRIGHT", "Core/Shaders/FBOVert.glsl", "Core/Shaders/BloomMaskFrag.glsl");
 	AddShader("CUBEMAP_REFLECTION", "Core/Shaders/CubemapReflectionVert.glsl", "Core/Shaders/CubemapReflectionFrag.glsl");
 	AddShader("DEPTH", "Core/Shaders/DepthVert.glsl", "Core/Shaders/DepthFrag.glsl");
+	AddShader("SSAO", "Core/Shaders/FBOVert.glsl", "Core/Shaders/SSAO.glsl");
+	AddShader("SSAO_BLUR", "Core/Shaders/FBOVert.glsl", "Core/Shaders/SSAOBlur.glsl");
 }
 
 void Blocks::ShaderManager::AddShader(const std::string& name, const std::string& vert, const std::string& frag, const std::string& geo)

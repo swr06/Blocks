@@ -43,10 +43,14 @@ uniform sampler2D u_BloomTextures[4];
 uniform sampler2D u_DepthTexture;
 uniform samplerCube u_AtmosphereTexture;
 uniform sampler2D u_SSRNormal; // Contains Unit normals. The alpha component is used to tell if the current pixel is liquid or not
+uniform sampler2D u_SSAOTexture;
+
+uniform float u_SSAOStrength;
 
 uniform float u_Exposure = 1.0f;
 
 uniform bool u_BloomEnabled;
+uniform bool u_SSAOEnabled;
 uniform bool u_VolumetricEnabled;
 uniform bool u_PlayerInWater;
 uniform float u_Time;
@@ -56,6 +60,7 @@ uniform vec3 u_SunDirection;
 const vec3 SUN_COLOR = vec3(1.0);
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords);
+vec4 textureBicubicplus(sampler2D sampler, vec2 texCoords);
 
 mat3 ACESInputMat = mat3(
     0.59719, 0.07600, 0.02840,
@@ -291,19 +296,25 @@ void main()
         float blueness_multiplier = 0.0f;
         blueness_multiplier = mix(0.45f, 0.0f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
         final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
+    
+        if (u_SSAOEnabled)
+        {
+            float ssao = textureBicubic(u_SSAOTexture, v_TexCoords).r;
+            final_color.xyz *= pow(ssao, u_SSAOStrength);
+        }
     }
 
     Vignette(final_color);
-
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), exposure));
 
     // Apply gamma correction
     o_Color.rgb = pow(o_Color.rgb, vec3(1.0f / 2.2f));
+
 }
 
 vec4 cubic(float v)
 {
-    vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;
+    vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;\
     vec4 s = n * n * n;
     float x = s.x;
     float y = s.y - 4.0 * s.x;
@@ -338,6 +349,41 @@ vec4 textureBicubic(sampler2D sampler, vec2 texCoords)
     vec4 sample1 = texture(sampler, offset.yz);
     vec4 sample2 = texture(sampler, offset.xw);
     vec4 sample3 = texture(sampler, offset.yw);
+
+    float sx = s.x / (s.x + s.y);
+    float sy = s.z / (s.z + s.w);
+
+    return mix(
+       mix(sample3, sample2, sx), mix(sample1, sample0, sx)
+    , sy);
+}
+
+vec4 textureBicubicplus(sampler2D sampler, vec2 texCoords)
+{
+
+   vec2 texSize = textureSize(sampler, 0);
+   vec2 invTexSize = 1.0 / texSize;
+
+   texCoords = texCoords * texSize - 0.5;
+
+
+    vec2 fxy = fract(texCoords);
+    texCoords -= fxy;
+
+    vec4 xcubic = cubic(fxy.x);
+    vec4 ycubic = cubic(fxy.y);
+
+    vec4 c = texCoords.xxyy + vec2 (-0.5, +1.5).xyxy;
+
+    vec4 s = vec4(xcubic.xz + xcubic.yw, ycubic.xz + ycubic.yw);
+    vec4 offset = c + vec4 (xcubic.yw, ycubic.yw) / s;
+
+    offset *= invTexSize.xxyy;
+
+    vec4 sample0 = BetterTexture_1(sampler, offset.xz);
+    vec4 sample1 = BetterTexture_1(sampler, offset.yz);
+    vec4 sample2 = BetterTexture_1(sampler, offset.xw);
+    vec4 sample3 = BetterTexture_1(sampler, offset.yw);
 
     float sx = s.x / (s.x + s.y);
     float sy = s.z / (s.z + s.w);
