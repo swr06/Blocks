@@ -41,232 +41,116 @@ namespace Blocks
 			BloomFBOVAO->Unbind();
 		}
 
+		void BlurBloomMip(BloomFBO& bloomfbo, int mip_num, GLuint source_tex)
+		{
+			GLenum buffer;
+			int w, h;
+			float mip = 0.0f;
+			std::unique_ptr<GLClasses::Framebuffer>* fbo;
+
+			GLClasses::Shader& GaussianBlur = ShaderManager::GetShader("GAUSSIAN_SINGLEPASS");
+			GLClasses::Shader& BloomBrightShader = ShaderManager::GetShader("BLOOM_BRIGHT");
+
+			switch (mip_num)
+			{
+			case 0:
+			{
+				buffer = GL_COLOR_ATTACHMENT0;
+				w = floor(bloomfbo.m_mipscale1 * bloomfbo.GetWidth());
+				h = floor(bloomfbo.m_mipscale1 * bloomfbo.GetHeight());
+				mip = 0.0f;
+				fbo = &BloomAlternateFBO;
+
+				break;
+			}
+
+			case 1:
+			{
+				buffer = GL_COLOR_ATTACHMENT1;
+				w = floor(bloomfbo.m_mipscale2 * bloomfbo.GetWidth());
+				h = floor(bloomfbo.m_mipscale2 * bloomfbo.GetHeight());
+				mip = 0.0f;
+				fbo = &BloomAlternateFBO1;
+
+				break;
+			}
+
+			case 2:
+			{
+				buffer = GL_COLOR_ATTACHMENT2;
+				w = floor(bloomfbo.m_mipscale3 * bloomfbo.GetWidth());
+				h = floor(bloomfbo.m_mipscale3 * bloomfbo.GetHeight());
+				mip = 0.0f;
+				fbo = &BloomAlternateFBO2;
+
+				break;
+			}
+
+			case 3:
+			{
+				buffer = GL_COLOR_ATTACHMENT3;
+				w = floor(bloomfbo.m_mipscale4 * bloomfbo.GetWidth());
+				h = floor(bloomfbo.m_mipscale4 * bloomfbo.GetHeight());
+				mip = 0.0f;
+				fbo = &BloomAlternateFBO3;
+
+				break;
+			}
+
+			default:
+			{
+				throw "INVALID VALUE PASSED TO BLOOM RENDERER!";
+			}
+			}
+
+			fbo->get()->SetSize(w, h);
+
+			BloomBrightShader.Use();
+			fbo->get()->Bind();
+			glViewport(0, 0, w, h);
+
+			BloomBrightShader.SetInteger("u_Texture", 0);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, source_tex);
+
+			BloomFBOVAO->Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			BloomFBOVAO->Unbind();
+
+			///////////////
+
+			GaussianBlur.Use();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, bloomfbo.m_Framebuffer);
+			glDrawBuffer(buffer);
+			glViewport(0, 0, w, h);
+
+			GaussianBlur.SetInteger("u_Texture", 0);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, fbo->get()->GetTexture());
+
+			BloomFBOVAO->Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			BloomFBOVAO->Unbind();
+		}
+
 		void RenderBloom(BloomFBO& bloom_fbo, GLuint source_tex)
 		{
 			GLClasses::Shader& BloomBrightShader = ShaderManager::GetShader("BLOOM_BRIGHT");
-			GLClasses::Shader& GaussianHorizontalBlur = ShaderManager::GetShader("GAUSSIAN_HORIZONTAL");
-			GLClasses::Shader& GaussianVerticalBlur = ShaderManager::GetShader("GAUSSIAN_VERTICAL");
 
-			/////////////////////////
-			//////// PASS 1 /////////
-			/////////////////////////
-
-			int w = bloom_fbo.GetWidth() * bloom_fbo.m_mipscale1;
-			int h = bloom_fbo.GetHeight() * bloom_fbo.m_mipscale1;
+			// Render the bright parts to a texture
 
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 
-			BloomAlternateFBO->SetSize(w, h);
+			// Blur the mips
+			BlurBloomMip(bloom_fbo, 0, source_tex);
+			BlurBloomMip(bloom_fbo, 1, source_tex);
+			BlurBloomMip(bloom_fbo, 2, source_tex);
+			BlurBloomMip(bloom_fbo, 3, source_tex);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT0);
-			glViewport(0, 0, w, h);
-
-			BloomBrightShader.Use();
-			BloomBrightShader.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, source_tex);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform a horizontal blur
-
-			BloomAlternateFBO->Bind();
-
-			GaussianHorizontalBlur.Use();
-			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip0);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform the vertical blur
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-			GaussianVerticalBlur.Use();
-			GaussianVerticalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO->GetTexture());
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			/////////////////////////
-			//////// PASS 2 /////////
-			/////////////////////////
-
-			w = floor(bloom_fbo.GetWidth() * bloom_fbo.m_mipscale2);
-			h = floor(bloom_fbo.GetHeight() * bloom_fbo.m_mipscale2);
-
-			BloomAlternateFBO1->SetSize(w, h);
-
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT1);
-			glViewport(0, 0, w, h);
-
-			BloomBrightShader.Use();
-			BloomBrightShader.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, source_tex);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform a horizontal blur
-
-			BloomAlternateFBO1->Bind();
-
-			GaussianHorizontalBlur.Use();
-			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip1);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform the vertical blur
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT1);
-
-			GaussianVerticalBlur.Use();
-			GaussianVerticalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO1->GetTexture());
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			/////////////////////////
-			//////// PASS 3 /////////
-			/////////////////////////
-
-			w = floor(bloom_fbo.GetWidth() * bloom_fbo.m_mipscale3);
-			h = floor(bloom_fbo.GetHeight() * bloom_fbo.m_mipscale3);
-
-			BloomAlternateFBO2->SetSize(w, h);
-
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT2);
-			glViewport(0, 0, w, h);
-
-			BloomBrightShader.Use();
-			BloomBrightShader.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, source_tex);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform a horizontal blur
-
-			BloomAlternateFBO2->Bind();
-
-			GaussianHorizontalBlur.Use();
-			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip2);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform the vertical blur
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT2);
-
-			GaussianVerticalBlur.Use();
-			GaussianVerticalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO2->GetTexture());
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			/////////////////////////
-			//////// PASS 4 /////////
-			/////////////////////////
-
-			w = floor(bloom_fbo.GetWidth() * bloom_fbo.m_mipscale4);
-			h = floor(bloom_fbo.GetHeight() * bloom_fbo.m_mipscale4);
-
-			BloomAlternateFBO3->SetSize(w, h);
-
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT3);
-			glViewport(0, 0, w, h);
-
-			BloomBrightShader.Use();
-			BloomBrightShader.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, source_tex);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform a horizontal blur
-
-			BloomAlternateFBO3->Bind();
-
-			GaussianHorizontalBlur.Use();
-			GaussianHorizontalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, bloom_fbo.m_Mip3);
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-
-			// Perform the vertical blur
-
-			glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo.m_Framebuffer);
-			glDrawBuffer(GL_COLOR_ATTACHMENT3);
-
-			GaussianVerticalBlur.Use();
-			GaussianVerticalBlur.SetInteger("u_Texture", 0);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, BloomAlternateFBO3->GetTexture());
-
-			BloomFBOVAO->Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			BloomFBOVAO->Unbind();
-			
 			return;
 		}
 	}

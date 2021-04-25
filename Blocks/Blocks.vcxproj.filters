@@ -491,5 +491,8 @@
     <None Include="Core\Shaders\SSAOBlur.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Core\Shaders\Gaussian9TapSinglePass.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

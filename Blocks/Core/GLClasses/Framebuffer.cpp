@@ -6,8 +6,8 @@
 
 namespace GLClasses
 {
-    Framebuffer::Framebuffer(unsigned int w, unsigned int h, bool hdr, bool has_depth_attachment) :
-        m_FBO(0), m_FBWidth(w), m_FBHeight(h), m_IsHDR(hdr), m_HasDepthMap(has_depth_attachment)
+    Framebuffer::Framebuffer(unsigned int w, unsigned int h, bool hdr, bool has_depth_attachment, bool mipmap) :
+        m_FBO(0), m_FBWidth(w), m_FBHeight(h), m_IsHDR(hdr), m_HasDepthMap(has_depth_attachment), m_ShouldMipMap(mipmap)
     {
        // CreateFramebuffer();
     }
@@ -36,6 +36,11 @@ namespace GLClasses
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+        if (m_ShouldMipMap)
+        {
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_TextureAttachment, 0);
 

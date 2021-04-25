@@ -10,7 +10,7 @@ namespace GLClasses
 	class Framebuffer
 	{
 	public :
-		Framebuffer(unsigned int w, unsigned int h, bool hdr, bool has_depth_attachment = true);
+		Framebuffer(unsigned int w, unsigned int h, bool hdr, bool has_depth_attachment = true, bool mipmap = false);
 		~Framebuffer();
 
 		Framebuffer(const Framebuffer&) = delete;
@@ -22,7 +22,7 @@ namespace GLClasses
 			return *this;
 		}
 
-		Framebuffer(Framebuffer&& v) : m_IsHDR(v.m_IsHDR), m_HasDepthMap(v.m_HasDepthMap)
+		Framebuffer(Framebuffer&& v) : m_IsHDR(v.m_IsHDR), m_HasDepthMap(v.m_HasDepthMap), m_ShouldMipMap(v.m_ShouldMipMap)
 		{
 			m_FBO = v.m_FBO;
 			m_TextureAttachment = v.m_TextureAttachment;
@@ -110,6 +110,7 @@ namespace GLClasses
 		int m_FBHeight;
 		const bool m_IsHDR;
 		const bool m_HasDepthMap;
+		const bool m_ShouldMipMap;
 		float m_Exposure = 0.0f;
 	};
 }

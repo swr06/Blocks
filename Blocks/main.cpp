@@ -422,7 +422,7 @@ int main()
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(4096, 4096);
+	GLClasses::DepthBuffer ShadowMap(3584, 3072);
 	GLClasses::CubeReflectionMap ReflectionMap(256);
 
 	Blocks::BloomFBO BloomFBO(800, 600);
