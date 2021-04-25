@@ -23,7 +23,7 @@ namespace Blocks
 	{
 	public : 
 
-		World() {};
+		World();
 
 		Block GetWorldBlock(const glm::ivec3& block_loc);
 		uint8_t GetWorldBlockLightValue(const glm::ivec3& block_loc);

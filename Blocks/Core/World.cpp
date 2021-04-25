@@ -18,6 +18,8 @@ namespace Blocks
 	int flora_build_distance_z = render_distance_z + 2;
 #endif
 
+	static std::vector <glm::vec2> chunk_loc_indices;
+
 	int Modulo(int a, int b)
 	{
 		return (a % b + b) % b;
@@ -26,6 +28,54 @@ namespace Blocks
 	float ModuloF(float a, float b)
 	{
 		return std::fmodf((std::fmodf(a, b) + b), b);
+	}
+
+	void GenerateIndices()
+	{
+		/*
+		chunks near the player are rendered first to reduce overdraw
+		*/
+
+		int ox = 0; 
+		int oy = 0;
+		int rx = 0;
+		int ry = 0;
+
+		for (int k = 0; k < render_distance_x + 1; k++)
+		{
+			rx = k;
+			ry = k;
+
+			for (int i = ox - rx; i < ox + rx; i++)
+			{
+				for (int j = oy - ry; j < oy + ry; j++)
+				{
+					if ((i == ox - rx || i + 1 == ox + rx || j == oy - ry || j + 1 == oy + ry))
+					{
+						chunk_loc_indices.push_back(glm::vec2(i, j));
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < chunk_loc_indices.size(); i++)
+		{
+			auto e = chunk_loc_indices[i];
+
+			for (int j = 0; j < chunk_loc_indices.size(); j++)
+			{
+				if (j == i)
+				{
+					continue;
+				}
+			
+				if (chunk_loc_indices[j] == e)
+				{
+					chunk_loc_indices.erase(chunk_loc_indices.begin() + j);
+				}
+			}
+		}
+
 	}
 
 
@@ -54,6 +104,11 @@ namespace Blocks
 		}
 
 		return false;
+	}
+
+	World::World()
+	{
+		GenerateIndices();
 	}
 
 	void World::GenerateChunks(const glm::vec3& position, const ViewFrustum& view_frustum)
@@ -103,14 +158,15 @@ namespace Blocks
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
 		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
 
-		for (int i = player_chunk_x - render_distance_x; i < player_chunk_x + render_distance_x; i++)
+		for (int i = 0; i < chunk_loc_indices.size(); i++)
 		{
-			for (int j = player_chunk_z - render_distance_z; j < player_chunk_z + render_distance_z; j++)
+			glm::vec2 loc = chunk_loc_indices[i];
+			loc.x += player_chunk_x;
+			loc.y += player_chunk_z;
+
+			if (ChunkExists(glm::ivec2(loc)))
 			{
-				if (ChunkExists(glm::ivec2(i, j)))
-				{
-					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderMeshes(view_frustum, shader, true);
-				}
+				m_WorldChunks.at(std::pair<int, int>((int)loc.x, (int)loc.y)).RenderMeshes(view_frustum, shader, true);
 			}
 		}
 	}
@@ -120,14 +176,15 @@ namespace Blocks
 		int player_chunk_x = (int)floor(position.x / CHUNK_SIZE_X);
 		int player_chunk_z = (int)floor(position.z / CHUNK_SIZE_Z);
 
-		for (int i = player_chunk_x - render_distance_x; i < player_chunk_x + render_distance_x; i++)
+		for (int i = 0; i < chunk_loc_indices.size(); i++)
 		{
-			for (int j = player_chunk_z - render_distance_z; j < player_chunk_z + render_distance_z; j++)
+			glm::vec2 loc = chunk_loc_indices[i];
+			loc.x += player_chunk_x;
+			loc.y += player_chunk_z;
+
+			if (ChunkExists(glm::ivec2(loc)))
 			{
-				if (ChunkExists(glm::ivec2(i, j)))
-				{
-					m_WorldChunks.at(std::pair<int, int>(i, j)).RenderWaterMeshes(view_frustum, shader, true);
-				}
+				m_WorldChunks.at(std::pair<int, int>((int)loc.x, (int)loc.y)).RenderWaterMeshes(view_frustum, shader, true);
 			}
 		}
 	}
@@ -166,14 +223,14 @@ namespace Blocks
 
 		std::vector<std::pair<int, int>> to_erase;
 
-		for (auto &e : m_WorldChunks)
+		for (auto& e : m_WorldChunks)
 		{
 			const auto& ref = e.first;
 			glm::vec2 chunk_pos = e.second.m_Position;
 
 			float diff_x = abs(chunk_pos.x - player_chunk_x);
 			float diff_z = abs(chunk_pos.y - player_chunk_z);
-			
+
 			if (diff_x > flora_build_distance_x + 1 ||
 				diff_z > flora_build_distance_z + 1)
 			{
@@ -181,7 +238,7 @@ namespace Blocks
 			}
 		}
 
-		for (int i = 0 ; i < to_erase.size() ; i++)
+		for (int i = 0; i < to_erase.size(); i++)
 		{
 			m_WorldChunks.erase(to_erase[i]);
 		}
@@ -499,7 +556,7 @@ namespace Blocks
 								floor(position.z))));
 						}
 					}
-					
+
 					else
 					{
 						if (edit_block.first->ID == BlockDatabase::GetBlockID("redstone_lamp_on"))
