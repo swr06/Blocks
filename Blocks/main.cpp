@@ -74,6 +74,7 @@ GLClasses::FramebufferRed SSAOFBO(16, 16);
 GLClasses::Framebuffer SSRFBO(16, 16, true);
 GLClasses::Framebuffer RefractionFBO(16, 16, true);
 GLClasses::Framebuffer BloomFBO(16, 16, true);
+GLClasses::Framebuffer TAAFBO(16, 16, true);
 
 // Flags 
 bool ShouldRenderSkybox = true;
@@ -100,7 +101,7 @@ glm::vec3 MoonDirection = glm::vec3(0.0f);
 // ImGui Adjustable Variables
 float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
-float RenderScale = 0.8f;
+float RenderScale = 0.75f;
 float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.25f;
 float SSRefractionRenderScale = 0.2f;
@@ -150,6 +151,15 @@ uint64_t _App_PolygonsRendered; // Internal! Do not touch.
 uint32_t _App_ChunkDrawCalls; // Internal! Do not touch.
 
 RenderingTime AppRenderingTime;
+
+// for temporal filter
+
+glm::mat4 CurrentViewMatrix = glm::mat4(1.0f);
+glm::mat4 CurrentProjectionMatrix = glm::mat4(1.0f);
+glm::mat4 PrevViewMatrix = glm::mat4(1.0f);
+glm::mat4 PrevProjectionMatrix = glm::mat4(1.0f);
+glm::vec3 CurrentCameraPosition = glm::vec3(0.0f);
+glm::vec3 PrevCameraPosition = glm::vec3(0.0f);
 
 class BlocksApp : public Blocks::Application
 {
@@ -419,6 +429,7 @@ int main()
 	GLClasses::Shader& BilateralBlur = Blocks::ShaderManager::GetShader("BILATERAL_BLUR");
 	GLClasses::Shader& SSAO = Blocks::ShaderManager::GetShader("SSAO");
 	GLClasses::Shader& SSAO_Blur = Blocks::ShaderManager::GetShader("SSAO_BLUR");
+	GLClasses::Shader& TAA = Blocks::ShaderManager::GetShader("TAA");
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
@@ -518,6 +529,7 @@ int main()
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * SSRefractionRenderScale, wy * SSRefractionRenderScale);
 		BloomFBO.SetSize(floor(wx), floor(wy));
+		TAAFBO.SetSize(floor(wx), floor(wy));
 		SSAOFBO.SetSize(floor(wx * SSAORenderScale), floor(wy * SSAORenderScale));
 
 		// ----------------- //
@@ -543,6 +555,18 @@ int main()
 		app.OnUpdate();
 		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
 		PlayerMoved = Player.OnUpdate(app.GetWindow());
+
+		// For taa
+		PrevViewMatrix = CurrentViewMatrix;
+		PrevProjectionMatrix = CurrentProjectionMatrix;
+		PrevCameraPosition = CurrentCameraPosition;
+
+		CurrentProjectionMatrix = Player.Camera.GetProjectionMatrix();
+		CurrentViewMatrix = Player.Camera.GetViewMatrix();
+		CurrentCameraPosition = Player.Camera.GetPosition();
+
+
+
 
 		AppRenderingTime.Update = update_timer.End();
 
@@ -822,6 +846,8 @@ int main()
 		RenderShader.SetVector3f("u_MoonDirection", MoonDirection);
 
 		RenderShader.SetVector2f("u_ShadowDistortBiasPos", Blocks::ShadowMapRenderer::GetShadowDistortBiasPosition());
+		RenderShader.SetVector2f("u_VertDimensions", glm::vec2(CurrentlyUsedFBO.GetWidth(), CurrentlyUsedFBO.GetHeight()));
+		RenderShader.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 		// Bind Textures
 
@@ -1098,6 +1124,58 @@ int main()
 			AppRenderingTime.Bloom = t6.End();
 		}
 
+
+		// --------------------------
+		// Temporal Anti Aliasing Pass
+		
+		bool ShouldDoTAA = true;
+
+
+		if (ShouldDoTAA)
+		{
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+
+			TAAFBO.Bind();
+			TAA.Use();
+
+			TAA.SetMatrix4("u_Projection", CurrentProjectionMatrix);
+			TAA.SetMatrix4("u_View", CurrentViewMatrix);
+			TAA.SetMatrix4("u_InverseProjection", glm::inverse(CurrentProjectionMatrix));
+			TAA.SetMatrix4("u_InverseView", glm::inverse(CurrentViewMatrix));
+			TAA.SetMatrix4("u_PrevProjection", PrevProjectionMatrix);
+			TAA.SetMatrix4("u_PrevView", PrevViewMatrix);
+			TAA.SetMatrix4("u_PrevInverseProjection", glm::inverse(PrevProjectionMatrix));
+			TAA.SetMatrix4("u_PrevInverseView", glm::inverse(PrevViewMatrix));
+			
+			TAA.SetInteger("u_CurrentColorTexture", 0);
+			TAA.SetInteger("u_CurrentDepthTexture", 1);
+			TAA.SetInteger("u_PreviousColorTexture", 2);
+			TAA.SetInteger("u_PreviousDepthTexture", 3);
+
+			TAA.SetVector3f("u_CameraPosition", CurrentCameraPosition);
+			TAA.SetVector3f("u_PrevCameraPosition", PrevCameraPosition);
+			
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());
+
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
+
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
+
+
+			TAAFBO.Unbind();
+		}
+
 		// --------------
 		// After the rendering, do the tonemapping pass
 
@@ -1141,7 +1219,7 @@ int main()
 		PPShader.SetFloat("u_zFar", 1000.0f);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
+		glBindTexture(GL_TEXTURE_2D, TAAFBO.GetTexture());
 		
 		glActiveTexture(GL_TEXTURE1);
 

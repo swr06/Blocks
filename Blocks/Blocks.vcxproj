@@ -287,6 +287,7 @@
     <None Include="Core\Shaders\SSAOBlur.glsl" />
     <None Include="Core\Shaders\SSRefractionsFrag.glsl" />
     <None Include="Core\Shaders\SSRFrag.glsl" />
+    <None Include="Core\Shaders\TemporalAA.glsl" />
     <None Include="Core\Shaders\Tonemapping\ACES.glsl" />
     <None Include="Core\Shaders\Tonemapping\filmic.glsl" />
     <None Include="Core\Shaders\Tonemapping\LICENSE.MD" />
