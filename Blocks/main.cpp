@@ -565,9 +565,6 @@ int main()
 		CurrentViewMatrix = Player.Camera.GetViewMatrix();
 		CurrentCameraPosition = Player.Camera.GetPosition();
 
-
-
-
 		AppRenderingTime.Update = update_timer.End();
 
 		if (app.GetCurrentFrame() % 4 == 0 || BlockModified)
@@ -1152,6 +1149,7 @@ int main()
 			TAA.SetInteger("u_CurrentDepthTexture", 1);
 			TAA.SetInteger("u_PreviousColorTexture", 2);
 			TAA.SetInteger("u_PreviousDepthTexture", 3);
+			TAA.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 			TAA.SetVector3f("u_CameraPosition", CurrentCameraPosition);
 			TAA.SetVector3f("u_PrevCameraPosition", PrevCameraPosition);

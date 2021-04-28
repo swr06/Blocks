@@ -268,11 +268,12 @@ void main()
     float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
     vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
 
-    g_LightColor = mix(SUN_COLOR, MOON_COLOR, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    float LightRatio = clamp(exp(-distance(u_SunDirection.y, 1.0555f)), 0.0f, 1.0f);
+    g_LightColor = mix(SUN_COLOR, MOON_COLOR, LightRatio);
 
     vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection);
     vec3 Moonlightfactor = CalculateDirectionalLightPBR(vec3(u_SunDirection.x, u_SunDirection.y, -u_SunDirection.z));
-    vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, LightRatio);
 
     o_Color = vec4(Ambient + FinalLighting, 1.0f);
     o_Normal = g_Normal;

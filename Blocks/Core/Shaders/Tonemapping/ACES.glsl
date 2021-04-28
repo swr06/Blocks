@@ -245,7 +245,7 @@ void main()
          Volumetric = (volumetric_value * SUN_COLOR);
     }
 
-    float bloom_multiplier = PixelIsWater ? 0.4f : 1.0f;
+    float bloom_multiplier = PixelIsWater ? 0.4f : 0.5f;
 
     if (u_BloomEnabled)
     {
@@ -287,7 +287,7 @@ void main()
     if (PixelDepth != 1.0f)
     {
         float blueness_multiplier = 0.0f;
-        blueness_multiplier = mix(0.45f, 0.0f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+        blueness_multiplier = mix(0.45f, 0.0f, clamp(exp(-distance(u_SunDirection.y, 1.1f)), 0.0f, 1.0f));
         final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
     
         if (u_SSAOEnabled)

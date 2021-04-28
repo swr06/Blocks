@@ -4,6 +4,7 @@
 #define RENDER_CHUNK_SIZE_Y 96
 #define RENDER_CHUNK_SIZE_Z 16
 #define pi 3.141592653589
+#define USE_SEUS_TAA_JITTER
 
 layout (location = 0) in ivec3 a_Position;
 layout (location = 1) in uint a_TexCoords;
@@ -62,6 +63,7 @@ out vec3 v_TangentFragPosition;
 
 void TemporalJitterProjPos(inout vec4 pos)
 {
+#ifdef USE_SEUS_TAA_JITTER
 	const vec2 haltonSequenceOffsets[16] = vec2[16](vec2(-1, -1), vec2(0, -0.3333333), vec2(-0.5, 0.3333334), vec2(0.5, -0.7777778), vec2(-0.75, -0.1111111), vec2(0.25, 0.5555556), vec2(-0.25, -0.5555556), vec2(0.75, 0.1111112), vec2(-0.875, 0.7777778), vec2(0.125, -0.9259259), vec2(-0.375, -0.2592592), vec2(0.625, 0.4074074), vec2(-0.625, -0.7037037), vec2(0.375, -0.03703701), vec2(-0.125, 0.6296296), vec2(0.875, -0.4814815));
 	const vec2 bayerSequenceOffsets[16] = vec2[16](vec2(0, 3) / 16.0, vec2(8, 11) / 16.0, vec2(2, 1) / 16.0, vec2(10, 9) / 16.0, vec2(12, 15) / 16.0, vec2(4, 7) / 16.0, vec2(14, 13) / 16.0, vec2(6, 5) / 16.0, vec2(3, 0) / 16.0, vec2(11, 8) / 16.0, vec2(1, 2) / 16.0, vec2(9, 10) / 16.0, vec2(15, 12) / 16.0, vec2(7, 4) / 16.0, vec2(13, 14) / 16.0, vec2(5, 6) / 16.0);
 	
@@ -72,7 +74,22 @@ void TemporalJitterProjPos(inout vec4 pos)
 										   );
 
 	pos.xy += ((bayerSequenceOffsets[int(mod(u_CurrentFrame, 12.0f))] * 2.0 - 1.0) / u_VertDimensions);
-	//pos.xy += (rand(vec2(mod(float(frameCounter) / 16.0, 1.0))).xy / vec2(viewWidth, viewHeight)) * 1.0;
+#else
+	vec2 jitterOffsets[8] = vec2[8](
+								vec2( 0.125,-0.375),
+								vec2(-0.125, 0.375),
+								vec2( 0.625, 0.125),
+								vec2( 0.375,-0.625),
+								vec2(-0.625, 0.625),
+								vec2(-0.875,-0.125),
+								vec2( 0.375,-0.875),
+								vec2( 0.875, 0.875)
+							);
+	float w = pos.w;
+								   
+	vec2 offset = jitterOffsets[u_CurrentFrame % 8] * (w / vec2(u_VertDimensions));
+	pos.xy += offset;
+#endif
 }
 
 void main()

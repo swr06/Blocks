@@ -84,7 +84,7 @@ bool get_sun_light(in ray_t ray, inout float opticalDepthR, inout float opticalD
     
     for(int i = 0; i < u_NumLightSamples; i++)
     {
-        vec3 s = ray.origin + ray.direction * (march_pos + 0.5f * march_length);
+        vec3 s = ray.origin + ray.direction * (march_pos + 0.1f * march_length);
         float height = length(s)-earth_radius;
         opticalDepthR += exp(-height/hR) * march_length;
         opticalDepthM += exp(-height/hM) * march_length;
