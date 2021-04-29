@@ -9,48 +9,7 @@ g h o s t
 Kiroma
 */
 
-
-#include <stdio.h>
-#include <iostream>
-#include <array>
-#include <random>
-#include <string>
-#include <thread>
-#include <vector>
-#include <chrono>
-#include <memory>
-
-#include <glad/glad.h>          
-#include <GLFW/glfw3.h>
-
-#include <glm/glm.hpp>
-
-#include "Core/Application/Application.h"
-#include "Core/GLClasses/VertexBuffer.h"
-#include "Core/GLClasses/VertexArray.h"
-#include "Core/GLClasses/Shader.h"
-#include "Core/GLClasses/Fps.h"
-#include "Core/FpsCamera.h"
-#include "Core/CubeRenderer.h"
-#include "Core/Chunk.h"
-#include "Core/ChunkMesh.h"
-#include "Core/World.h"
-#include "Core/BlockDatabaseParser.h"
-#include "Core/BlockDatabase.h"
-#include "Core/AtmosphereRenderer.h"
-#include "Core/OrthographicCamera.h"
-#include "Core/Renderer2D.h"
-#include "Core/Player.h"
-#include "Core/GLClasses/DepthBuffer.h"
-#include "Core/ShadowRenderer.h"
-#include "Core/BlocksRenderBuffer.h"
-#include "Core/GLClasses/Framebuffer.h"
-#include "Core/GLClasses/FramebufferRed.h"
-#include "Core/CubemapReflectionRenderer.h"
-#include "Core/Utils/Timer.h"
-#include "Core/BloomRenderer.h"
-#include "Core/ShaderManager.h"
-#include "Core/AORenderer.h"
+#include "Core/BlocksEngine.h"
 
 // World, Camera, Player..
 Blocks::Player Player;
