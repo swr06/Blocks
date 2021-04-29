@@ -29,7 +29,8 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Global Cubemaps ✓
 - Distorted Shadow maps ✓
 - Parallax Corrected Cubemaps
-- Temporal Anti Aliasing 
+- Temporal Anti Aliasing ✓
+- Screen Space Ambient Occlusion ✓
 - Weather
 - CSM 
 - VSM Shadows
