@@ -8,6 +8,8 @@
 #define USE_PCF
 #define PCF_COUNT 8
 
+#define USE_SEUS_TAA_JITTER
+
 //#define rot(a) mat2(cos(a + PI * vec4(0,1.5,0.5,0)))
  
 // in some mc textures, "smoothness" is used, rather than roughness
@@ -71,6 +73,8 @@ uniform vec2 u_ShadowDistortBiasPos;
 
 
 uniform int u_FoliageBlockID;
+uniform int u_CurrentFrameFRAG;
+uniform vec2 u_DimensionsFRAG;
 
 uniform bool u_WhiteWorld;
 
@@ -287,10 +291,10 @@ void main()
         vec3 R = normalize(reflect(ViewDirection, g_Normal));
         vec3 AtmosphereColor = GetAtmosphere(R);
 
-        o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.05f);
+        o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.04f);
     }
 
-    o_Color.xyz *= max(v_LampLightValue * 1.2f, 1.0f);
+    o_Color.xyz *= max(v_LampLightValue * 1.2, 1.0f);
     o_Color.xyz *= g_AO;
 
     o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled && reflective_block);
@@ -339,13 +343,13 @@ vec3 GetAtmosphere(vec3 ray_dir_)
 
 float GetDisplacementAt(vec2 tx)
 {
-    return texture(u_BlockPBRTextures, vec3(tx, v_PBRTexIndex)).b * 0.2f;
+    return texture(u_BlockPBRTextures, vec3(tx, v_PBRTexIndex)).b * 0.25f;
 }
 
 vec2 ParallaxOcclusionMapping(vec2 TextureCoords, vec3 ViewDirection) // View direction should be in tangent space!
 { 
     float NumLayers = 16; 
-    float LayerDepth = 1.0 / NumLayers;
+    float LayerDepth = 1.0 / (NumLayers * 0.45f);
     float CurrentLayerDepth = 0.0;
     vec2 P = ViewDirection.xy * 1.0f; 
     vec2 DeltaTexCoords = P / NumLayers;
@@ -381,6 +385,36 @@ vec4 smoothfilter(in sampler2D tex, in vec2 uv, in vec2 textureResolution)
 	return texture2D( tex, uv);
 }
 
+void TemporalJitterProjPos(inout vec4 pos, in vec2 Dims)
+{
+#ifdef USE_SEUS_TAA_JITTER
+	const vec2 haltonSequenceOffsets[16] = vec2[16](vec2(-1, -1), vec2(0, -0.3333333), vec2(-0.5, 0.3333334), vec2(0.5, -0.7777778), vec2(-0.75, -0.1111111), vec2(0.25, 0.5555556), vec2(-0.25, -0.5555556), vec2(0.75, 0.1111112), vec2(-0.875, 0.7777778), vec2(0.125, -0.9259259), vec2(-0.375, -0.2592592), vec2(0.625, 0.4074074), vec2(-0.625, -0.7037037), vec2(0.375, -0.03703701), vec2(-0.125, 0.6296296), vec2(0.875, -0.4814815));
+	const vec2 bayerSequenceOffsets[16] = vec2[16](vec2(0, 3) / 16.0, vec2(8, 11) / 16.0, vec2(2, 1) / 16.0, vec2(10, 9) / 16.0, vec2(12, 15) / 16.0, vec2(4, 7) / 16.0, vec2(14, 13) / 16.0, vec2(6, 5) / 16.0, vec2(3, 0) / 16.0, vec2(11, 8) / 16.0, vec2(1, 2) / 16.0, vec2(9, 10) / 16.0, vec2(15, 12) / 16.0, vec2(7, 4) / 16.0, vec2(13, 14) / 16.0, vec2(5, 6) / 16.0);
+	
+	const vec2 otherOffsets[16] = vec2[16](vec2(0.375, 0.4375), vec2(0.625, 0.0625), vec2(0.875, 0.1875), vec2(0.125, 0.0625),
+										   vec2(0.375, 0.6875), vec2(0.875, 0.4375), vec2(0.625, 0.5625), vec2(0.375, 0.9375),
+										   vec2(0.625, 0.3125), vec2(0.125, 0.5625), vec2(0.125, 0.8125), vec2(0.375, 0.1875),
+										   vec2(0.875, 0.9375), vec2(0.875, 0.6875), vec2(0.125, 0.3125), vec2(0.625, 0.8125)
+										   );
+
+	pos.xy += 0.89f * ((bayerSequenceOffsets[int(mod(u_CurrentFrameFRAG, 12.0f))] * 2.0 - 1.0) / Dims);
+#else
+	vec2 jitterOffsets[8] = vec2[8](
+								vec2( 0.125,-0.375),
+								vec2(-0.125, 0.375),
+								vec2( 0.625, 0.125),
+								vec2( 0.375,-0.625),
+								vec2(-0.625, 0.625),
+								vec2(-0.875,-0.125),
+								vec2( 0.375,-0.875),
+								vec2( 0.875, 0.875)
+							);
+	float w = pos.w;
+								   
+	vec2 offset = jitterOffsets[u_CurrentFrameFRAG % 8] * (w / vec2(Dims));
+	pos.xy += offset;
+#endif
+}
 
 vec3 DistortPosition(in vec3 pos)
 {
@@ -399,9 +433,11 @@ float CalculateSunShadow()
 	float shadow = 0.0;
 
     vec4 DistortedPosition;
+    vec2 TexSize = textureSize(u_LightShadowMap, 0).xy;
 
     DistortedPosition = u_LightProjectionMatrix * u_LightViewMatrix * vec4(v_FragPosition, 1.0f); 
     DistortedPosition.xyz = DistortPosition(DistortedPosition.xyz);
+    TemporalJitterProjPos(DistortedPosition, TexSize);
     DistortedPosition.xyz = DistortedPosition.xyz * 0.5f + 0.5f; // Convert to screen space
 
     float Depth = DistortedPosition.z;
@@ -412,7 +448,6 @@ float CalculateSunShadow()
         return shadow;
     }
 
-    vec2 TexSize = textureSize(u_LightShadowMap, 0).xy;
     const float sbias = 0.000045f;
 
     #ifdef USE_PCF

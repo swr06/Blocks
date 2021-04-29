@@ -55,6 +55,24 @@ vec2 Reprojection(float depth)
 	return ProjectedPosition.xy;
 }
 
+vec2 Reprojection2(float depth) 
+{
+	vec3 pos = vec3(v_TexCoords, depth); // Convert to clip space
+	pos = pos * 2.0 - 1.0;
+
+	vec4 viewPosPrev = u_InverseProjection * vec4(pos, 1.0);
+	viewPosPrev /= viewPosPrev.w;
+	viewPosPrev = u_InverseView * viewPosPrev;
+
+	vec3 cameraOffset = u_CameraPosition - u_PrevCameraPosition;
+
+	vec4 previousPosition = viewPosPrev + vec4(cameraOffset, 0.0);
+	previousPosition = u_PrevView * previousPosition;
+	previousPosition = u_PrevProjection * previousPosition;
+	return previousPosition.xy / previousPosition.w * 0.5 + 0.5;
+}
+
+
 vec3 NeighbourhoodClamping(vec3 color, vec3 tempColor, out vec3 avg_col, out float odepth, out vec2 best_offset) 
 {
 	vec2 neighbourhoodOffsets[8] = vec2[8]

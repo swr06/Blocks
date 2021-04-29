@@ -45,8 +45,6 @@ uniform samplerCube u_AtmosphereTexture;
 uniform sampler2D u_SSRNormal; // Contains Unit normals. The alpha component is used to tell if the current pixel is liquid or not
 uniform sampler2D u_SSAOTexture;
 
-uniform float u_SSAOStrength;
-
 uniform float u_Exposure = 1.0f;
 
 uniform bool u_BloomEnabled;
@@ -196,9 +194,8 @@ void UnderwaterDistort(inout vec2 TexCoord)
 //Due to low sample count we "tonemap" the inputs to preserve colors and smoother edges
 vec3 WeightedSample(sampler2D colorTex, vec2 texcoord)
 {
-	vec3 wsample = texture2D(colorTex,texcoord).rgb * 1.0f;
+	vec3 wsample = texture(colorTex,texcoord).rgb * 1.0f;
 	return wsample / (1.0f + GetLuminance(wsample));
-
 }
 
 vec3 smoothfilter(in sampler2D tex, in vec2 uv)
@@ -264,7 +261,16 @@ void main()
         ColorGrading(HDR.xyz);
         ColorSaturation(HDR.xyz);
 
-        HDR = mix(HDR, sharpen(u_FramebufferTexture, v_TexCoords).rgb, 0.25f).rgb;
+        HDR = mix(HDR, sharpen(u_FramebufferTexture, v_TexCoords).rgb, 0.322f).rgb;
+
+        if (u_SSAOEnabled)
+        {
+            float ssao = 0.0f;
+            ssao = smoothfilter(u_SSAOTexture, v_TexCoords).r;
+            ssao = pow(ssao, 8.2f);
+            HDR.xyz *= 8.2 * 4.8f;
+            HDR.xyz *= ssao;
+        }
     }
 
     if (u_PlayerInWater)
@@ -289,12 +295,6 @@ void main()
         float blueness_multiplier = 0.0f;
         blueness_multiplier = mix(0.45f, 0.0f, clamp(exp(-distance(u_SunDirection.y, 1.1f)), 0.0f, 1.0f));
         final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
-    
-        if (u_SSAOEnabled)
-        {
-            float ssao = textureBicubic(u_SSAOTexture, v_TexCoords).r;
-            final_color.xyz *= pow(ssao, u_SSAOStrength);
-        }
     }
 
     Vignette(final_color);

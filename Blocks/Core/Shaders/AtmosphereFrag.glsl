@@ -84,7 +84,7 @@ bool get_sun_light(in ray_t ray, inout float opticalDepthR, inout float opticalD
     
     for(int i = 0; i < u_NumLightSamples; i++)
     {
-        vec3 s = ray.origin + ray.direction * (march_pos + 0.1f * march_length);
+        vec3 s = ray.origin + ray.direction * (march_pos + 0.5f * march_length);
         float height = length(s)-earth_radius;
         opticalDepthR += exp(-height/hR) * march_length;
         opticalDepthM += exp(-height/hM) * march_length;
@@ -184,7 +184,6 @@ void main()
     ray_t primary_ray = ray_t(cameraCenter, normalize(v_RayDirection)); 
     vec3 col = get_incident_light(primary_ray);
    
-    col = pow(col * 5.0f / (col * 5.0f + vec3(1.0f)), vec3(2.2f)); //Gamma correction 
     col = max(col, vec3(0.05f));
 
     o_Color = vec4(col, 1.0f);
