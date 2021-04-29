@@ -96,7 +96,7 @@ void main()
 
 		float SampledDepth = texture(u_ShadowMap, ProjectionCoordinates.xy).r; 
 		float CurrentDepth = ProjectionCoordinates.z;
-		float bias = 0.00015f;
+		float bias =  0.000029999f;
 
 		bool inshadow = (CurrentDepth - bias) < SampledDepth;
 		

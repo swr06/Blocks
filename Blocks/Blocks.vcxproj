@@ -209,6 +209,7 @@
     <ClInclude Include="Core\Block.h" />
     <ClInclude Include="Core\BlockDatabase.h" />
     <ClInclude Include="Core\BlockDatabaseParser.h" />
+    <ClInclude Include="Core\BlocksEngine.h" />
     <ClInclude Include="Core\BlocksRenderBuffer.h" />
     <ClInclude Include="Core\BloomFBO.h" />
     <ClInclude Include="Core\BloomRenderer.h" />
