@@ -38,6 +38,8 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Weather
 - VSM Shadows
 - LPV (For indirect)
+- World saving and loading
+- Loading worlds created in minecraft
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
