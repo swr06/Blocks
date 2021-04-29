@@ -22,6 +22,8 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Voxel GI
 - Depth of Field
 - Motion Blur 
+- Auto exposure
+- Lens Flare
 - Atmospheric Scattering ✓
 - Day/Night cycle ✓
 - Parallax Occlusion Mapping ✓
@@ -31,14 +33,14 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Parallax Corrected Cubemaps
 - Temporal Anti Aliasing ✓
 - Screen Space Ambient Occlusion ✓
+- Reflective Shadow Maps (For indirect single bounce lighting)
+- PCSS Shadows
 - Weather
-- CSM 
 - VSM Shadows
 - LPV (For indirect)
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
-- Global illumination
 - Atmospheric effect (WIP) ✓
 
 # Test Environment <br>
