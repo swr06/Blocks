@@ -45,8 +45,6 @@ uniform samplerCube u_AtmosphereTexture;
 uniform sampler2D u_SSRNormal; // Contains Unit normals. The alpha component is used to tell if the current pixel is liquid or not
 uniform sampler2D u_SSAOTexture;
 
-uniform float u_SSAOStrength;
-
 uniform float u_Exposure = 1.0f;
 
 uniform bool u_BloomEnabled;
@@ -193,36 +191,13 @@ void UnderwaterDistort(inout vec2 TexCoord)
     }
 }
 
-vec2 sharpenOffsets[4] = vec2[4](
-	vec2( 1.0,  0.0),
-	vec2( 0.0,  1.0),
-	vec2(-1.0,  0.0),
-	vec2( 0.0, -1.0)
-);
-
-void SharpenFilter(inout vec3 color) 
-{
-	float mult = 1.0f * 0.025f;
-	vec2 view = 1.0 / textureSize(u_FramebufferTexture, 0);
-
-	color *= 1.0f * 0.1f + 1.0f;
-
-	for(int i = 0; i < 4; i++) 
-    {
-		vec2 offset = sharpenOffsets[i] * view;
-		color -= texture2D(u_FramebufferTexture, v_TexCoords + offset).rgb * mult;
-	}
-}
-
 //Due to low sample count we "tonemap" the inputs to preserve colors and smoother edges
 vec3 WeightedSample(sampler2D colorTex, vec2 texcoord)
 {
-	vec3 wsample = texture2D(colorTex,texcoord).rgb * 1.0f;
+	vec3 wsample = texture(colorTex,texcoord).rgb * 1.0f;
 	return wsample / (1.0f + GetLuminance(wsample));
-
 }
 
-//Modified texture interpolation from inigo quilez
 vec3 smoothfilter(in sampler2D tex, in vec2 uv)
 {
 	vec2 textureResolution = textureSize(tex, 0);
@@ -232,6 +207,20 @@ vec3 smoothfilter(in sampler2D tex, in vec2 uv)
 	uv = iuv + fuv*fuv*fuv*(fuv*(fuv*6.0-15.0)+10.0);
 	uv = (uv - 0.5)/textureResolution;
 	return WeightedSample( tex, uv);
+}
+
+vec3 sharpen(in sampler2D tex, in vec2 coords) 
+{
+	vec2 renderSize = textureSize(tex, 0);
+	float dx = 1.0 / renderSize.x;
+	float dy = 1.0 / renderSize.y;
+	vec3 sum = vec3(0.0);
+	sum += -1. * smoothfilter(tex, coords + vec2( -1.0 * dx , 0.0 * dy));
+	sum += -1. * smoothfilter(tex, coords + vec2( 0.0 * dx , -1.0 * dy));
+	sum += 5. * smoothfilter(tex, coords + vec2( 0.0 * dx , 0.0 * dy));
+	sum += -1. * smoothfilter(tex, coords + vec2( 0.0 * dx , 1.0 * dy));
+	sum += -1. * smoothfilter(tex, coords + vec2( 1.0 * dx , 0.0 * dy));
+	return sum;
 }
 
 void main()
@@ -253,7 +242,7 @@ void main()
          Volumetric = (volumetric_value * SUN_COLOR);
     }
 
-    float bloom_multiplier = PixelIsWater ? 0.4f : 1.0f;
+    float bloom_multiplier = PixelIsWater ? 0.4f : 0.5f;
 
     if (u_BloomEnabled)
     {
@@ -265,13 +254,23 @@ void main()
          Bloom[3] = textureBicubic(u_BloomTextures[3], g_TexCoords).xyz;
     }
    
-    vec3 HDR = smoothfilter(u_FramebufferTexture, g_TexCoords).rgb;
+    vec3 HDR = smoothfilter(u_FramebufferTexture, v_TexCoords).rgb;
 
     if (PixelDepth != 1.0f && !PixelIsWater)
     {
         ColorGrading(HDR.xyz);
         ColorSaturation(HDR.xyz);
-        //SharpenFilter(HDR.xyz);
+
+        HDR = mix(HDR, sharpen(u_FramebufferTexture, v_TexCoords).rgb, 0.322f).rgb;
+
+        if (u_SSAOEnabled)
+        {
+            float ssao = 0.0f;
+            ssao = smoothfilter(u_SSAOTexture, v_TexCoords).r;
+            ssao = pow(ssao, 8.2f);
+            HDR.xyz *= 8.2 * 4.8f;
+            HDR.xyz *= ssao;
+        }
     }
 
     if (u_PlayerInWater)
@@ -294,14 +293,8 @@ void main()
     if (PixelDepth != 1.0f)
     {
         float blueness_multiplier = 0.0f;
-        blueness_multiplier = mix(0.45f, 0.0f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+        blueness_multiplier = mix(0.45f, 0.0f, clamp(exp(-distance(u_SunDirection.y, 1.1f)), 0.0f, 1.0f));
         final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
-    
-        if (u_SSAOEnabled)
-        {
-            float ssao = textureBicubic(u_SSAOTexture, v_TexCoords).r;
-            final_color.xyz *= pow(ssao, u_SSAOStrength);
-        }
     }
 
     Vignette(final_color);

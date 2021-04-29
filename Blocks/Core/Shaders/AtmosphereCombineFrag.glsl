@@ -114,7 +114,7 @@ void main()
     if (!intersect)
     {
         float star_visibility;
-        star_visibility = mix(0.0f, 1.0f, min(distance(u_SunDir.y, -1.0f), 0.99f));
+        star_visibility = clamp(exp(-distance(u_SunDir.y, 1.8555f)), 0.0f, 1.0f);
 
         vec3 stars = vec3(stars(vec3(v_RayDirection)) * star_visibility);
         o_Color += stars;

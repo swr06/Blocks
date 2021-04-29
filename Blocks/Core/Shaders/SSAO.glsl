@@ -15,6 +15,8 @@ uniform mat4 u_InverseProjectionMatrix;
 uniform mat4 u_ViewMatrix;
 uniform mat4 u_ProjectionMatrix;
 
+uniform int SAMPLE_SIZE = 28;
+
 float CalcViewZ(vec2 Coords)
 {
     float Depth = texture(u_DepthTexture, Coords).x;
@@ -45,8 +47,8 @@ vec3 WorldPosFromDepth(float depth)
     return worldSpacePosition.xyz;
 }
 
-const float Radius = 0.50f;
-const float Bias = 0.01f;
+const float Radius = 0.450f;
+const float Bias = 0.10f;
 
 void main()
 {
@@ -61,7 +63,7 @@ void main()
 	vec3 Position = vec3(u_ViewMatrix * vec4(WorldPosFromDepth(PixelDepth), 1.0f));
 
 	vec3 NoiseValue = normalize(vec3(texture(u_NoiseTexture, v_TexCoords * NoiseScale).rg, 0.0f));
-	vec3 Normal = normalize(texture(u_NormalTexture, v_TexCoords).xyz);
+	vec3 Normal = normalize(vec3(u_ViewMatrix * vec4(texture(u_NormalTexture, v_TexCoords).xyz, 0.0f)));
 	vec3 Tangent = normalize(NoiseValue - Normal * dot(NoiseValue, Normal));
 	vec3 Bitangent = normalize(cross(Normal, Tangent));
 	mat3 TBN = mat3(Tangent, Bitangent, Normal);
@@ -70,7 +72,8 @@ void main()
 	int KernelSampleCount = int(KernelTextureSize.x) * int(KernelTextureSize.y);
 	o_AOValue = 0.0f;
 
-	for (int i = 0 ; i < KernelSampleCount ; i++)
+
+	for (int i = 0 ; i < clamp(SAMPLE_SIZE, 1, KernelSampleCount) ; i++)
 	{
 		vec3 KernelValue = texelFetch(u_SSAOKernel, ivec2(Convert1DTo2DIndex(i, KernelTextureSize)), 0).rgb;
 		vec3 OrientedKernel = TBN * KernelValue;
@@ -88,7 +91,7 @@ void main()
 		o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck;  
 	}
 
-	o_AOValue /= KernelSampleCount;
+	o_AOValue /= SAMPLE_SIZE;
 	o_AOValue = 1.0f - o_AOValue;
 }
 

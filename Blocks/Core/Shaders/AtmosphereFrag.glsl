@@ -184,7 +184,6 @@ void main()
     ray_t primary_ray = ray_t(cameraCenter, normalize(v_RayDirection)); 
     vec3 col = get_incident_light(primary_ray);
    
-    col = pow(col * 5.0f / (col * 5.0f + vec3(1.0f)), vec3(2.2f)); //Gamma correction 
     col = max(col, vec3(0.05f));
 
     o_Color = vec4(col, 1.0f);
