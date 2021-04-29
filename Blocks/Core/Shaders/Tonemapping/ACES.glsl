@@ -231,6 +231,12 @@ void main()
     vec2 g_TexCoords = v_TexCoords;
     bool PixelIsWater = texture(u_SSRNormal, v_TexCoords).a == 1.0f;
 
+    vec2 TexSize = textureSize(u_DepthTexture, 0);
+    float PixelDepth1 = texture(u_DepthTexture, v_TexCoords + vec2(0.0f, 1.0f) * (1.0f / TexSize)).r;
+    float PixelDepth2 = texture(u_DepthTexture, v_TexCoords + vec2(0.0f, -1.0f) * (1.0f / TexSize)).r;
+    float PixelDepth3 = texture(u_DepthTexture, v_TexCoords + vec2(1.0f, 0.0f) * (1.0f / TexSize)).r;
+    float PixelDepth4 = texture(u_DepthTexture, v_TexCoords + vec2(-1.0f, 0.0f) * (1.0f / TexSize)).r;
+
     if (u_PlayerInWater)
     {
         UnderwaterDistort(g_TexCoords);
@@ -238,7 +244,7 @@ void main()
 
     if (u_VolumetricEnabled)
     {
-         float volumetric_value = textureBicubic(u_VolumetricTexture, v_TexCoords).r;
+         float volumetric_value = smoothfilter(u_VolumetricTexture, v_TexCoords).r;
          Volumetric = (volumetric_value * SUN_COLOR);
     }
 
@@ -256,7 +262,7 @@ void main()
    
     vec3 HDR = smoothfilter(u_FramebufferTexture, v_TexCoords).rgb;
 
-    if (PixelDepth != 1.0f && !PixelIsWater)
+    if (PixelDepth != 1.0f && PixelDepth1 != 1.0f && PixelDepth2 != 1.0f && PixelDepth3 != 1.0f && PixelDepth4 != 1.0f && !PixelIsWater)
     {
         ColorGrading(HDR.xyz);
         ColorSaturation(HDR.xyz);

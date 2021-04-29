@@ -71,7 +71,7 @@ float WaterParallaxHeight = 0.2f;
 float Exposure = 3.25f;
 float AtmosphereRenderScale = 0.04;
 
-bool SSAOPass = false;
+bool SSAOPass = true;
 bool DepthPrePass = false;
 bool VSync = true;
 
@@ -1064,7 +1064,7 @@ int main()
 			glUseProgram(0);
 
 			///////////////////////////
-			// Perform a bilateral blur 
+			// Perform a bilateral blur to remove noise
 
 			if (ShouldBilateralBlurVolumetrics)
 			{
@@ -1077,7 +1077,7 @@ int main()
 				BilateralBlur.SetVector2f("u_SketchSize",
 					glm::vec2(VolumetricLightingFBOBlurred.GetWidth(), VolumetricLightingFBOBlurred.GetHeight()));
 				BilateralBlur.SetInteger("u_Texture", 0);
-				BilateralBlur.SetFloat("u_BSIGMA", 1.0f);
+				BilateralBlur.SetFloat("u_BSIGMA", 0.5f);
 
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, VolumetricLightingFBO.GetTexture());

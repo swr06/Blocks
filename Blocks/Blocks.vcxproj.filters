@@ -357,6 +357,9 @@
     <ClInclude Include="Core\AORenderer.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="Core\BlocksEngine.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\fast_noise\README.md">

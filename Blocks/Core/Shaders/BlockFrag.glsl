@@ -221,16 +221,6 @@ void main()
     // Subsurface scattering
     // TODO : REWORK THIS!
 
-    //if (g_IsFoliage)
-    //{
-	//    vec3 V = normalize(u_ViewerPosition - v_FragPosition);
-    //    float VdotL = clamp(dot(normalize(V), u_SunDirection), 0.0, 1.0);
-    //    float subsurface = pow(VdotL, 48.0);
-    //    subsurface *= 24.0f;
-    //    subsurface = clamp(subsurface, 0.0f, 1.8f);
-    //    SampledAlbedo.rgb *= (g_Shadow * subsurface) + 1.0f;
-    //}
-
 	g_Normal = v_Normal;
 
     if (SampledAlbedo.a < 0.1f) 
@@ -279,7 +269,15 @@ void main()
     vec3 Moonlightfactor = CalculateDirectionalLightPBR(vec3(u_SunDirection.x, u_SunDirection.y, -u_SunDirection.z));
     vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, LightRatio);
 
+    if (g_IsFoliage)
+    {
+        float VdotL = clamp(dot((ViewDirection), -u_SunDirection), 0.0, 1.0);
+        float subsurface = pow(VdotL, 24.0);
+        //FinalLighting *= (1.0f - g_Shadow) * (subsurface + 1.0);
+    }
+
     o_Color = vec4(Ambient + FinalLighting, 1.0f);
+
     o_Normal = g_Normal;
     o_SSRNormal.xyz = v_Normal;
     o_SSRNormal.w = 0.0f; // Used to tell if the currect pixel is water or not
@@ -442,7 +440,8 @@ float CalculateSunShadow()
 
     float Depth = DistortedPosition.z;
 
-    if (Depth > 1.0f)
+    if (Depth > 1.0f || DistortedPosition.x > 1.0f || DistortedPosition.y > 1.0f || 
+        DistortedPosition.x < 0.0f || DistortedPosition.y < 0.0f)
     {
         shadow = 0.0f;
         return shadow;
