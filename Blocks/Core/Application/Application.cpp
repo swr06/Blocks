@@ -218,6 +218,8 @@ namespace Blocks
 		system("@del log.txt"); // Delete the already existing log file
 #endif
 
+		Blocks::Logger::InitLog();
+
 		return;
 	}
 

@@ -348,7 +348,6 @@ int main()
 {
 	BlocksApp app;
 
-	Blocks::Logger::InitLog();
 	app.Initialize();
 
 	do
