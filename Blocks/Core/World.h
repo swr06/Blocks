@@ -19,6 +19,12 @@
 
 namespace Blocks
 {
+	namespace FileHandler
+	{
+		void SaveWorld(const std::string& world_name, const glm::vec3& player_position, World* world);
+		bool LoadWorld(const std::string& world_name, glm::vec3& player_position, World* world);
+	}
+
 	class World
 	{
 	public : 
@@ -41,6 +47,9 @@ namespace Blocks
 		void ChangeCurrentBlock();
 		void DeleteFarawayChunks(const glm::vec3& reference);
 
+		std::string m_WorldName = "";
+
+
 	private :
 
 		void GenerateChunks(const glm::vec3& position, const ViewFrustum& view_frustum);
@@ -58,5 +67,8 @@ namespace Blocks
 		void DepropogateLight();
 		std::queue<LightNode> m_LightBFS;
 		std::queue<LightRemovalNode> m_LightRemovalBFS;
+
+		friend void FileHandler::SaveWorld(const std::string& world_name, const glm::vec3& player_position, World* world);
+		friend bool FileHandler::LoadWorld(const std::string& world_name, glm::vec3& player_position, World* world);
 	};
 }

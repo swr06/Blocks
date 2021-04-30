@@ -24,4 +24,17 @@ namespace Blocks
 
 		return;
 	}
+
+	void Logger::InitLog()
+	{
+		FILE* file = fopen("log.txt", "w+");
+
+		if (!file)
+		{
+			std::cout << "\nBlocks : " << "Couldnt initialize log (Could not create file LOG.TXT";
+		}
+
+		fclose(file);
+		return;
+	}
 }

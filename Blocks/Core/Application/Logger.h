@@ -8,5 +8,6 @@ namespace Blocks
 	{
 		void Log(const std::string& txt);
 		void LogToFile(const std::string& txt);
+		void InitLog();
 	}
 }

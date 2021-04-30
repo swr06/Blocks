@@ -47,7 +47,7 @@ void main()
 
 	if (a_BlockID == u_VertFoliageBlockID)
 	{
-		float speed = 0.05;
+		float speed = 0.07f;
 		vec3 position = RealPosition;
 		float tick = u_VertTime;
 

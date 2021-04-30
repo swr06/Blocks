@@ -226,6 +226,12 @@ namespace Blocks
 		for (auto& e : m_WorldChunks)
 		{
 			const auto& ref = e.first;
+
+			if (e.second.m_ChunkPlayerModified)
+			{
+				continue;
+			}
+
 			glm::vec2 chunk_pos = e.second.m_Position;
 
 			float diff_x = abs(chunk_pos.x - player_chunk_x);
@@ -606,6 +612,7 @@ namespace Blocks
 					}
 
 					edit_block.second->ForceRegenerateMeshes();
+					edit_block.second->m_ChunkPlayerModified = true;
 
 					glm::ivec3 block_chunk_pos = WorldToChunkCoords(position);
 					glm::vec2 chunk_pos = edit_block.second->GetPosition();

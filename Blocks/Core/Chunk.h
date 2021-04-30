@@ -25,6 +25,12 @@ namespace Blocks
 		void GenerateChunkFlora(Chunk* chunk);
 	}
 
+	namespace FileHandler
+	{
+		bool ReadChunk(Chunk* chunk, const std::string& dir);
+		bool WriteChunk(Chunk* chunk, const std::string& dir);
+	}
+
 	enum class ChunkGenerationState
 	{
 		GeneratedAndPlanted,
@@ -41,6 +47,7 @@ namespace Blocks
 			m_Position = position;
 			memset(&m_ChunkData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
 			memset(&m_ChunkLightData[0], 0, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z);
+			m_ChunkPlayerModified = false;
 		}
 
 		inline const Block& GetBlock(uint8_t x, uint8_t y, uint8_t z) const noexcept
@@ -159,6 +166,9 @@ namespace Blocks
 			}
 		}
 
+		bool m_ChunkPlayerModified = false;
+
+		ChunkGenerationState m_ChunkGenerationState = ChunkGenerationState::Ungenerated;
 	private :
 
 		std::array<Block, CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z> m_ChunkData;
@@ -167,12 +177,13 @@ namespace Blocks
 		std::array<std::array<uint8_t, CHUNK_SIZE_X>, CHUNK_SIZE_Z> m_Heightmap;
 		glm::vec2 m_Position;
 
-		ChunkGenerationState m_ChunkGenerationState = ChunkGenerationState::Ungenerated;
 		FrustumAABB m_ChunkAABB;
 
 		friend class World;
 		friend void WorldGenerator::GenerateChunk(Chunk* chunk);
 		friend void WorldGenerator::SetVerticalBlocks(Chunk* chunk, int x, int z, int ylevel);
 		friend void WorldGenerator::GenerateChunkFlora(Chunk* chunk);
+		friend bool FileHandler::ReadChunk(Chunk* chunk, const std::string& dir);
+		friend bool FileHandler::WriteChunk(Chunk* chunk, const std::string& dir);
 	};
 }

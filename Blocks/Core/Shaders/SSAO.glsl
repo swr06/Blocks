@@ -59,7 +59,7 @@ vec3 ViewPosFromDepth(float depth)
 }
 
 const float Radius = 0.55f;
-const float Bias = 0.075;
+const float Bias = 0.09999f;
 
 void main()
 {

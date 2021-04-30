@@ -76,7 +76,7 @@ bool DepthPrePass = false;
 bool VSync = true;
 
 bool TickSun = true;
-bool SmartLeafMesh = true;
+bool SmartLeafMesh = false;
 
 bool ShouldBilateralBlurVolumetrics = true;
 
@@ -298,6 +298,7 @@ public:
 
 		if (e.type == Blocks::EventTypes::KeyPress && e.key == GLFW_KEY_ESCAPE)
 		{
+			Blocks::FileHandler::SaveWorld(MainWorld.m_WorldName, Player.Camera.GetPosition(), &MainWorld);
 			exit(0);
 		}
 
@@ -347,10 +348,29 @@ int main()
 {
 	BlocksApp app;
 
+	Blocks::Logger::InitLog();
 	app.Initialize();
 
-	std::cout << "\n\nWhat type of world do you want? (0 : FLAT, 1 : SIMPLEX FRACTAL) : ";
-	std::cin >> _WORLD_GEN_TYPE;
+	do
+	{
+		std::cout << "\n";
+		std::cout << "Enter the world name : ";
+		std::cin >> MainWorld.m_WorldName;
+		std::cout << "\n";
+	} while (!Blocks::FileHandler::FilenameValid(MainWorld.m_WorldName));
+	
+	glm::vec3 pl_pos = glm::vec3(0.0f);
+
+	if (Blocks::FileHandler::LoadWorld(MainWorld.m_WorldName, pl_pos, &MainWorld))
+	{
+		Player.Camera.SetPosition(pl_pos);
+	}
+
+	else
+	{
+		std::cout << "\n\nWhat type of world do you want? (0 : FLAT, 1 : SIMPLEX FRACTAL) : ";
+		std::cin >> _WORLD_GEN_TYPE;
+	}
 
 #ifdef NDEBUG
 	std::cout << "\nRUNNING IN RELEASE MODE!\n";
@@ -535,7 +555,7 @@ int main()
 
 		AppRenderingTime.Update = update_timer.End();
 
-		if (app.GetCurrentFrame() % 5 == 0 || BlockModified)
+		if (app.GetCurrentFrame() % 6 == 0 || BlockModified)
 		{
 			Blocks::Timer shadow_timer;
 			shadow_timer.Start();
@@ -1281,7 +1301,7 @@ int main()
 		/// Frame cleanup  ///
 		//////////////////////
 
-		if (app.GetCurrentFrame() % 5 == 0)
+		if (app.GetCurrentFrame() % 16 == 0)
 		{
 			MainWorld.DeleteFarawayChunks(Player.Camera.GetPosition());
 		}
@@ -1291,6 +1311,8 @@ int main()
 		BlockModified = false;
 		SunDirectionChanged = false;
 	}
+
+	Blocks::FileHandler::SaveWorld(MainWorld.m_WorldName, Player.Camera.GetPosition(), &MainWorld);
 }
 
 // Forward declarations 

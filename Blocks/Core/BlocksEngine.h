@@ -41,3 +41,4 @@
 #include "BloomRenderer.h"
 #include "ShaderManager.h"
 #include "AORenderer.h"
+#include "WorldFileHandler.h"

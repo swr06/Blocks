@@ -1,7 +1,7 @@
 #include "WorldGenerator.h"
 
 static FastNoise NoiseGenerator(2384); // World generator
-static Random StructureGenerator;
+static FastNoise TreeNoiseGenerator(38236); // World generator
 
 const int MAX_WATER_Y = 32;
 
@@ -121,6 +121,8 @@ void Blocks::WorldGenerator::GenerateChunkFlora(Chunk* chunk)
 
 	chunk->m_ChunkGenerationState = ChunkGenerationState::GeneratedAndPlanted;
 
+	TreeNoiseGenerator.SetNoiseType(FastNoise::WhiteNoise);
+
 	for (int x = 0; x < CHUNK_SIZE_X; x++)
 	{
 		for (int z = 0; z < CHUNK_SIZE_Z; z++)
@@ -130,7 +132,7 @@ void Blocks::WorldGenerator::GenerateChunkFlora(Chunk* chunk)
 
 			uint8_t height = chunk->m_Heightmap[x][z];
 
-			if (StructureGenerator.UnsignedInt(200) == 0 && height > MAX_WATER_Y + 2)
+			if (TreeNoiseGenerator.GetNoise(real_x, real_z) * 2.0f - 1.0f > 0.97f && height > MAX_WATER_Y + 2)
 			{
 				FillInWorldStructure(&Tree, real_x - 2, height - 1, real_z - 2);
 			}

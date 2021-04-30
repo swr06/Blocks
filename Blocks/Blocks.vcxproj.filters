@@ -190,6 +190,9 @@
     <ClCompile Include="Core\AORenderer.cpp">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
+    <ClCompile Include="Core\WorldFileHandler.cpp">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\imconfig.h">
@@ -358,6 +361,9 @@
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
     <ClInclude Include="Core\BlocksEngine.h">
+      <Filter>Source Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\WorldFileHandler.h">
       <Filter>Source Files\Blocks</Filter>
     </ClInclude>
   </ItemGroup>

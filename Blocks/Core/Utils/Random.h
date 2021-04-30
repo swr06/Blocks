@@ -28,8 +28,6 @@ public:
 		return (unsigned int)m_Distribution(m_Engine) % limit;
 	}
 
-private:
-
 	// Uses the std::mt19937 random engine
 	std::mt19937 m_Engine;
 	std::uniform_int_distribution<std::mt19937::result_type> m_Distribution;
