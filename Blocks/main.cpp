@@ -803,6 +803,7 @@ int main()
 		RenderShader.SetInteger("u_BlockNormalTextures", 1);
 		RenderShader.SetInteger("u_BlockPBRTextures", 2);
 		RenderShader.SetVector3f("u_ViewerPosition", Player.Camera.GetPosition());
+		RenderShader.SetVector3f("u_StrongerLightDirection", LightDirectionToUse);
 		RenderShader.SetFloat("u_ShadowBias", ShadowBias);
 
 		// Shadows
@@ -825,6 +826,7 @@ int main()
 		RenderShader.SetBool("u_SSREnabled", _SSR);
 		RenderShader.SetBool("u_UsePOM", ShouldDoPOM);
 		RenderShader.SetBool("u_WhiteWorld", WhiteWorld);
+		RenderShader.SetBool("u_EyeIsInWater", Player.InWater);
 
 		RenderShader.SetVector3f("u_SunDirection", SunDirection);
 		RenderShader.SetVector3f("u_MoonDirection", MoonDirection);

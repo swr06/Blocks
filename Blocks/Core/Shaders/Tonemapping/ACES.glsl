@@ -28,8 +28,8 @@
 #define CG_TI 1.00 
 #define CG_TM 0.0 
 
-#define SATURATION 1.2f
-#define VIBRANCE 2.1f
+#define SATURATION 1.0f
+#define VIBRANCE 1.6f
 
 in vec2 v_TexCoords;
 in vec3 v_RayPosition;
@@ -309,7 +309,7 @@ void main()
     {
         float blueness_multiplier = 0.0f;
         blueness_multiplier = mix(0.45f, 0.0f, clamp(exp(-distance(u_SunDirection.y, 1.1f)), 0.0f, 1.0f));
-        final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
+        //final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
     }
 
     Vignette(final_color);

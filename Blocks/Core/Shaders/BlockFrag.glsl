@@ -38,6 +38,7 @@ flat in int v_BlockID;
 in vec3 v_TangentFragPosition;
 
 uniform vec3 u_ViewerPosition;
+uniform vec3 u_StrongerLightDirection;
 uniform sampler2DArray u_BlockTextures;
 uniform sampler2DArray u_BlockNormalTextures;
 uniform sampler2DArray u_BlockPBRTextures;
@@ -77,6 +78,7 @@ uniform int u_CurrentFrameFRAG;
 uniform vec2 u_DimensionsFRAG;
 
 uniform bool u_WhiteWorld;
+uniform bool u_EyeIsInWater;
 
 // Globals
 vec3 g_Albedo;
@@ -88,12 +90,18 @@ float g_Metalness = 0.1f;
 float g_Displacement = 0.0f;
 float g_AO = 1.0f;
 float g_Shadow = 0.0f;
-vec3 g_LightColor;
 bool g_IsFoliage;
 
 //vec3 SUN_COLOR = vec3(255.0f / 255.0f, 160.0f / 255.0f, 80.0f / 255.0f) * 1.25f;
-vec3 SUN_COLOR = vec3(2.0f);
-vec3 MOON_COLOR =  vec3(0.7f, 0.7f, 0.8f);
+const vec3 SUN_COLOR = (vec3(192.0f, 216.0f, 255.0f) / 255.0f) * 6.4f;
+const vec3 SUN_AMBIENT = (vec3(120.0f, 172.0f, 255.0f) / 255.0f) * 0.6f;
+
+const vec3 DUSK_COLOR  = (vec3(255.0f, 160.0f, 80.0f) / 255.0f) * 1.2f; // 1.25 intensity
+const vec3 DUSK_AMBIENT = (vec3(255.0f, 204.0f, 144.0f) / 255.0f) * 0.3f; 
+
+const vec3 NIGHT_COLOR  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 1.1f; 
+const vec3 NIGHT_AMBIENT  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.35f; 
+
 vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
 int MIN = -2147483648;
@@ -129,7 +137,7 @@ vec2 ParallaxOcclusionMapping(vec2 TextureCoords, vec3 ViewDirection); // View d
 
 vec3 GetAtmosphere(vec3 ray_dir_);
 
-vec3 CalculateDirectionalLightPBR(vec3);
+vec3 CalculateDirectionalLightPBR(vec3 light_dir, vec3 col);
 vec3 RandomPointInUnitSphere();
 float nextFloat(inout int seed);
 float nextFloat(inout int seed, in float max);
@@ -188,7 +196,6 @@ void main()
     if (v_IsUnderwater == 1)
     {
         g_Shadow *= 0.5f;
-        SUN_COLOR *= 0.25f;
     }
 
     g_Texcoords = v_TexCoord;
@@ -252,7 +259,7 @@ void main()
 
         g_Displacement = PBR_Color.z; 
         g_AO = PBR_Color.w;
-        g_AO = pow(g_AO, 6.0f);
+        g_AO = pow(g_AO, 4.25f);
         g_AO = clamp(g_AO, 0.0f, 1.0f);
 
         g_F0 = vec3(0.04f); 
@@ -261,14 +268,35 @@ void main()
 
 
     float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
-    vec3 Ambient = 0.2f * g_Albedo * VoxelAOValue;
+    vec3 Ambient;
+    vec3 MoonAmbient = NIGHT_AMBIENT * g_Albedo * VoxelAOValue;
+    float LightRatio = clamp(exp(-distance(u_SunDirection.y, 1.0)), 0.0f, 1.0f);
 
-    float LightRatio = clamp(exp(-distance(u_SunDirection.y, 1.0555f)), 0.0f, 1.0f);
-    g_LightColor = mix(SUN_COLOR, MOON_COLOR, LightRatio);
+    float ColorRatioMutliplier = 1.66;
 
-    vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection);
-    vec3 Moonlightfactor = CalculateDirectionalLightPBR(vec3(u_SunDirection.x, u_SunDirection.y, -u_SunDirection.z));
-    vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, LightRatio);
+    if (u_SunDirection.y > -0.57f && dot(u_StrongerLightDirection, u_SunDirection) > dot(u_StrongerLightDirection, u_MoonDirection))
+    {
+        ColorRatioMutliplier = mix(5.0f, 1.66f, u_SunDirection.y - 1.0f);;
+    }
+
+    float DuskDayRatio = clamp(LightRatio * ColorRatioMutliplier, 0.0f, 1.0f);
+    vec3 SunColor = mix(SUN_COLOR, DUSK_COLOR, DuskDayRatio);
+    Ambient = mix(SUN_AMBIENT, DUSK_AMBIENT, DuskDayRatio);
+
+    //Ambient = SUN_AMBIENT;
+    //SunColor = SUN_COLOR;
+
+    Ambient = Ambient * g_Albedo * VoxelAOValue;
+
+    vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection, SunColor);
+    vec3 Moonlightfactor = CalculateDirectionalLightPBR(vec3(u_SunDirection.x, u_SunDirection.y, -u_SunDirection.z), NIGHT_COLOR);
+
+    SunlightFactor += Ambient;
+    Moonlightfactor += MoonAmbient;
+
+    vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, clamp(LightRatio * 1.2, 0.0f, 1.0f));
+    //FinalLighting = SunlightFactor;
+    //FinalLighting = Moonlightfactor;
 
     if (g_IsFoliage)
     {
@@ -277,7 +305,7 @@ void main()
         //FinalLighting *= (1.0f - g_Shadow) * (subsurface + 1.0);
     }
 
-    o_Color = vec4(Ambient + FinalLighting, 1.0f);
+    o_Color = vec4(FinalLighting, 1.0f);
 
     o_Normal = g_Normal;
     o_SSRNormal.xyz = v_Normal;
@@ -316,6 +344,19 @@ void main()
         vec3 ReflectedColor = texture(u_ReflectionCubemap, R).rgb;
 
         o_Color = mix(o_Color, vec4(ReflectedColor, 1.0f), 0.3); 
+    }
+
+    if (v_IsUnderwater) 
+    {
+        if (u_EyeIsInWater)
+        {
+            o_Color *= 0.24f;
+        }
+
+        else 
+        {
+            o_Color *= 0.5f;
+        }
     }
 
     //o_Color = vec4(vec3(g_AO), 1.0f);
@@ -555,7 +596,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 CalculateDirectionalLightPBR(vec3 light_dir)
+vec3 CalculateDirectionalLightPBR(vec3 light_dir, vec3 col)
 {
     float ShadowIntensity = 0.98f;
     float Shadow = min(g_Shadow * ShadowIntensity, 1.0f);
@@ -563,7 +604,7 @@ vec3 CalculateDirectionalLightPBR(vec3 light_dir)
 	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
     vec3 L = normalize(light_dir);
     vec3 H = normalize(V + L);
-	vec3 radiance = g_LightColor;
+	vec3 radiance = col;
 
     float NDF = DistributionGGX(g_Normal, H, g_Roughness);   
     float G = GeometrySmith(g_Normal, V, L, g_Roughness);      

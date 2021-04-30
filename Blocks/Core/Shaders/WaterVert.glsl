@@ -45,7 +45,7 @@ out vec3 v_TangentFragPosition;
 
 float WavingWater(vec3 worldPos) 
 {
-	float frametime = 1.0f * u_VertexTime;
+	float frametime = 1.5f * u_VertexTime;
 
 	float fractY = fract(worldPos.y + 0.005);
 		
@@ -67,7 +67,7 @@ void main()
 	a_Position.z + (u_ChunkPosition.z * RENDER_CHUNK_SIZE_Z)); 
 	
 	RealPosition.y -= 0.4f; 
-	RealPosition.y += 20.0f * WavingWater(RealPosition);
+	RealPosition.y += 13.26f * WavingWater(RealPosition);
 
 	gl_Position = u_Projection * u_View * vec4(RealPosition, 1.0);
 
