@@ -24,6 +24,7 @@ void Blocks::ShaderManager::CreateShaders()
 	AddShader("SSAO_BLUR", "Core/Shaders/FBOVert.glsl", "Core/Shaders/SSAOBlur.glsl");
 	AddShader("GAUSSIAN_SINGLEPASS", "Core/Shaders/FBOVert.glsl", "Core/Shaders/Gaussian9TapSinglePass.glsl");
 	AddShader("TAA", "Core/Shaders/FBOVert.glsl", "Core/Shaders/TemporalAA.glsl");
+	AddShader("FINAL", "Core/Shaders/FBOVert.glsl", "Core/Shaders/FinalFrag.glsl");
 }
 
 void Blocks::ShaderManager::AddShader(const std::string& name, const std::string& vert, const std::string& frag, const std::string& geo)

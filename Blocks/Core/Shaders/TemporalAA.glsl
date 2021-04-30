@@ -134,13 +134,13 @@ void main()
 
 	vec2 velocity = (TexCoord - PreviousCoord.xy) * Dimensions;
 
-	float blendFactor = float(
+	float BlendFactor = float(
 		PreviousCoord.x > 0.0 && PreviousCoord.x < 1.0 &&
 		PreviousCoord.y > 0.0 && PreviousCoord.y < 1.0
 	);
 
-	blendFactor *= exp(-length(velocity)) * 0.6f + 0.3f;
+	BlendFactor *= exp(-length(velocity)) * 0.6f + 0.36f;
 
-	o_Color = mix(CurrentColor.xyz, PrevColor.xyz, blendFactor);
+	o_Color = mix(CurrentColor.xyz, PrevColor.xyz, BlendFactor);
 }
 

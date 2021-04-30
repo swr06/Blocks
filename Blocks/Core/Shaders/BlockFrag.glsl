@@ -250,9 +250,10 @@ void main()
 
         g_Metalness = max(0.01f, PBR_Color.y);
 
-        // Todo!
-        g_Displacement = PBR_Color.z;
+        g_Displacement = PBR_Color.z; 
         g_AO = PBR_Color.w;
+        g_AO = pow(g_AO, 6.0f);
+        g_AO = clamp(g_AO, 0.0f, 1.0f);
 
         g_F0 = vec3(0.04f); 
 		g_F0 = mix(g_F0, g_Albedo, g_Metalness);
@@ -317,7 +318,7 @@ void main()
         o_Color = mix(o_Color, vec4(ReflectedColor, 1.0f), 0.3); 
     }
 
-    //o_Color = vec4(vec3(g_Displacement), 1.0f);
+    //o_Color = vec4(vec3(g_AO), 1.0f);
 
     o_RefractionMask = -1.0f;
     o_SSRNormal.a = 0.0f; // Used to tell if the currect pixel is water or not

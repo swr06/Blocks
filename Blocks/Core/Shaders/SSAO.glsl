@@ -47,8 +47,19 @@ vec3 WorldPosFromDepth(float depth)
     return worldSpacePosition.xyz;
 }
 
-const float Radius = 0.450f;
-const float Bias = 0.10f;
+vec3 ViewPosFromDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0;
+
+    vec4 clipSpacePosition = vec4(v_TexCoords * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = u_InverseProjectionMatrix * clipSpacePosition;
+    viewSpacePosition /= viewSpacePosition.w;
+
+    return viewSpacePosition.xyz;
+}
+
+const float Radius = 0.55f;
+const float Bias = 0.075;
 
 void main()
 {
@@ -60,7 +71,7 @@ void main()
 		return;
 	}
 
-	vec3 Position = vec3(u_ViewMatrix * vec4(WorldPosFromDepth(PixelDepth), 1.0f));
+	vec3 Position = ViewPosFromDepth(PixelDepth);
 
 	vec3 NoiseValue = normalize(vec3(texture(u_NoiseTexture, v_TexCoords * NoiseScale).rg, 0.0f));
 	vec3 Normal = normalize(vec3(u_ViewMatrix * vec4(texture(u_NormalTexture, v_TexCoords).xyz, 0.0f)));
@@ -83,12 +94,14 @@ void main()
 		ProjectedPosition.xyz /= ProjectedPosition.w; // Perspective division
 		ProjectedPosition.xyz = ProjectedPosition.xyz * 0.5f + 0.5f;
 
-		float SampleDepth = vec3(u_ViewMatrix *
-								vec4(WorldPosFromDepth(texture(u_DepthTexture, ProjectedPosition.xy).r), 
-								1.0f)).z;
+		if (ProjectedPosition.x > 0.0f && ProjectedPosition.y > 0.0f && ProjectedPosition.x < 1.0f && ProjectedPosition.y < 1.0f)
+		{
+			float NonLinearSampleDepth = texture(u_DepthTexture, ProjectedPosition.xy).r;
+			float SampleDepth = ViewPosFromDepth(NonLinearSampleDepth).z;
 
-		float RangeCheck = smoothstep(0.0, 1.0, Radius / abs(Position.z - SampleDepth));
-		o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck;  
+			float RangeCheck = smoothstep(0.0, 1.0, Radius / abs(Position.z - SampleDepth));
+			o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck; 
+		}
 	}
 
 	o_AOValue /= SAMPLE_SIZE;

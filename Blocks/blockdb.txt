@@ -157,6 +157,20 @@
 }
 
 {
+	Name : WhiteBricks
+	Albedo : Res/Block/WhiteBricks/Albedo.png
+	Normal : Res/Block/WhiteBricks/Normal.png
+	PBR : Res/Block/WhiteBricks/PBR.png
+}
+
+{
+	Name : WhitePorcelain
+	Albedo : Res/Block/WhitePorcelain/Albedo.png
+	Normal : Res/Block/WhitePorcelain/Normal.png
+	PBR : Res/Block/WhitePorcelain/PBR.png
+}
+
+{
 	Name : MISC_LEAVE_THIS_AT_THE_END
 	Albedo : Res/Block/Misc/Albedo.png
 	Normal : Res/Block/Misc/Normal.png

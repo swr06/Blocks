@@ -54,6 +54,7 @@ uniform bool u_PlayerInWater;
 uniform float u_Time;
 
 uniform vec3 u_SunDirection;
+uniform float u_RenderScale;
 
 const vec3 SUN_COLOR = vec3(1.0);
 
@@ -267,14 +268,22 @@ void main()
         ColorGrading(HDR.xyz);
         ColorSaturation(HDR.xyz);
 
-        HDR = mix(HDR, sharpen(u_FramebufferTexture, v_TexCoords).rgb, 0.322f).rgb;
+        float sharpness_ratio = 0.0f;
+
+        if (u_RenderScale < 1.0f)
+        {
+            sharpness_ratio = (1.0f - u_RenderScale) * 0.78f;
+            HDR = mix(HDR, sharpen(u_FramebufferTexture, v_TexCoords).rgb, sharpness_ratio).rgb;
+        }
+
 
         if (u_SSAOEnabled)
         {
             float ssao = 0.0f;
             ssao = smoothfilter(u_SSAOTexture, v_TexCoords).r;
             ssao = pow(ssao, 8.2f);
-            HDR.xyz *= 8.2 * 4.8f;
+
+            HDR.xyz *= 8.2 * 4.9f;
             HDR.xyz *= ssao;
         }
     }
@@ -305,10 +314,6 @@ void main()
 
     Vignette(final_color);
     o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), exposure));
-
-    // Apply gamma correction
-    o_Color.rgb = pow(o_Color.rgb, vec3(1.0f / 2.2f));
-
 }
 
 vec4 cubic(float v)

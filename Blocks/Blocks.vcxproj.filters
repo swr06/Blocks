@@ -500,5 +500,8 @@
     <None Include="Core\Shaders\TemporalAA.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Core\Shaders\FinalFrag.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

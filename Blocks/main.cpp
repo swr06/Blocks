@@ -33,9 +33,9 @@ GLClasses::FramebufferRed SSAOFBO(16, 16);
 GLClasses::FramebufferRed SSAOBlurred(16, 16);
 GLClasses::Framebuffer SSRFBO(16, 16, true);
 GLClasses::Framebuffer RefractionFBO(16, 16, true);
-GLClasses::Framebuffer BloomFBO(16, 16, true);
 GLClasses::Framebuffer TAAFBO_1(16, 16, true);
 GLClasses::Framebuffer TAAFBO_2(16, 16, true);
+GLClasses::Framebuffer PostFBO(16, 16, true);
 
 // Flags 
 bool ShouldRenderSkybox = true;
@@ -76,7 +76,7 @@ bool DepthPrePass = false;
 bool VSync = true;
 
 bool TickSun = true;
-bool SmartLeafMesh = false;
+bool SmartLeafMesh = true;
 
 bool ShouldBilateralBlurVolumetrics = true;
 
@@ -391,10 +391,11 @@ int main()
 	GLClasses::Shader& SSAO = Blocks::ShaderManager::GetShader("SSAO");
 	GLClasses::Shader& SSAO_Blur = Blocks::ShaderManager::GetShader("SSAO_BLUR");
 	GLClasses::Shader& TAA = Blocks::ShaderManager::GetShader("TAA");
+	GLClasses::Shader& FINAL = Blocks::ShaderManager::GetShader("FINAL");
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(3584, 3584);
+	GLClasses::DepthBuffer ShadowMap(4096, 4096);
 	GLClasses::CubeReflectionMap ReflectionMap(256);
 
 	Blocks::BloomFBO BloomFBO(800, 600);
@@ -494,6 +495,7 @@ int main()
 		TAAFBO_2.SetSize(floor(wx), floor(wy));
 		SSAOFBO.SetSize(floor(wx * SSAORenderScale), floor(wy * SSAORenderScale));
 		SSAOBlurred.SetSize(floor(wx * SSAORenderScale), floor(wy * SSAORenderScale));
+		PostFBO.SetSize(wx, wy);
 
 		// ----------------- //
 
@@ -508,6 +510,7 @@ int main()
 		Blocks::BlocksRenderBuffer& PreviousFrameFBO = (app.GetCurrentFrame() % 2 == 0) ? SecondaryRenderFBO : MainRenderFBO;
 		GLClasses::Framebuffer& TAAFBO = (app.GetCurrentFrame() % 2 == 0) ? TAAFBO_1 : TAAFBO_2;
 		GLClasses::Framebuffer& PreviousTAAFBO = (app.GetCurrentFrame() % 2 == 0) ? TAAFBO_2 : TAAFBO_1;
+		GLClasses::Framebuffer& PPFBO = PostFBO;
 
 		glfwSwapInterval(VSync);
 
@@ -532,7 +535,7 @@ int main()
 
 		AppRenderingTime.Update = update_timer.End();
 
-		if (app.GetCurrentFrame() % 4 == 0 || BlockModified)
+		if (app.GetCurrentFrame() % 5 == 0 || BlockModified)
 		{
 			Blocks::Timer shadow_timer;
 			shadow_timer.Start();
@@ -1105,67 +1108,13 @@ int main()
 			AppRenderingTime.Bloom = t6.End();
 		}
 
-
-		// --------------------------
-		// Temporal Anti Aliasing Pass
-		
-		bool ShouldDoTAA = true;
-
-
-		if (ShouldDoTAA)
-		{
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_CULL_FACE);
-
-			TAAFBO.Bind();
-			TAA.Use();
-
-			TAA.SetMatrix4("u_Projection", CurrentProjectionMatrix);
-			TAA.SetMatrix4("u_View", CurrentViewMatrix);
-			TAA.SetMatrix4("u_InverseProjection", glm::inverse(CurrentProjectionMatrix));
-			TAA.SetMatrix4("u_InverseView", glm::inverse(CurrentViewMatrix));
-			TAA.SetMatrix4("u_PrevProjection", PrevProjectionMatrix);
-			TAA.SetMatrix4("u_PrevView", PrevViewMatrix);
-			TAA.SetMatrix4("u_PrevInverseProjection", glm::inverse(PrevProjectionMatrix));
-			TAA.SetMatrix4("u_PrevInverseView", glm::inverse(PrevViewMatrix));
-			
-			TAA.SetInteger("u_CurrentColorTexture", 0);
-			TAA.SetInteger("u_CurrentDepthTexture", 1);
-			TAA.SetInteger("u_PreviousColorTexture", 2);
-			TAA.SetInteger("u_PreviousDepthTexture", 3);
-			TAA.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
-
-			TAA.SetVector3f("u_CameraPosition", CurrentCameraPosition);
-			TAA.SetVector3f("u_PrevCameraPosition", PrevCameraPosition);
-			
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
-
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, PreviousTAAFBO.GetTexture());
-
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
-
-			FBOVAO.Bind();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			FBOVAO.Unbind();
-
-
-			TAAFBO.Unbind();
-		}
-
 		// --------------
 		// After the rendering, do the tonemapping pass
 
 		Blocks::Timer t7;
 		t7.Start();
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, app.GetWidth(), app.GetHeight());
+		PPFBO.Bind();
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 
@@ -1198,9 +1147,10 @@ int main()
 		PPShader.SetInteger("u_CurrentFrame", 10);
 		PPShader.SetFloat("u_zNear", 0.1f);
 		PPShader.SetFloat("u_zFar", 1000.0f);
+		PPShader.SetFloat("u_RenderScale", RenderScale);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, TAAFBO.GetTexture());
+		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetColorTexture());
 		
 		glActiveTexture(GL_TEXTURE1);
 
@@ -1243,6 +1193,79 @@ int main()
 		FBOVAO.Unbind();
 
 		AppRenderingTime.PostProcessing = t7.End();
+
+		PPFBO.Unbind();
+
+		// --------------------------
+		// Temporal Anti Aliasing Pass
+
+		bool ShouldDoTAA = true;
+
+		if (ShouldDoTAA)
+		{
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+
+			TAAFBO.Bind();
+			TAA.Use();
+
+			TAA.SetMatrix4("u_Projection", CurrentProjectionMatrix);
+			TAA.SetMatrix4("u_View", CurrentViewMatrix);
+			TAA.SetMatrix4("u_InverseProjection", glm::inverse(CurrentProjectionMatrix));
+			TAA.SetMatrix4("u_InverseView", glm::inverse(CurrentViewMatrix));
+			TAA.SetMatrix4("u_PrevProjection", PrevProjectionMatrix);
+			TAA.SetMatrix4("u_PrevView", PrevViewMatrix);
+			TAA.SetMatrix4("u_PrevInverseProjection", glm::inverse(PrevProjectionMatrix));
+			TAA.SetMatrix4("u_PrevInverseView", glm::inverse(PrevViewMatrix));
+
+			TAA.SetInteger("u_CurrentColorTexture", 0);
+			TAA.SetInteger("u_CurrentDepthTexture", 1);
+			TAA.SetInteger("u_PreviousColorTexture", 2);
+			TAA.SetInteger("u_PreviousDepthTexture", 3);
+			TAA.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
+
+			TAA.SetVector3f("u_CameraPosition", CurrentCameraPosition);
+			TAA.SetVector3f("u_PrevCameraPosition", PrevCameraPosition);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, PPFBO.GetTexture());
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetDepthTexture());
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, PreviousTAAFBO.GetTexture());
+
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetDepthTexture());
+
+			FBOVAO.Bind();
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			FBOVAO.Unbind();
+
+			TAAFBO.Unbind();
+		}
+
+
+		// Final pass to blit the TAA'ed fbo onto the screen
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+
+		glViewport(0, 0, wx, wy);
+
+		FINAL.Use();
+		FINAL.SetInteger("u_FramebufferTexture", 0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, TAAFBO.GetTexture());
+
+		FBOVAO.Bind();
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		FBOVAO.Unbind();
+
+		glUseProgram(0);
 
 		// Render the 2D elements
 		Renderer2D.RenderQuad(glm::vec2(floor((float)app.GetWidth() / 2.0f), floor((float)app.GetHeight() / 2.0f)), &Crosshair, &OCamera);
