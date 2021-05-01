@@ -12,6 +12,7 @@ extern bool _WORLD_GEN_TYPE;
 namespace Blocks
 {
 	static std::string save_dir = "Saves/";
+	static World* load_world = nullptr;
 
 	void ExtendString(std::string& str, int ex_amt, std::string& ex_c)
 	{
@@ -70,9 +71,33 @@ namespace Blocks
 		}
 
 		fread(&chunk->m_ChunkData, sizeof(Block), CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z, infile);
-
 		fclose(infile);
-		return true;
+
+		uint8_t light_source_id = BlockDatabase::GetBlockID("redstone_lamp_on");
+		int light_count = 0;
+
+		for (int x = 0; x < CHUNK_SIZE_X; x++)
+		{
+			for (int y = 0; y < CHUNK_SIZE_Y; y++)
+			{
+				for (int z = 0; z < CHUNK_SIZE_Z; z++)
+				{
+					float real_x = x + (chunk->m_Position.x * CHUNK_SIZE_X);
+					float real_z = z + (chunk->m_Position.y * CHUNK_SIZE_Z);
+
+					if (chunk->GetBlock(x, y, z).ID == light_source_id && load_world != nullptr)
+					{
+						LightNode lightnode(glm::vec3(real_x, y, real_z));
+						chunk->SetLightLevelAt(x, y, z, 16);
+						load_world->m_LightBFS.push(lightnode);
+
+						light_count++;
+					}
+				}
+			}
+		}
+
+		return true; 
 	}
 
 	void WriteDatFile(const glm::vec3& player_pos, const std::string& dir)
@@ -146,6 +171,8 @@ namespace Blocks
 		std::stringstream dir_s;
 		std::stringstream chunkdir_s;
 		
+		load_world = world;
+
 		dir_s << save_dir << world_name << "/";
 		chunkdir_s << dir_s.str() << "/chunkdata/";
 

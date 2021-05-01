@@ -23,6 +23,7 @@ namespace Blocks
 	{
 		void SaveWorld(const std::string& world_name, const glm::vec3& player_position, World* world);
 		bool LoadWorld(const std::string& world_name, glm::vec3& player_position, World* world);
+		bool ReadChunk(Chunk* chunk, const std::string& dir);
 	}
 
 	class World
@@ -39,7 +40,7 @@ namespace Blocks
 		glm::ivec3 WorldToChunkCoords(const glm::ivec3& world_loc);
 		Chunk* GetWorldBlockChunk(const glm::ivec3& block_loc);
 
-		void Update(const glm::vec3& position, const ViewFrustum& view_frustum);
+		void Update(const glm::vec3& position, const ViewFrustum& view_frustum, uint64_t currentframe);
 		void RenderChunks(const glm::vec3& position, const ViewFrustum& view_frustum, GLClasses::Shader& shader);
 		void RenderWaterChunks(const glm::vec3& position, const ViewFrustum& view_frustum, GLClasses::Shader& shader);
 		void RenderChunks(const glm::vec3& position, GLClasses::Shader& shader);
@@ -70,5 +71,6 @@ namespace Blocks
 
 		friend void FileHandler::SaveWorld(const std::string& world_name, const glm::vec3& player_position, World* world);
 		friend bool FileHandler::LoadWorld(const std::string& world_name, glm::vec3& player_position, World* world);
+		friend bool FileHandler::ReadChunk(Chunk* chunk, const std::string& dir);
 	};
 }

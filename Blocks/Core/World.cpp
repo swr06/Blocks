@@ -10,9 +10,9 @@ namespace Blocks
 	int flora_build_distance_x = render_distance_x + 1;
 	int flora_build_distance_z = render_distance_z + 1;
 #else _RELEASE
-	int render_distance_x = 8;
+	int render_distance_x = 8; 
 	int render_distance_z = 8;
-	int build_distance_x = render_distance_x + 3;
+	int build_distance_x = render_distance_x + 3; 
 	int build_distance_z = render_distance_z + 3;
 	int flora_build_distance_x = render_distance_x + 2;
 	int flora_build_distance_z = render_distance_z + 2;
@@ -260,10 +260,19 @@ namespace Blocks
 		}
 	}
 
-	void World::Update(const glm::vec3& position, const ViewFrustum& view_frustum)
+	void World::Update(const glm::vec3& position, const ViewFrustum& view_frustum, uint64_t currentframe)
 	{
+		static bool FirstWorldUpdate = true;
+
 		m_FirstUpdateDone = true;
 		GenerateChunks(position, view_frustum);
+
+		if (FirstWorldUpdate || currentframe % 16 == 0)
+		{
+			PropogateLight();
+			DepropogateLight();
+			FirstWorldUpdate = false;
+		}
 	}
 
 	Chunk* World::GetChunk(const glm::ivec2& chunk_loc)

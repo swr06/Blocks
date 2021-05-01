@@ -58,8 +58,24 @@ vec3 ViewPosFromDepth(float depth)
     return viewSpacePosition.xyz;
 }
 
-const float Radius = 0.55f;
-const float Bias = 0.09999f;
+float CompareDepthsFar(float depth1, float depth2) 
+{
+	float garea = 2.0; 
+	float diff = (depth1 - depth2) * 100.0; 
+
+	if (diff < 0.4f)
+	{
+		return 0.0f;
+	} 
+	
+	else 
+	{
+		return 1.0f;
+	}
+}
+
+const float Radius = 0.69f; //nice
+const float Bias = 0.14f;
 
 void main()
 {
@@ -100,7 +116,9 @@ void main()
 			float SampleDepth = ViewPosFromDepth(NonLinearSampleDepth).z;
 
 			float RangeCheck = smoothstep(0.0, 1.0, Radius / abs(Position.z - SampleDepth));
-			o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck; 
+
+			//o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck; 
+			o_AOValue += (CompareDepthsFar(SampleDepth, SamplePosition.z + Bias)) * RangeCheck;
 		}
 	}
 

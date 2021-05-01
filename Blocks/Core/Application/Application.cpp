@@ -212,6 +212,11 @@ namespace Blocks
 			std::cout << "\tDEBUG : THE OPENGL SYNCHRONOUS DEBUG EXTENSION IS UN AVAILABLE\n";
 		}
 
+		if (glfwExtensionSupported("GL_EXT_texture_filter_anisotropic"))
+		{
+			std::cout << "\tANISOTROPIC FILTERING EXTENSION AVAILIBLE\n";
+		}
+
 		glfwMaximizeWindow(m_Window);
 			
 #ifdef _WIN32

@@ -41,7 +41,7 @@ namespace Blocks
 			BloomFBOVAO->Unbind();
 		}
 
-		void BlurBloomMip(BloomFBO& bloomfbo, int mip_num, GLuint source_tex)
+		void BlurBloomMip(BloomFBO& bloomfbo, int mip_num, GLuint source_tex, GLuint depth_tex)
 		{
 			GLenum buffer;
 			int w, h;
@@ -110,9 +110,13 @@ namespace Blocks
 			glViewport(0, 0, w, h);
 
 			BloomBrightShader.SetInteger("u_Texture", 0);
+			BloomBrightShader.SetInteger("u_DepthTexture", 1);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, source_tex);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, depth_tex);
 
 			BloomFBOVAO->Bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -136,7 +140,7 @@ namespace Blocks
 			BloomFBOVAO->Unbind();
 		}
 
-		void RenderBloom(BloomFBO& bloom_fbo, GLuint source_tex)
+		void RenderBloom(BloomFBO& bloom_fbo, GLuint source_tex, GLuint depth_tex)
 		{
 			GLClasses::Shader& BloomBrightShader = ShaderManager::GetShader("BLOOM_BRIGHT");
 
@@ -146,10 +150,10 @@ namespace Blocks
 			glDisable(GL_CULL_FACE);
 
 			// Blur the mips
-			BlurBloomMip(bloom_fbo, 0, source_tex);
-			BlurBloomMip(bloom_fbo, 1, source_tex);
-			BlurBloomMip(bloom_fbo, 2, source_tex);
-			BlurBloomMip(bloom_fbo, 3, source_tex);
+			BlurBloomMip(bloom_fbo, 0, source_tex, depth_tex);
+			BlurBloomMip(bloom_fbo, 1, source_tex, depth_tex);
+			BlurBloomMip(bloom_fbo, 2, source_tex, depth_tex);
+			BlurBloomMip(bloom_fbo, 3, source_tex, depth_tex);
 
 			return;
 		}

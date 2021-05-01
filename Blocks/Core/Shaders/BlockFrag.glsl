@@ -294,7 +294,14 @@ void main()
     SunlightFactor += Ambient;
     Moonlightfactor += MoonAmbient;
 
-    vec3 FinalLighting = mix(SunlightFactor, Moonlightfactor, clamp(LightRatio * 1.2, 0.0f, 1.0f));
+    vec3 FinalLighting;
+    FinalLighting = mix(SunlightFactor, Moonlightfactor, clamp(LightRatio * 1.2f, 0.0f, 1.0f));
+
+    if (dot(u_StrongerLightDirection, u_SunDirection) < dot(u_StrongerLightDirection, vec3(-u_SunDirection)))
+    {
+        FinalLighting = mix(SunlightFactor, Moonlightfactor, clamp(LightRatio * 2.4, 0.0f, 1.0f));
+    }
+
     //FinalLighting = SunlightFactor;
     //FinalLighting = Moonlightfactor;
 

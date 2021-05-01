@@ -69,7 +69,7 @@ float SSRefractionRenderScale = 0.2f;
 float WaterParallaxDepth = 8.0f;
 float WaterParallaxHeight = 0.2f;
 float Exposure = 3.25f;
-float AtmosphereRenderScale = 0.04;
+float AtmosphereRenderScale = 0.05;
 
 bool SSAOPass = true;
 bool DepthPrePass = false;
@@ -80,8 +80,8 @@ bool SmartLeafMesh = false;
 
 bool ShouldBilateralBlurVolumetrics = true;
 
-int AtmosphereLightSteps = 2;
-int AtmosphereSteps = 30;
+int AtmosphereLightSteps = 4;
+int AtmosphereSteps = 25;
 int VolumetricSteps = 16;
 
 float FakeSunTime = 0.0f;
@@ -360,6 +360,8 @@ int main()
 	
 	glm::vec3 pl_pos = glm::vec3(0.0f);
 
+	Blocks::BlockDatabase::Initialize();
+
 	if (Blocks::FileHandler::LoadWorld(MainWorld.m_WorldName, pl_pos, &MainWorld))
 	{
 		Player.Camera.SetPosition(pl_pos);
@@ -386,7 +388,6 @@ int main()
 	Blocks::AtmosphereRenderer AtmosphereRenderer;
 	Blocks::AtmosphereRenderMap AtmosphereCubemap(64);
 
-	Blocks::BlockDatabase::Initialize();
 	Blocks::Renderer2D Renderer2D;
 
 	// Textures
@@ -540,7 +541,7 @@ int main()
 
 		update_timer.Start();
 		app.OnUpdate();
-		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum);
+		MainWorld.Update(Player.Camera.GetPosition(), Player.PlayerViewFrustum, app.GetCurrentFrame());
 		PlayerMoved = Player.OnUpdate(app.GetWindow());
 
 		// For taa
@@ -983,6 +984,8 @@ int main()
 
 		AppRenderingTime.Water = t4.End();
 
+		glDisable(GL_BLEND);
+
 		// ----------------
 		// SSAO Pass
 
@@ -999,9 +1002,10 @@ int main()
 			SSAO.SetInteger("u_NormalTexture", 1);
 			SSAO.SetInteger("u_NoiseTexture", 2);
 			SSAO.SetInteger("u_SSAOKernel", 3);
+			SSAO.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 			SSAO.SetInteger("SAMPLE_SIZE", SSAOSampleCount);
 			SSAO.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
-			SSAO.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
+			SSAO.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix())); 
 			SSAO.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
 			SSAO.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
 			SSAO.SetVector2f("u_Dimensions", glm::vec2(SSAOFBO.GetWidth(), SSAOFBO.GetHeight()));
@@ -1124,7 +1128,7 @@ int main()
 			Blocks::Timer t6;
 			t6.Start();
 
-			Blocks::BloomRenderer::RenderBloom(BloomFBO, CurrentlyUsedFBO.GetColorTexture());
+			Blocks::BloomRenderer::RenderBloom(BloomFBO, CurrentlyUsedFBO.GetColorTexture(), CurrentlyUsedFBO.GetDepthTexture());
 
 			AppRenderingTime.Bloom = t6.End();
 		}

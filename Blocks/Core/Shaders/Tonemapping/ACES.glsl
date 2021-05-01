@@ -296,7 +296,7 @@ void main()
     }
 
     float exposure = u_Exposure;
-    exposure = mix(4.0f, 0.9f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
+    exposure = mix(4.0f, 0.5f, min(distance(u_SunDirection.y, -1.0f), 0.99f));
 
     vec3 final_color;
     final_color = HDR + 
@@ -313,7 +313,16 @@ void main()
     }
 
     Vignette(final_color);
-    o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), exposure));
+
+    if (PixelDepth != 1.0f)
+    {
+        o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), exposure));
+    }
+
+    else 
+    {
+        o_Color.rgb = final_color;
+    }
 }
 
 vec4 cubic(float v)

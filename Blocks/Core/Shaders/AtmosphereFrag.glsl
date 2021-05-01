@@ -68,8 +68,8 @@ bool intersects_sphere(in ray_t ray, in sphere_t sphere, inout float t0, inout f
 const float earth_radius = 6360e3; 
 const float atmosphere_radius = 6420e3;
 
-const vec3 sun_power = vec3(10.0);
-const vec3 moon_power = sun_power * vec3(0.2,0.2,0.35);
+const vec3 sun_power = vec3(16.0) * vec3(0.8f, 0.85f, 1.0f);
+const vec3 moon_power = vec3(4.0) * ((vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.6f);
 
 const sphere_t atmosphere = sphere_t(vec3(0.),atmosphere_radius);
 const sphere_t earth = sphere_t(vec3(0.),earth_radius);
@@ -112,10 +112,10 @@ vec3 get_incident_light(in ray_t ray)
     float mu = dot(sun_dir, ray.direction);
     float muMoon = dot(moon_dir, ray.direction);
     
-    float phaseR = rayleigh_phase_func(mu);
-    float phaseM = henyey_greenstein_phase_func(mu);
+    float phaseR = rayleigh_phase_func(mu) * 1.66f;
+    float phaseM = henyey_greenstein_phase_func(mu) * 1.05f;
     float phaseMoonR = rayleigh_phase_func(muMoon);
-    float phaseMoonM = henyey_greenstein_phase_func(muMoon);
+    float phaseMoonM = henyey_greenstein_phase_func(muMoon) * 1.0;
     float opticalDepthR = 0.0f;
     float opticalDepthM = 0.0f;
     float opticalDepthMoonR = 0.0f;
@@ -179,12 +179,12 @@ void main()
 {    
     g_Time = u_Time * 0.1f;
     vec2 uv = v_TexCoords.xy;
+    vec3 ray_dir = v_RayDirection;
+    ray_dir.y = clamp(ray_dir.y, 0.04f, 1.0f);
 
     vec3 cameraCenter = vec3(0.0f, earth_radius + 1.0f, 0.0f);
-    ray_t primary_ray = ray_t(cameraCenter, normalize(v_RayDirection)); 
+    ray_t primary_ray = ray_t(cameraCenter, normalize(ray_dir)); 
     vec3 col = get_incident_light(primary_ray);
    
-    col = max(col, vec3(0.05f));
-
     o_Color = vec4(col, 1.0f);
 }
