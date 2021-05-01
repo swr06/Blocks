@@ -38,12 +38,12 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Weather
 - VSM Shadows
 - LPV (For indirect)
-- World saving and loading
-- Loading worlds created in minecraft
+- World saving and loading ✓
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
 - Atmospheric effect (WIP) ✓
+- Loading worlds created in minecraft
 
 # Test Environment <br>
 CPU : Ryzen 3 2200G <br>
