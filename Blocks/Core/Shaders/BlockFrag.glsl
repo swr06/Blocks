@@ -267,7 +267,6 @@ void main()
     }
 
 
-    float VoxelAOValue = v_AO / 3.0f;
     vec3 Ambient;
     vec3 MoonAmbient = NIGHT_AMBIENT * g_Albedo;
     float LightRatio = clamp(exp(-distance(u_SunDirection.y, 1.0)), 0.0f, 1.0f);
@@ -329,6 +328,8 @@ void main()
     }
 
     o_Color.xyz *= max(v_LampLightValue * 1.2, 1.0f);
+
+    float VoxelAOValue = v_AO / 4.0f;
     o_Color.xyz *= clamp((1.0f - VoxelAOValue), 0.2f, 1.0f);
     o_Color.xyz *= g_AO;
 

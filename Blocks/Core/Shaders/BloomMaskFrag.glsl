@@ -15,6 +15,6 @@ void main()
 	float Brightness = (Color.r * 0.2126f) + (Color.g * 0.7152f) + (Color.b * 0.722f);
     Brightness = sqrt(Brightness);
 
-    float BrightnessThreshold = (Depth == 1.0f) ? 3.0f : 2.5f;
+    float BrightnessThreshold = (Depth == 1.0f) ? 3.0f : 2.2f;
     o_Color = mix(vec3(0.0f), Color, float(Brightness > BrightnessThreshold));
 }

@@ -96,7 +96,7 @@ bool GetAtmosphere(inout vec3 atmosphere_color)
 
     if(dot(ray_dir, moon_dir) > 0.99986f)
     {
-        atmosphere *= MOON_COLOR * 40.0f; intersect = true;
+        atmosphere *= MOON_COLOR * 50.0f; intersect = true;
     }
 
     atmosphere_color = atmosphere;
