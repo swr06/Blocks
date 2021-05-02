@@ -501,6 +501,9 @@ int main()
 
 		float wx = floor(app.GetWidth()), wy = floor(app.GetHeight());
 
+		wx = glm::max(wx, 48.0f);
+		wy = glm::max(wy, 48.0f);
+
 		// Set MainRenderFBO Sizes
 
 		MainRenderFBO.SetDimensions(wx * RenderScale, wy * RenderScale);

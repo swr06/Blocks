@@ -10,7 +10,7 @@ layout (location = 0) out vec3 o_Color;
 uniform sampler2D u_Texture;
 
 uniform vec2 u_SketchSize;
-uniform float u_BSIGMA = 0.75;
+uniform float u_BSIGMA = 0.9;
 
 float normpdf(in float x, in float sigma)
 {
@@ -26,7 +26,8 @@ void main(void)
 {
 	vec3 c = texture2D(u_Texture, vec2(0.0, 0.0) + (gl_FragCoord.xy / u_SketchSize.xy)).rgb;
 		
-	const int kSize = (MSIZE - 1) / 2;
+	//const int kSize = (MSIZE - 1) / 2;
+	const int kSize = 4;
 	vec3 final_colour = vec3(0.0);
 	
 	float Z = 0.0;

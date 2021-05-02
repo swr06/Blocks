@@ -94,13 +94,13 @@ bool g_IsFoliage;
 
 //vec3 SUN_COLOR = vec3(255.0f / 255.0f, 160.0f / 255.0f, 80.0f / 255.0f) * 1.25f;
 const vec3 SUN_COLOR = (vec3(192.0f, 216.0f, 255.0f) / 255.0f) * 6.4f;
-const vec3 SUN_AMBIENT = (vec3(120.0f, 172.0f, 255.0f) / 255.0f) * 0.6f;
+const vec3 SUN_AMBIENT = (vec3(120.0f, 172.0f, 255.0f) / 255.0f) * 1.01f;
 
 const vec3 DUSK_COLOR  = (vec3(255.0f, 160.0f, 80.0f) / 255.0f) * 1.2f; // 1.25 intensity
-const vec3 DUSK_AMBIENT = (vec3(255.0f, 204.0f, 144.0f) / 255.0f) * 0.3f; 
+const vec3 DUSK_AMBIENT = (vec3(255.0f, 204.0f, 144.0f) / 255.0f) * 0.71f; 
 
 const vec3 NIGHT_COLOR  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 1.1f; 
-const vec3 NIGHT_AMBIENT  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.35f; 
+const vec3 NIGHT_AMBIENT  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.76f; 
 
 vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 
@@ -267,9 +267,9 @@ void main()
     }
 
 
-    float VoxelAOValue = max(0.75f, (3.0f - v_AO) * 0.8f);
+    float VoxelAOValue = v_AO / 3.0f;
     vec3 Ambient;
-    vec3 MoonAmbient = NIGHT_AMBIENT * g_Albedo * VoxelAOValue;
+    vec3 MoonAmbient = NIGHT_AMBIENT * g_Albedo;
     float LightRatio = clamp(exp(-distance(u_SunDirection.y, 1.0)), 0.0f, 1.0f);
 
     float ColorRatioMutliplier = 1.66;
@@ -286,7 +286,7 @@ void main()
     //Ambient = SUN_AMBIENT;
     //SunColor = SUN_COLOR;
 
-    Ambient = Ambient * g_Albedo * VoxelAOValue;
+    Ambient = Ambient * g_Albedo;
 
     vec3 SunlightFactor = CalculateDirectionalLightPBR(-u_SunDirection, SunColor);
     vec3 Moonlightfactor = CalculateDirectionalLightPBR(vec3(u_SunDirection.x, u_SunDirection.y, -u_SunDirection.z), NIGHT_COLOR);
@@ -329,6 +329,7 @@ void main()
     }
 
     o_Color.xyz *= max(v_LampLightValue * 1.2, 1.0f);
+    o_Color.xyz *= clamp((1.0f - VoxelAOValue), 0.2f, 1.0f);
     o_Color.xyz *= g_AO;
 
     o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled && reflective_block);
@@ -496,7 +497,7 @@ float CalculateSunShadow()
         return shadow;
     }
 
-    const float sbias = 0.000045f;
+    const float sbias = 0.00009f;
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / TexSize; // LOD = 0
