@@ -134,8 +134,8 @@ vec3 GetAtmosphere(vec3 ray_direction)
 
     // Water specular highlights
     atmosphere *= SUN_COLOR * max(RenderDisc(ray_dir, sun_dir, 0.00140f) * 75.0f, 1.0f);
-    atmosphere *= MOON_COLOR * max(RenderDisc(ray_dir, moon_dir, 0.00110f) * 80.0f, 1.0f);
-    atmosphere *= 0.2f;
+    atmosphere *= MOON_COLOR * max(RenderDisc(ray_dir, moon_dir, 0.00110f) * 400.0f, 1.0f);
+    atmosphere *= 0.24f;
 
     return atmosphere;
 }
@@ -317,7 +317,7 @@ void main()
         float distance_to_point = distance(WorldPosAt, v_FragPosition); 
         vec3 transmittance = exp(vec3(-distance_to_point * 0.09f));
 
-        transmittance *= 1.425f;
+        transmittance *= 1.925f;
 
         if (RefractedUV != vec2(-1.0f) && valid)
         {
@@ -382,7 +382,8 @@ void main()
     
     // 
 
-    float darken = WaterMapValue.z * 1.25;
+    o_Color.xyz += 0.08f * g_WaterColor;
+    float darken = WaterMapValue.z * 1.325;
     o_Color.xyz *= darken;
 
     // Output values
@@ -390,7 +391,7 @@ void main()
     o_RefractionMask = 1.0f;
 
     // Set output normals
-    o_Normal = g_Normal + (perlin_noise * 0.05f);
+    o_Normal = g_Normal;
 
     o_SSRNormal.xyz = vec3(v_Normal.x, 
                        v_Normal.y,  

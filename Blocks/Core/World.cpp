@@ -252,11 +252,16 @@ namespace Blocks
 
 	void World::ChangeCurrentBlock()
 	{
-		m_CurrentBlock += 1;
+		if (m_CurrentBlock == WATER_BLOCK_RESERVED_ID)
+		{
+			m_CurrentBlock = 1;
+		}
+
+		m_CurrentBlock++;
 
 		if (m_CurrentBlock >= BlockDatabase::GetNumberOfBlocksInDatabase())
 		{
-			m_CurrentBlock = 1;
+			m_CurrentBlock = WATER_BLOCK_RESERVED_ID;
 		}
 	}
 

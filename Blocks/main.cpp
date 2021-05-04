@@ -62,7 +62,7 @@ glm::vec3 MoonDirection = glm::vec3(0.0f);
 // ImGui Adjustable Variables
 float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
-float RenderScale = 0.75f;
+float RenderScale = 0.7f;
 float VolumetricRenderScale = 0.5f;
 float SSRRenderScale = 0.25f;
 float SSRefractionRenderScale = 0.2f;
@@ -500,6 +500,8 @@ int main()
 		glm::vec3 LightDirectionToUse = -SunDirection.y < 0.01f ? MoonDirection : SunDirection;
 
 		float wx = floor(app.GetWidth()), wy = floor(app.GetHeight());
+		float bloom_wx = wx * glm::clamp(RenderScale * 0.9f, 0.1f, 1.0f);
+		float bloom_wy = wy * glm::clamp(RenderScale * 0.9f, 0.1f, 1.0f);
 
 		wx = glm::max(wx, 48.0f);
 		wy = glm::max(wy, 48.0f);
@@ -513,7 +515,7 @@ int main()
 		VolumetricLightingFBOBlurred.SetSize(floor((float)wx * VolumetricRenderScale), floor((float)wy * VolumetricRenderScale));
 		SSRFBO.SetSize(wx * SSRRenderScale, wy * SSRRenderScale);
 		RefractionFBO.SetSize(wx * SSRefractionRenderScale, wy * SSRefractionRenderScale);
-		BloomFBO.SetSize(floor(wx), floor(wy));
+		BloomFBO.SetSize(floor(bloom_wx), floor(bloom_wy));
 		TAAFBO_1.SetSize(floor(wx), floor(wy));
 		TAAFBO_2.SetSize(floor(wx), floor(wy));
 		SSAOFBO.SetSize(floor(wx * SSAORenderScale), floor(wy * SSAORenderScale));

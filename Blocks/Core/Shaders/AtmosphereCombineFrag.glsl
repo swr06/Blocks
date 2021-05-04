@@ -76,7 +76,7 @@ float stars(vec3 fragpos)
     float rand_val = rand(fragpos.xy);
     star *= (rand_val + sin(u_Time * rand_val) * 1.5f);
 
-	return clamp(star, 0.0f, 100000.0f) * 5.0f;
+	return clamp(star, 0.0f, 100000.0f) * 25.0f;
 }
 
 
