@@ -33,11 +33,10 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Parallax Corrected Cubemaps
 - Temporal Anti Aliasing ✓
 - Screen Space Ambient Occlusion ✓
+- Diffuse Irradiance
 - Reflective Shadow Maps (For indirect single bounce lighting)
 - PCSS Shadows
 - Weather
-- VSM Shadows
-- LPV (For indirect)
 - World saving and loading ✓
 
 # Advanced Features (Planned for later) 
