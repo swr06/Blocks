@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include <glm/glm.hpp>
+
 uint32_t _App_PolygonCount = 0;
 
 // LINE 322 : imgui_impl_glfw.cpp // To disable imgui mouse input when the cursor is disabled. This is a hack
@@ -301,7 +303,7 @@ namespace Blocks
 	*/
 	unsigned int Application::GetWidth()
 	{
-		return m_CurrentWidth;
+		return glm::max(m_CurrentWidth, 64);
 	}
 
 	/*
@@ -309,7 +311,7 @@ namespace Blocks
 	*/
 	unsigned int Application::GetHeight()
 	{
-		return m_CurrentHeight;
+		return glm::max(m_CurrentHeight, 64);
 	}
 
 	void Application::SetCursorLocked(bool locked)

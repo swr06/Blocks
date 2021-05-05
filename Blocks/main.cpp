@@ -45,6 +45,7 @@ bool ShouldDoSSRPass = true;
 bool ShouldDoRefractions = true;
 bool ShouldDoWaterParallax = true;
 bool ShouldDoPOM = false;
+bool ShouldDoSSGodRays = true;
 
 bool _Bloom = true;
 bool _SSR = true;
@@ -154,6 +155,7 @@ public:
 			ImGui::SliderFloat("Sun Angle", &FakeSunTime, 0.0f, 256.0f);
 			ImGui::SliderFloat("Shadow Bias", &ShadowBias, 0.001f, 0.05f, 0);
 			ImGui::SliderFloat("Render Scale", &RenderScale, 0.1f, 1.5f);
+			ImGui::Checkbox("Should do screen space god rays (This isn't volumetric!)", &ShouldDoSSGodRays);
 			ImGui::SliderFloat("Volumetric Scattering", &VolumetricScattering, 0.0f, 1.0f);
 			ImGui::SliderFloat("Exposure", &Exposure, 0.5f, 10.0f);
 			ImGui::Checkbox("Parallax Occlusion Mapping?", &ShouldDoPOM);
@@ -502,9 +504,6 @@ int main()
 		float wx = floor(app.GetWidth()), wy = floor(app.GetHeight());
 		float bloom_wx = wx * glm::clamp(RenderScale * 0.9f, 0.1f, 1.0f);
 		float bloom_wy = wy * glm::clamp(RenderScale * 0.9f, 0.1f, 1.0f);
-
-		wx = glm::max(wx, 48.0f);
-		wy = glm::max(wy, 48.0f);
 
 		// Set MainRenderFBO Sizes
 
@@ -1155,6 +1154,7 @@ int main()
 		PPShader.SetInteger("u_DepthTexture", 4);
 		PPShader.SetInteger("u_SSRNormal", 10);
 		PPShader.SetInteger("u_SSAOTexture", 12);
+		PPShader.SetInteger("u_BlueNoiseTexture", 13);
 
 		// Bloom textures
 		PPShader.SetInteger("u_BloomTextures[0]", 5);
@@ -1168,12 +1168,21 @@ int main()
 		PPShader.SetBool("u_SSAOEnabled", SSAOPass);
 		PPShader.SetFloat("u_Exposure", Exposure);
 		PPShader.SetFloat("u_Time", glfwGetTime());
+		PPShader.SetFloat("u_AspectRatio", (float)app.GetWidth() / (float)app.GetHeight());
 		PPShader.SetMatrix4("u_InverseProjection", glm::inverse(Player.Camera.GetProjectionMatrix()));
 		PPShader.SetMatrix4("u_InverseView", glm::inverse(Player.Camera.GetViewMatrix()));
 		PPShader.SetVector3f("u_SunDirection", SunDirection);
+		PPShader.SetVector3f("u_StrongerLightSourceDirection", LightDirectionToUse);
+		PPShader.SetBool("u_SunIsStronger", LightDirectionToUse == SunDirection ? true : false);
+		PPShader.SetBool("u_ScreenSpaceGodRays", ShouldDoSSGodRays);
 		PPShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetWidth(), CurrentlyUsedFBO.GetHeight()));
+		PPShader.SetVector2f("u_WindowDimensions", glm::vec2(PPFBO.GetWidth(), PPFBO.GetHeight()));
 
-		// For bilateral upsample
+		PPShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+		PPShader.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
+		PPShader.SetMatrix4("u_Projection", Player.Camera.GetProjectionMatrix());
+		PPShader.SetMatrix4("u_View", (Player.Camera.GetViewMatrix()));
+
 		PPShader.SetInteger("u_CurrentFrame", 10);
 		PPShader.SetFloat("u_zNear", 0.1f);
 		PPShader.SetFloat("u_zFar", 1000.0f);
@@ -1217,6 +1226,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE12);
 		glBindTexture(GL_TEXTURE_2D, SSAOBlurred.GetTexture());
+
+		glActiveTexture(GL_TEXTURE13);
+		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);

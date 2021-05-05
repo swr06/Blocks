@@ -31,6 +31,13 @@
 #define SATURATION 1.0f
 #define VIBRANCE 1.6f
 
+// Chocapic bayer dithering
+#define Bayer4(a)   (Bayer2 (.5 *(a)) * .25 + Bayer2(a))
+#define Bayer8(a)   (Bayer4 (.5 *(a)) * .25 + Bayer2(a))
+#define Bayer16(a)  (Bayer8 (.5 *(a)) * .25 + Bayer2(a))
+#define Bayer32(a)  (Bayer16(.5 *(a)) * .25 + Bayer2(a))
+#define Bayer64(a)  (Bayer32(.5 *(a)) * .25 + Bayer2(a))
+
 in vec2 v_TexCoords;
 in vec3 v_RayPosition;
 in vec3 v_RayDirection;
@@ -44,6 +51,12 @@ uniform sampler2D u_DepthTexture;
 uniform samplerCube u_AtmosphereTexture;
 uniform sampler2D u_SSRNormal; // Contains Unit normals. The alpha component is used to tell if the current pixel is liquid or not
 uniform sampler2D u_SSAOTexture;
+uniform sampler2D u_BlueNoiseTexture;
+
+uniform mat4 u_Projection;
+uniform mat4 u_View;
+uniform mat4 u_InverseProjectionMatrix;
+uniform mat4 u_InverseViewMatrix;
 
 uniform float u_Exposure = 1.0f;
 
@@ -52,6 +65,15 @@ uniform bool u_SSAOEnabled;
 uniform bool u_VolumetricEnabled;
 uniform bool u_PlayerInWater;
 uniform float u_Time;
+
+uniform vec2 u_Dimensions;
+uniform vec2 u_WindowDimensions;
+
+uniform vec3 u_StrongerLightSourceDirection;
+uniform bool u_SunIsStronger;
+uniform bool u_ScreenSpaceGodRays;
+
+uniform float u_AspectRatio;
 
 uniform vec3 u_SunDirection;
 uniform float u_RenderScale;
@@ -192,6 +214,11 @@ void UnderwaterDistort(inout vec2 TexCoord)
     }
 }
 
+float Bayer2(vec2 a) {
+    a = floor(a);
+    return fract(a.x / 2. + a.y * a.y * .75);
+}
+
 //Due to low sample count we "tonemap" the inputs to preserve colors and smoother edges
 vec3 WeightedSample(sampler2D colorTex, vec2 texcoord)
 {
@@ -222,6 +249,82 @@ vec3 sharpen(in sampler2D tex, in vec2 coords)
 	sum += -1. * smoothfilter(tex, coords + vec2( 0.0 * dx , 1.0 * dy));
 	sum += -1. * smoothfilter(tex, coords + vec2( 1.0 * dx , 0.0 * dy));
 	return sum;
+}
+
+vec3 WorldPosFromDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0;
+
+    vec4 clipSpacePosition = vec4(v_TexCoords * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = u_InverseProjectionMatrix * clipSpacePosition;
+
+    // Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+
+    vec4 worldSpacePosition = u_InverseViewMatrix * viewSpacePosition;
+
+    return worldSpacePosition.xyz;
+}
+
+vec3 ViewPosFromDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0;
+
+    vec4 clipSpacePosition = vec4(v_TexCoords * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = u_InverseProjectionMatrix * clipSpacePosition;
+
+    // Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+
+    return viewSpacePosition.xyz;
+}
+
+vec2 ViewToScreenSpace(vec3 view)
+{
+    vec4 projected = u_Projection * vec4(view, 1.0f);
+    projected.xyz /= projected.w;
+
+    return projected.xy * 0.5f + 0.5f;
+}
+
+vec2 WorldToScreen(vec3 pos)
+{
+    vec4 ViewSpace = u_View * vec4(pos, 1.0f);
+    vec4 Projected = u_Projection * ViewSpace;
+    Projected.xyz /= Projected.w;
+    Projected.xyz = Projected.xyz * 0.5f + 0.5f;
+
+    return Projected.xy;
+} 
+
+float GetScreenSpaceGodRays(vec3 view_position)
+{
+    vec2 SunScreenSpacePosition = WorldToScreen(u_StrongerLightSourceDirection * 100000.0f); 
+
+    float ScreenSpaceDistToSun = length(v_TexCoords - SunScreenSpacePosition.xy);
+    float RayIntensity = clamp(1.0f - ScreenSpaceDistToSun, 0.0, 0.6);
+    float RayIntensityMultiplier = u_SunIsStronger ? 0.35224f : 0.15f;
+
+    float rays = 0.0;
+    const int SAMPLES = 14;
+
+    float dither = texture(u_BlueNoiseTexture, v_TexCoords * (u_WindowDimensions / textureSize(u_BlueNoiseTexture, 0).xy)).r;
+    //float dither = Bayer64(gl_FragCoord.xy);
+
+    for (int i = 0; i < SAMPLES; i++)
+    {
+        float scale = (1.0f - (float(i) / float(SAMPLES))) + dither / float(SAMPLES);
+
+        vec2 coord = (v_TexCoords - SunScreenSpacePosition) * scale + SunScreenSpacePosition;
+        coord = clamp(coord, 0.001f, 0.999f);
+
+        float depth_at = texture(u_DepthTexture, coord.xy).r;
+        float is_sky_at = depth_at == 1.0f ? 1.0f : 0.0f;
+
+        rays += is_sky_at / float(SAMPLES) * RayIntensity * RayIntensityMultiplier;
+    }
+
+    return rays;
 }
 
 void main()
@@ -303,14 +406,21 @@ void main()
                   (Bloom[0] * 1.0f * bloom_multiplier) + (Bloom[1] * 0.7f * bloom_multiplier) + (Bloom[2] * 0.5f * bloom_multiplier) 
                   + (Bloom[3] * 0.25f * bloom_multiplier) + (Volumetric * 0.035f);
 
-    // Make night time more blue
 
-    if (PixelDepth != 1.0f)
+    if (u_ScreenSpaceGodRays)
     {
-        float blueness_multiplier = 0.0f;
-        blueness_multiplier = mix(0.45f, 0.0f, clamp(exp(-distance(u_SunDirection.y, 1.1f)), 0.0f, 1.0f));
-        //final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
+        //vec3 ss_volumetric_color = u_SunIsStronger ? vec3(1.1f, 1.1, 0.85f) : (vec3(96.0f, 192.0f, 255.0f) / 255.0f);
+        vec3 ss_volumetric_color = u_SunIsStronger ? (vec3(192.0f, 216.0f, 255.0f) / 255.0f) : (vec3(96.0f, 192.0f, 255.0f) / 255.0f);
+        final_color += ss_volumetric_color * vec3(GetScreenSpaceGodRays(ViewPosFromDepth(PixelDepth)));
     }
+
+    // Make night time more blue
+    //if (PixelDepth != 1.0f)
+    //{
+    //    float blueness_multiplier = 0.0f;
+    //    blueness_multiplier = mix(0.45f, 0.0f, clamp(exp(-distance(u_SunDirection.y, 1.1f)), 0.0f, 1.0f));
+    //    final_color *= vec3(max(blueness_multiplier * 5.0f, 0.35f), max(blueness_multiplier * 5.0f, 0.35f), 1.05f);
+    //}
 
     Vignette(final_color);
 
