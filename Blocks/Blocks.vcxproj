@@ -282,6 +282,7 @@
     <None Include="Core\Shaders\BlockFrag.glsl" />
     <None Include="Core\Shaders\BlockVert.glsl" />
     <None Include="Core\Shaders\FinalFrag.glsl" />
+    <None Include="Core\Shaders\Gaussian5TapSinglePass.glsl" />
     <None Include="Core\Shaders\Gaussian9TapSinglePass.glsl" />
     <None Include="Core\Shaders\GaussianBlurHorizontal.glsl" />
     <None Include="Core\Shaders\GaussianBlurVertical.glsl" />

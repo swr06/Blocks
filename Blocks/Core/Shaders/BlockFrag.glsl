@@ -3,6 +3,7 @@
 // Common Constants
 #define PI 3.141592653589
 #define TAU 6.28318530718
+#define USE_INTERPOLATED_AMBIENT
 
 // Flags
 #define USE_PCF
@@ -103,6 +104,7 @@ const vec3 NIGHT_COLOR  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 1.1f;
 const vec3 NIGHT_AMBIENT  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.76f; 
 
 vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
+vec3 g_ViewDirection;
 
 int MIN = -2147483648;
 int MAX = 2147483647;
@@ -148,6 +150,9 @@ float saturate(float x);
 vec2 saturate(vec2 x);
 vec3 saturate(vec3 x);
 
+vec3 cosWeightedRandomHemisphereDirection(const vec3 n);
+
+
 /// IMPLEMENTATION ///
 
 /* Reduces aliasing with pixel art */
@@ -183,13 +188,14 @@ vec4 BetterTexture(sampler2DArray tex, vec3 uv_)
 void main()
 {
     g_IsFoliage = false;
+    g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
 
     if (v_BlockID == u_FoliageBlockID)
     {
         g_IsFoliage = true;
     }
 
-    RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(1366);
+    RNG_SEED = RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(u_Dimensions.x) * int(u_Time * 1000);
     g_Shadow = CalculateSunShadow();
     g_Shadow = clamp(pow(g_Shadow, 1.5f), 0.0f, 1.0f);
 
@@ -280,7 +286,32 @@ void main()
 
     float DuskDayRatio = clamp(LightRatio * ColorRatioMutliplier, 0.0f, 1.0f);
     vec3 SunColor = mix(SUN_COLOR, DUSK_COLOR, DuskDayRatio);
+
+    #ifdef USE_INTERPOLATED_AMBIENT
     Ambient = mix(SUN_AMBIENT, DUSK_AMBIENT, DuskDayRatio);
+    MoonAmbient = NIGHT_AMBIENT * g_Albedo;
+    #else
+
+    // Approximate indirect lighting from atmosphere data
+    const int AMBIENT_SAMPLES = 4;
+    vec3 ComputedAmbient;
+
+    for (int s = 0 ; s < AMBIENT_SAMPLES ; s++)
+    {
+       // ComputedAmbient += texture(u_AtmosphereCubemap, reflect(-g_ViewDirection, normalize(cosWeightedRandomHemisphereDirection(v_Normal)))).rgb;
+        ComputedAmbient += texture(u_AtmosphereCubemap, cosWeightedRandomHemisphereDirection(g_Normal)).rgb;
+    }
+
+    vec3 TotalComputedAmbient = ComputedAmbient / float(AMBIENT_SAMPLES);
+
+    const float ComputedAmbientStrength = 1.0f;
+    Ambient = (TotalComputedAmbient * ComputedAmbientStrength) * g_Albedo;
+    MoonAmbient = (TotalComputedAmbient * ComputedAmbientStrength) * g_Albedo;
+
+    Ambient = pow(Ambient, vec3(1.0f / 2.2f));
+    MoonAmbient = pow(MoonAmbient, vec3(1.0f / 2.2f));
+
+    #endif
 
     //Ambient = SUN_AMBIENT;
     //SunColor = SUN_COLOR;
@@ -318,14 +349,6 @@ void main()
     o_SSRNormal.w = 0.0f; // Used to tell if the currect pixel is water or not
 
     bool reflective_block = v_TexIndex == u_GraniteTexIndex;
-
-    // Atmosphere lighting
-    {
-        vec3 R = normalize(reflect(ViewDirection, g_Normal));
-        vec3 AtmosphereColor = GetAtmosphere(R);
-
-        o_Color.xyz = mix(o_Color.xyz, AtmosphereColor, 0.04f);
-    }
 
     o_Color.xyz *= max(v_LampLightValue * 1.2, 1.0f);
 
@@ -745,4 +768,19 @@ vec3 saturate(vec3 x)
 vec2 saturate(vec2 x)
 {
 	return clamp(x, vec2(0.0), vec2(1.0));
+}
+
+vec3 cosWeightedRandomHemisphereDirection(const vec3 n) 
+{
+  	vec2 r = vec2(nextFloat(RNG_SEED), nextFloat(RNG_SEED));
+    
+	vec3  uu = normalize(cross(n, vec3(0.0,1.0,1.0)));
+	vec3  vv = cross(uu, n);
+	float ra = sqrt(r.y);
+	float rx = ra * cos(6.2831 * r.x); 
+	float ry = ra * sin(6.2831 * r.x);
+	float rz = sqrt(1.0 - r.y);
+	vec3  rr = vec3(rx * uu + ry * vv + rz * n );
+    
+    return normalize(rr);
 }

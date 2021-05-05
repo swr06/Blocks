@@ -48,7 +48,7 @@ namespace Blocks
 			float mip = 0.0f;
 			std::unique_ptr<GLClasses::Framebuffer>* fbo;
 
-			GLClasses::Shader& GaussianBlur = ShaderManager::GetShader("GAUSSIAN_SINGLEPASS");
+			GLClasses::Shader& GaussianBlur = ShaderManager::GetShader("GAUSSIAN_SINGLEPASS_5TAP");
 			GLClasses::Shader& BloomBrightShader = ShaderManager::GetShader("BLOOM_BRIGHT");
 
 			switch (mip_num)

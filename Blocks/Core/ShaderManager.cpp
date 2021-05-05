@@ -23,6 +23,7 @@ void Blocks::ShaderManager::CreateShaders()
 	AddShader("SSAO", "Core/Shaders/FBOVert.glsl", "Core/Shaders/SSAO.glsl");
 	AddShader("SSAO_BLUR", "Core/Shaders/FBOVert.glsl", "Core/Shaders/SSAOBlur.glsl");
 	AddShader("GAUSSIAN_SINGLEPASS", "Core/Shaders/FBOVert.glsl", "Core/Shaders/Gaussian9TapSinglePass.glsl");
+	AddShader("GAUSSIAN_SINGLEPASS_5TAP", "Core/Shaders/FBOVert.glsl", "Core/Shaders/Gaussian5TapSinglePass.glsl");
 	AddShader("TAA", "Core/Shaders/FBOVert.glsl", "Core/Shaders/TemporalAA.glsl");
 	AddShader("FINAL", "Core/Shaders/FBOVert.glsl", "Core/Shaders/FinalFrag.glsl");
 }

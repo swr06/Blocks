@@ -249,7 +249,7 @@ void main()
          Volumetric = (volumetric_value * SUN_COLOR);
     }
 
-    float bloom_multiplier = PixelIsWater ? 0.2f : 0.3f;
+    float bloom_multiplier = PixelIsWater ? 0.2f : 0.3455f;
 
     if (u_BloomEnabled)
     {
