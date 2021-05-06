@@ -66,8 +66,8 @@ void main()
 	RealPosition = vec3(a_Position.x + (u_ChunkPosition.x * RENDER_CHUNK_SIZE_X), a_Position.y + (u_ChunkPosition.y * RENDER_CHUNK_SIZE_Y), 
 	a_Position.z + (u_ChunkPosition.z * RENDER_CHUNK_SIZE_Z)); 
 	
-	RealPosition.y -= 0.2f; 
-	RealPosition.y += 9.26f * WavingWater(RealPosition);
+	RealPosition.y -= 0.15f; 
+	RealPosition.y += 8.26f * WavingWater(RealPosition);
 
 	gl_Position = u_Projection * u_View * vec4(RealPosition, 1.0);
 

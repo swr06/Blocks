@@ -25,6 +25,7 @@ uniform sampler2D u_RefractionUVTexture;
 uniform sampler2D u_PreviousFrameDepthTexture;
 uniform samplerCube u_AtmosphereCubemap;
 uniform sampler2D u_CurrentFrameDepthTexture;
+uniform sampler2D u_WaterMapTEST;
 
 uniform bool u_SSREnabled;
 uniform bool u_RefractionsEnabled;
@@ -78,11 +79,6 @@ vec3 WorldPosFromDepth(float depth)
     return worldSpacePosition.xyz;
 }
 
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
-{
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
 float curve(float x)
 {
 	return x * x * (3.0 - 2.0 * x);
@@ -130,7 +126,6 @@ vec3 GetAtmosphere(vec3 ray_direction)
 
     vec3 ray_dir = ray_direction;
     vec3 atmosphere = texture(u_AtmosphereCubemap, ray_dir).rgb;
-    atmosphere = max(atmosphere, 0.15f);
 
     // Water specular highlights
     atmosphere *= SUN_COLOR * max(RenderDisc(ray_dir, sun_dir, 0.00140f) * 75.0f, 1.0f);
@@ -271,39 +266,88 @@ vec2 ParallaxMapping(vec2 TextureCoords, vec3 ViewDirection)
     return FinalTexCoords;
 }   
 
+vec3 normal_waves(vec3 pos) 
+{
+    float timer = u_Time * 1.4;
+    
+    vec3 wave_1 = texture(u_WaterMapTEST, (pos.xz * 0.0625) + (timer * .025)).rgb;
+       wave_1 = wave_1 * vec3(0.6, 0.6, 1.0) - vec3(0.3, 0.3, 0.5);
+    vec3 wave_2 =
+       texture(u_WaterMapTEST, (pos.zx * 0.03125) - (timer * .025)).rgb;
+    wave_2 = wave_2 * vec3(0.6, 0.6, 1.0) - vec3(0.3, 0.3, 0.5);
+    
+    vec3 final_wave = wave_1 + wave_2;
+    
+    return normalize(final_wave);
+}
+
+float G1V(float dotNV, float k)
+{
+	return 1.0 / (dotNV * (1.0 - k) + k);
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 6.0);
+}
+
+vec3 SpecularGGX(vec3 N, vec3 V, vec3 L, float roughness, float F0)
+{
+	float alpha = roughness * roughness;
+
+	vec3 H = normalize(V + L);
+
+
+	float dotNL = saturate(dot(N, L));
+	float dotNV = saturate(dot(N, V));
+	float dotNH = saturate(dot(N, H));
+	float dotLH = saturate(dot(L, H));
+
+	float F, D, vis;
+
+	float alphaSqr = alpha * alpha;
+	float pi = 3.14159265359;
+	float denom = dotNH * dotNH * (alphaSqr - 1.0) + 1.0;
+	D = alphaSqr / (pi * denom * denom);
+
+	float dotLH5 = pow(1.0f - dotLH, 5.0);
+	F = F0 + (1.0 - F0) * dotLH5;
+    vec3 Fresnel = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), vec3(0.15f));
+
+	float k = alpha / 2.0;
+	vis = G1V(dotNL, k) * G1V(dotNV, k);
+
+	vec3 specular = vec3(dotNL * D * F * vis) * (vec3(192.0f, 216.0f, 255.0f) / 255.0f) * 6.4f;
+
+	//specular = vec3(0.1);
+	specular *= saturate(pow(1.0 - roughness, 0.7) * 2.0);
+
+	return specular;
+}
+
 void main()
 {
     vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
     ScreenSpaceCoordinates.x = clamp(ScreenSpaceCoordinates.x, 0.0f, 1.0f);
     ScreenSpaceCoordinates.y = clamp(ScreenSpaceCoordinates.y, 0.0f, 1.0f);
 
-    float perlin_noise = texture(u_NoiseTexture, v_FragPosition.xz * 0.25f + (0.25 * u_Time)).r;
-   
-    vec2 WaterUV = vec2(v_FragPosition.xz * 0.05f);
-    vec3 TangentViewPosition = v_TBNMatrix * u_ViewerPosition;
-
-    if (u_EnableParallax)
-    {
-        WaterUV = ParallaxMapping(WaterUV, normalize(TangentViewPosition - v_TangentFragPosition));
-    }
-
-    // Set globals
-    vec3 WaterMapValue = mix(texture(u_WaterMap[0], WaterUV).rgb, texture(u_WaterMap[1], WaterUV).rgb, (u_CurrentFrame % 6) / 6.0f);
-
-    g_Normal = v_TBNMatrix * vec3(WaterMapValue.x, 1.0f, WaterMapValue.y);
-    g_Normal = normalize(g_Normal);
-
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
-    g_SpecularStrength = 196.0f;
+    g_Normal = v_TBNMatrix * normal_waves(v_FragPosition);
 
-    // Set the water color
-    g_WaterColor = vec3(76.0f / 255.0f, 100.0f / 255.0f, 185.0f / 255.0f);
+    g_WaterColor = vec3(128.0f / 255.0f, 196.0f / 255.0f, 253.0f / 255.0f);
+    g_WaterColor *= g_WaterColor;
+    g_WaterColor *= 0.6f;
 
-    o_Color = vec4(CalculateSunLight(-u_SunDirection), 1.0f); // Calculate water, ray traced lighting
-    g_F0 = vec3(0.02f);
-    g_F0 = mix(g_F0, g_WaterColor, 0.025f);
+    float fake_fresnel = dot(g_ViewDirection, vec3(0.0f, 1.0f, 0.0f));
 
-    // Refractions
+    vec3 reflected = normalize(reflect(normalize(g_Normal), g_ViewDirection));
+    reflected.y = clamp(reflected.y, 0.3f, 1.0f);
+
+    vec3 sky_at = texture(u_AtmosphereCubemap, reflected).rgb;
+    vec3 Specular = g_WaterColor * SpecularGGX(g_Normal, g_ViewDirection, -u_SunDirection, 0.09f, 0.2f) * fake_fresnel;
+    vec3 Ambient = vec3(0.3f) * g_WaterColor;
+
+    o_Color = vec4(Specular + Ambient, 1.0f);
     
     vec4 RefractedColor;
     vec4 ReflectionColor;
@@ -311,13 +355,16 @@ void main()
     if (u_RefractionsEnabled)
     {
         vec2 RefractedUV = texture(u_RefractionUVTexture, ScreenSpaceCoordinates).rg;
+        RefractedUV.x += g_Normal.x * 0.07f;
+        RefractedUV.y += g_Normal.z * 0.03f;
+
         bool valid = RefractedUV.x >= 0.0f && RefractedUV.y >= 0.0f && RefractedUV.x <= 1.0f && RefractedUV.y <= 1.0f;
 
         vec3 WorldPosAt = WorldPosFromDepth(texture(u_CurrentFrameDepthTexture, ScreenSpaceCoordinates).r);
         float distance_to_point = distance(WorldPosAt, v_FragPosition); 
         vec3 transmittance = exp(vec3(-distance_to_point * 0.09f));
 
-        transmittance *= 1.925f;
+        transmittance *= 2.225f;
 
         if (RefractedUV != vec2(-1.0f) && valid)
         {
@@ -351,7 +398,7 @@ void main()
 
         if (SSR_UV != vec2(-1.0f) && valid)
         {
-            SSR_UV.x += g_Normal.x * 0.05f;
+            SSR_UV.x += g_Normal.x * 0.15f;
             SSR_UV.t += g_Normal.z * 0.02f;
             SSR_UV = clamp(SSR_UV, 0.0f, 1.0f);
 
@@ -359,7 +406,7 @@ void main()
 
             if (reflected_depth != 1.0f)
             {
-                ReflectionColor = vec4(texture(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0);
+                ReflectionColor = vec4((texture(u_PreviousFrameColorTexture, SSR_UV).rgb * 2.0f) * sky_at, 1.0) ;
                 float distance_to_edge = distance(SSR_UV.x, 1.0f);
                 float ReflectionMixFactor_1 = (1.0f - SSR_UV.y);
                 float ReflectionMixFactor;
@@ -375,17 +422,11 @@ void main()
                 }
 
                 ReflectionColor = clamp(ReflectionColor, 0.0f, 1.0f);
-                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 4.5, 0.45f)); 
+                o_Color = mix(o_Color, ReflectionColor, min((ReflectionMixFactor * ReflectionMixFactor_1) * 4.5, 0.9f)); 
             }
         }
     }
     
-    // 
-
-    o_Color.xyz += 0.08f * g_WaterColor;
-    float darken = WaterMapValue.z * 1.325;
-    o_Color.xyz *= darken;
-
     // Output values
     o_SSRMask = 1.0f;
     o_RefractionMask = 1.0f;

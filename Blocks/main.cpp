@@ -399,6 +399,7 @@ int main()
 	GLClasses::Texture PerlinNoiseNormalTexture;
 	GLClasses::Texture WaterDetailNormalMap;
 	GLClasses::Texture WaterMaps[100];
+	GLClasses::Texture WaterNewMap;
 
 	// Shaders
 	GLClasses::Shader& RenderShader = Blocks::ShaderManager::GetShader("RENDER_SHADER");
@@ -447,6 +448,7 @@ int main()
 	PerlinNoiseTexture.CreateTexture("Res/Misc/perlin_noise.png", false);
 	PerlinNoiseNormalTexture.CreateTexture("Res/Misc/perlin_noise_normal.png", false);
 	WaterDetailNormalMap.CreateTexture("Res/Misc/water_detail_normal_map.png", false);
+	WaterNewMap.CreateTexture("Res/Misc/water_normal_test.png", false);
 
 	// Create the water textures
 
@@ -614,8 +616,8 @@ int main()
 			SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
 
 			// Setting these high as a hack to increase the SSR distance :p
-			SSRShader.SetFloat("u_zNear", 2.0f);
-			SSRShader.SetFloat("u_zFar", 5000.0f);
+			SSRShader.SetFloat("u_zNear", 0.2f);
+			SSRShader.SetFloat("u_zFar", 2000.0f);
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetSSRNormalTexture());
@@ -924,6 +926,7 @@ int main()
 		WaterShader.SetInteger("u_PreviousFrameDepthTexture", 11);
 		WaterShader.SetInteger("u_AtmosphereCubemap", 12);
 		WaterShader.SetInteger("u_CurrentFrameDepthTexture", 13);
+		WaterShader.SetInteger("u_WaterMapTEST", 16);
 		WaterShader.SetInteger("u_CurrentFrame", app.GetCurrentFrame());
 
 		WaterShader.SetVector2f("u_Dimensions", glm::vec2(CurrentlyUsedFBO.GetDimensions().first, CurrentlyUsedFBO.GetDimensions().second));
@@ -980,6 +983,9 @@ int main()
 
 		glActiveTexture(GL_TEXTURE13);
 		glBindTexture(GL_TEXTURE_2D, TempFBO.GetDepthBuffer());
+
+		glActiveTexture(GL_TEXTURE16);
+		glBindTexture(GL_TEXTURE_2D, WaterNewMap.GetTextureID());
 
 		MainWorld.RenderWaterChunks(Player.Camera.GetPosition(), Player.PlayerViewFrustum, WaterShader);
 
