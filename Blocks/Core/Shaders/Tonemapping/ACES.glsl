@@ -1,6 +1,5 @@
 #version 330 core
 
-// Tonemapping by Capt Tatsu
 #define CG_RR 255 
 #define CG_RG 0 
 #define CG_RB 0 
@@ -31,12 +30,14 @@
 #define SATURATION 1.0f
 #define VIBRANCE 1.6f
 
-// Chocapic bayer dithering
+// basic bayer dithering
 #define Bayer4(a)   (Bayer2 (.5 *(a)) * .25 + Bayer2(a))
 #define Bayer8(a)   (Bayer4 (.5 *(a)) * .25 + Bayer2(a))
 #define Bayer16(a)  (Bayer8 (.5 *(a)) * .25 + Bayer2(a))
 #define Bayer32(a)  (Bayer16(.5 *(a)) * .25 + Bayer2(a))
 #define Bayer64(a)  (Bayer32(.5 *(a)) * .25 + Bayer2(a))
+
+#define PI 3.14159265359
 
 in vec2 v_TexCoords;
 in vec3 v_RayPosition;
@@ -52,6 +53,8 @@ uniform samplerCube u_AtmosphereTexture;
 uniform sampler2D u_SSRNormal; // Contains Unit normals. The alpha component is used to tell if the current pixel is liquid or not
 uniform sampler2D u_SSAOTexture;
 uniform sampler2D u_BlueNoiseTexture;
+uniform sampler2D u_NormalTexture;
+uniform sampler2D u_PreviousFrameTexture;
 
 uniform mat4 u_Projection;
 uniform mat4 u_View;
@@ -74,6 +77,8 @@ uniform bool u_SunIsStronger;
 uniform bool u_ScreenSpaceGodRays;
 
 uniform float u_AspectRatio;
+uniform float u_zNear;
+uniform float u_zFar;
 
 uniform vec3 u_SunDirection;
 uniform float u_RenderScale;
@@ -121,7 +126,6 @@ void Vignette(inout vec3 color)
 
 	color.rgb *= 1.0f - dist * 0.5;
 }
-
 vec4 BetterTexture(sampler2D tex, vec2 uv) 
 {
     vec2 res = vec2(textureSize(tex, 0).xy);
@@ -165,6 +169,8 @@ vec4 BetterTexture_1( sampler2D tex, vec2 uv)
 float GetLuminance(vec3 color) {
 	return dot(color, vec3(0.299, 0.587, 0.114));
 }
+
+// color grading by Capt Tatsu
 
 void ColorGrading(inout vec3 color)
 {
@@ -297,6 +303,17 @@ vec2 WorldToScreen(vec3 pos)
     return Projected.xy;
 } 
 
+
+float ComputeScattering(float lightDotView) // Dot product of the light direction vector and the view vector
+{
+    const float Scatter = 0.7f;
+	float result = 1.0f - Scatter * Scatter;
+	result /= (4.0f * PI * pow(1.0f + Scatter * Scatter - (2.0f * Scatter) * lightDotView, 1.5f));
+	
+	return result;
+}
+
+
 float GetScreenSpaceGodRays(vec3 view_position)
 {
     vec2 SunScreenSpacePosition = WorldToScreen(u_StrongerLightSourceDirection * 100000.0f); 
@@ -309,6 +326,7 @@ float GetScreenSpaceGodRays(vec3 view_position)
     const int SAMPLES = 14;
 
     float dither = texture(u_BlueNoiseTexture, v_TexCoords * (u_WindowDimensions / textureSize(u_BlueNoiseTexture, 0).xy)).r;
+    
     //float dither = Bayer64(gl_FragCoord.xy);
 
     for (int i = 0; i < SAMPLES; i++)
@@ -327,6 +345,72 @@ float GetScreenSpaceGodRays(vec3 view_position)
     return rays;
 }
 
+float linearizeDepth(float depth)
+{
+	return (2.0 * u_zNear) / (u_zFar + u_zNear - depth * (u_zFar - u_zNear));
+}
+
+vec3 BilateralUpsample(sampler2D tex, vec2 txc, vec3 base_normal, float base_depth)
+{
+    const vec2 Kernel[4] = vec2[](
+        vec2(0.0f, 1.0f),
+        vec2(1.0f, 0.0f),
+        vec2(-1.0f, 0.0f),
+        vec2(0.0, -1.0f)
+    );
+
+    vec2 texel_size = 1.0f / textureSize(tex, 0);
+
+    vec3 color = vec3(0.0f, 0.0f, 0.0f);
+    float weight_sum;
+
+    for (int i = 0; i < 4; i++) 
+    {
+        vec3 sampled_normal = texture(u_NormalTexture, txc + Kernel[i] * texel_size).xyz;
+        float nweight = pow(abs(dot(sampled_normal, base_normal)), 32);
+
+        float sampled_depth = linearizeDepth(texture(u_DepthTexture, txc + Kernel[i] * texel_size).z); 
+        float dweight = 1.0f / (abs(base_depth - sampled_depth) + 0.001f);
+
+        float computed_weight = nweight * dweight;
+        color.rgb += texture(tex, txc + Kernel[i] * texel_size).rgb * computed_weight;
+        weight_sum += computed_weight;
+    }
+
+    color /= max(weight_sum, 0.2f);
+    color = clamp(color, texture(tex, txc).rgb * 0.12f, vec3(1.0f));
+    return color;
+}
+
+vec3 DepthOnlyBilateralUpsample(sampler2D tex, vec2 txc, float base_depth)
+{
+    const vec2 Kernel[4] = vec2[](
+        vec2(0.0f, 1.0f),
+        vec2(1.0f, 0.0f),
+        vec2(-1.0f, 0.0f),
+        vec2(0.0, -1.0f)
+    );
+
+    vec2 texel_size = 1.0f / textureSize(tex, 0);
+
+    vec3 color = vec3(0.0f, 0.0f, 0.0f);
+    float weight_sum;
+
+    for (int i = 0; i < 4; i++) 
+    {
+        float sampled_depth = linearizeDepth(texture(u_DepthTexture, txc + Kernel[i] * texel_size).z); 
+        float dweight = 1.0f / (abs(base_depth - sampled_depth) + 0.001f);
+
+        float computed_weight = dweight;
+        color.rgb += texture(tex, txc + Kernel[i] * texel_size).rgb * computed_weight;
+        weight_sum += computed_weight;
+    }
+
+    color /= max(weight_sum, 0.2f);
+    color = clamp(color, texture(tex, txc).rgb * 0.12f, vec3(1.0f));
+    return color;
+}
+
 void main()
 {
     vec3 Volumetric = vec3(0.0f);
@@ -341,6 +425,9 @@ void main()
     float PixelDepth3 = texture(u_DepthTexture, v_TexCoords + vec2(1.0f, 0.0f) * (1.0f / TexSize)).r;
     float PixelDepth4 = texture(u_DepthTexture, v_TexCoords + vec2(-1.0f, 0.0f) * (1.0f / TexSize)).r;
 
+    vec3 SampledNormal = texture(u_NormalTexture, v_TexCoords).rgb;
+    float LinearizedDepth = linearizeDepth(PixelDepth);
+
     if (u_PlayerInWater)
     {
         UnderwaterDistort(g_TexCoords);
@@ -348,7 +435,8 @@ void main()
 
     if (u_VolumetricEnabled)
     {
-         float volumetric_value = smoothfilter(u_VolumetricTexture, v_TexCoords).r;
+         float volumetric_value = DepthOnlyBilateralUpsample(u_VolumetricTexture, v_TexCoords, LinearizedDepth).r * 1.243f;
+         //float volumetric_value = texture(u_VolumetricTexture, v_TexCoords).r;
          Volumetric = (volumetric_value * SUN_COLOR);
     }
 
@@ -365,6 +453,7 @@ void main()
     }
    
     vec3 HDR = smoothfilter(u_FramebufferTexture, v_TexCoords).rgb;
+    float ssao = 0.0f;
 
     if (PixelDepth != 1.0f && PixelDepth1 != 1.0f && PixelDepth2 != 1.0f && PixelDepth3 != 1.0f && PixelDepth4 != 1.0f && !PixelIsWater)
     {
@@ -379,14 +468,12 @@ void main()
             HDR = mix(HDR, sharpen(u_FramebufferTexture, v_TexCoords).rgb, sharpness_ratio).rgb;
         }
 
-
         if (u_SSAOEnabled)
         {
-            float ssao = 0.0f;
-            ssao = smoothfilter(u_SSAOTexture, v_TexCoords).r;
+            ssao = BilateralUpsample(u_SSAOTexture, v_TexCoords, SampledNormal, LinearizedDepth).r;
             ssao = pow(ssao, 8.2f);
 
-            HDR.xyz *= 8.2 * 4.9f;
+            HDR.xyz *= 8.2;;
             HDR.xyz *= ssao;
         }
     }
@@ -426,7 +513,8 @@ void main()
 
     if (PixelDepth != 1.0f)
     {
-        o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), exposure));
+        o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), exp(exposure * 0.423f)));
+        //o_Color = vec4(ACESFitted(vec4(final_color, 1.0f), (exposure )));
     }
 
     else 
@@ -437,7 +525,7 @@ void main()
 
 vec4 cubic(float v)
 {
-    vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;\
+    vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;
     vec4 s = n * n * n;
     float x = s.x;
     float y = s.y - 4.0 * s.x;

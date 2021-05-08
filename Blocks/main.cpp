@@ -1155,6 +1155,8 @@ int main()
 		PPShader.SetInteger("u_SSRNormal", 10);
 		PPShader.SetInteger("u_SSAOTexture", 12);
 		PPShader.SetInteger("u_BlueNoiseTexture", 13);
+		PPShader.SetInteger("u_NormalTexture", 15);
+		PPShader.SetInteger("u_PreviousFrameTexture", 16);
 
 		// Bloom textures
 		PPShader.SetInteger("u_BloomTextures[0]", 5);
@@ -1229,6 +1231,12 @@ int main()
 
 		glActiveTexture(GL_TEXTURE13);
 		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
+
+		glActiveTexture(GL_TEXTURE15);
+		glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetNormalTexture());
+
+		glActiveTexture(GL_TEXTURE16);
+		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());
 
 		FBOVAO.Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
