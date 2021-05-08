@@ -1233,7 +1233,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, BlueNoiseTexture.GetTextureID());
 
 		glActiveTexture(GL_TEXTURE15);
-		glBindTexture(GL_TEXTURE_2D, MainRenderFBO.GetNormalTexture());
+		glBindTexture(GL_TEXTURE_2D, CurrentlyUsedFBO.GetNormalTexture());
 
 		glActiveTexture(GL_TEXTURE16);
 		glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetColorTexture());
