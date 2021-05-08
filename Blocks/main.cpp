@@ -559,7 +559,7 @@ int main()
 
 		AppRenderingTime.Update = update_timer.End();
 
-		if (app.GetCurrentFrame() % 6 == 0 || BlockModified)
+		if (app.GetCurrentFrame() % 8 == 0 || BlockModified || SunDirectionChanged)
 		{
 			Blocks::Timer shadow_timer;
 			shadow_timer.Start();
