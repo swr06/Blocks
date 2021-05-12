@@ -185,6 +185,23 @@ vec4 BetterTexture(sampler2DArray tex, vec3 uv_)
     return texture(tex, vec3(uv, uv_.b));
 }
 
+
+bool RayBoxIntersect(const vec3 boxMin, const vec3 boxMax, vec3 r0, vec3 rD, out float t_min, out float t_max) 
+{
+	vec3 inv_dir = 1.0f / rD;
+	vec3 tbot = inv_dir * (boxMin - r0);
+	vec3 ttop = inv_dir * (boxMax - r0);
+	vec3 tmin = min(ttop, tbot);
+	vec3 tmax = max(ttop, tbot);
+	vec2 t = max(tmin.xx, tmin.yz);
+	float t0 = max(t.x, t.y);
+	t = min(tmax.xx, tmax.yz);
+	float t1 = min(t.x, t.y);
+	t_min = t0;
+	t_max = t1;
+	return t1 > max(t0, 0.0);
+}
+
 void main()
 {
     g_IsFoliage = false;
@@ -540,7 +557,17 @@ float CalculateSunShadow()
             jitter_value = PoissonDisk[x] * dither;
 
             float pcf = texture(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize).r; 
-	    	shadow += DistortedPosition.z - sbias > pcf ? 1.0f : 0.0f;        
+	    	shadow += DistortedPosition.z - sbias > pcf ? 1.0f : 0.0f;       
+            
+            vec3 ShadowDirection = normalize(-u_SunDirection);
+            float ShadowTMIN, ShadowTMAX;
+            bool PlayerIntersect = RayBoxIntersect(u_ViewerPosition,
+                                                   u_ViewerPosition - vec3(0.75f, 2.0f, 0.75f), 
+                                                   v_FragPosition.xyz + (vec3(jitter_value.x, jitter_value.y, jitter_value.y * jitter_value.x) * 0.1f), 
+                                                   ShadowDirection, 
+                                                   ShadowTMIN, 
+                                                   ShadowTMAX);
+            shadow += PlayerIntersect ? 1.0f : 0.0f;
 	    }
 
 	    shadow /= float(PCF_COUNT);
