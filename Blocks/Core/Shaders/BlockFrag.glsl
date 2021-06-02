@@ -7,7 +7,7 @@
 
 // Flags
 #define USE_PCF
-#define PCF_COUNT 8
+#define PCF_COUNT 24
 
 #define USE_SEUS_TAA_JITTER
 
@@ -94,14 +94,14 @@ float g_Shadow = 0.0f;
 bool g_IsFoliage;
 
 //vec3 SUN_COLOR = vec3(255.0f / 255.0f, 160.0f / 255.0f, 80.0f / 255.0f) * 1.25f;
-const vec3 SUN_COLOR = (vec3(192.0f, 216.0f, 255.0f) / 255.0f) * 6.4f;
-const vec3 SUN_AMBIENT = (vec3(120.0f, 172.0f, 255.0f) / 255.0f) * 1.01f;
+const vec3 SUN_COLOR = (vec3(192.0f, 216.0f, 255.0f) / 255.0f) * 4.4f;
+const vec3 SUN_AMBIENT = (vec3(120.0f, 172.0f, 255.0f) / 255.0f) * 0.7f;
 
 const vec3 DUSK_COLOR  = (vec3(255.0f, 160.0f, 80.0f) / 255.0f) * 1.2f; // 1.25 intensity
 const vec3 DUSK_AMBIENT = (vec3(255.0f, 204.0f, 144.0f) / 255.0f) * 0.71f; 
 
-const vec3 NIGHT_COLOR  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 1.1f; 
-const vec3 NIGHT_AMBIENT  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.76f; 
+const vec3 NIGHT_COLOR  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.5f; 
+const vec3 NIGHT_AMBIENT  = (vec3(96.0f, 192.0f, 255.0f) / 255.0f) * 0.2f; 
 
 vec3 SKY_LIGHT = vec3(165.0f / 255.0f, 202.0f / 255.0f, 250.0f / 255.0f);
 vec3 g_ViewDirection;
@@ -202,8 +202,19 @@ bool RayBoxIntersect(const vec3 boxMin, const vec3 boxMax, vec3 r0, vec3 rD, out
 	return t1 > max(t0, 0.0);
 }
 
+int BLUE_NOISE_IDX = 0;
+
 void main()
 {
+	RNG_SEED = int(gl_FragCoord.x) + int(gl_FragCoord.y) * int(800 * u_Time);
+
+	RNG_SEED ^= RNG_SEED << 13;
+    RNG_SEED ^= RNG_SEED >> 17;
+    RNG_SEED ^= RNG_SEED << 5;
+
+    BLUE_NOISE_IDX = RNG_SEED;
+	BLUE_NOISE_IDX = BLUE_NOISE_IDX % (255 * 255);
+
     g_IsFoliage = false;
     g_ViewDirection = normalize(u_ViewerPosition - v_FragPosition);
 
@@ -373,26 +384,31 @@ void main()
     o_Color.xyz *= clamp((1.0f - VoxelAOValue), 0.2f, 1.0f);
     o_Color.xyz *= g_AO;
 
-    o_SSRMask = mix(0.0f, 1.0f, u_SSREnabled && reflective_block);
+    o_SSRMask = float(g_Metalness > 0.01f);
 
-    if (u_SSREnabled && reflective_block) 
+    if (u_SSREnabled) 
     {
         vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
+        bool Valid = SSR_UV != vec2(-1.0f);
 
-        if (SSR_UV != vec2(-1.0f))
+        if (Valid)
         {
-            SSR_UV += g_Normal.xz * 0.3f;
-            o_Color = mix(o_Color, vec4(textureBicubic(u_PreviousFrameColorTexture, SSR_UV).rgb, 1.0f), 0.3); 
+            vec3 SSR_Color = texture(u_PreviousFrameColorTexture, SSR_UV).rgb;
+            float ReflectionRatio = g_Metalness * 0.2f;
+            ReflectionRatio *= 1.0f - g_Roughness;
+            o_Color.rgb = mix(o_Color.rgb, SSR_Color, ReflectionRatio); 
         }
-    }
 
-    else if (reflective_block)
-    {
-        vec3 R = normalize(reflect(ViewDirection, v_Normal + (0.1f * g_Normal)));
-        vec3 ReflectedColor = texture(u_ReflectionCubemap, R).rgb;
+        else 
+        {
+		    vec3 R = normalize(reflect(ViewDirection, v_Normal + (0.1f * g_Normal)));
+            vec3 Sky = texture(u_AtmosphereCubemap, R).rgb;
 
-        o_Color = mix(o_Color, vec4(ReflectedColor, 1.0f), 0.3); 
+            float ReflectionRatio = g_Metalness * 0.2f;
+            ReflectionRatio *= 1.0f - g_Roughness;
+            o_Color.rgb = mix(o_Color.rgb, Sky, ReflectionRatio); 
+        }
     }
 
     if (v_IsUnderwater) 
@@ -407,8 +423,6 @@ void main()
             o_Color *= 0.5f;
         }
     }
-
-    //o_Color = vec4(vec3(g_AO), 1.0f);
 
     o_RefractionMask = -1.0f;
     o_SSRNormal.a = 0.0f; // Used to tell if the currect pixel is water or not
@@ -517,6 +531,13 @@ vec3 DistortPosition(in vec3 pos)
 	return pos;
 }
 
+vec3 GetBlueNoise()
+{
+	BLUE_NOISE_IDX++;
+	vec2 txc =  vec2(BLUE_NOISE_IDX / 256, mod(BLUE_NOISE_IDX, 256));
+	return texelFetch(u_BlueNoiseTexture, ivec2(txc), 0).rgb;
+}
+
 float CalculateSunShadow()
 {
 	float shadow = 0.0;
@@ -538,7 +559,8 @@ float CalculateSunShadow()
         return shadow;
     }
 
-    const float sbias = 0.00009f;
+    const float sbias = 0.00004f;
+    float noise = GetBlueNoise().r;
 
     #ifdef USE_PCF
 	    vec2 TexelSize = 1.0 / TexSize; // LOD = 0
@@ -547,7 +569,6 @@ float CalculateSunShadow()
 	    for(int x = 0; x <= PCF_COUNT; x++)
 	    {
             //float noise = nextFloat(RNG_SEED);
-            float noise = texture(u_BlueNoiseTexture, gl_FragCoord.xy / textureSize(u_BlueNoiseTexture, 0)).r;
             float theta = noise * 6.28318530718;
             float cosTheta = cos(theta);
             float sinTheta = sin(theta);
@@ -559,7 +580,7 @@ float CalculateSunShadow()
             float pcf = texture(u_LightShadowMap, DistortedPosition.xy + jitter_value * TexelSize).r; 
 	    	shadow += DistortedPosition.z - sbias > pcf ? 1.0f : 0.0f;       
             
-            vec3 ShadowDirection = normalize(-u_SunDirection);
+            vec3 ShadowDirection = (u_StrongerLightDirection == u_SunDirection ? u_MoonDirection : u_SunDirection);
             float ShadowTMIN, ShadowTMAX;
             bool PlayerIntersect = RayBoxIntersect(u_ViewerPosition,
                                                    u_ViewerPosition - vec3(0.75f, 2.0f, 0.75f), 
@@ -615,72 +636,65 @@ vec3 CalculateCaustics()
     return col;
 }
 
-float DistributionGGX(vec3 N, vec3 H, float roughness)
+float ndfGGX(float cosLh, float roughness)
 {
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
+	float alpha   = roughness * roughness;
+	float alphaSq = alpha * alpha;
 
-    float nom   = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-
-    return nom / max(denom, 0.001); 
+	float denom = (cosLh * cosLh) * (alphaSq - 1.0) + 1.0;
+	return alphaSq / (PI * denom * denom);
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
+float gaSchlickG1(float cosTheta, float k)
 {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
-
-    float nom   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-
-    return nom / denom;
+	return cosTheta / (cosTheta * (1.0 - k) + k);
 }
 
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+float gaSchlickGGX(float cosLi, float cosLo, float roughness)
 {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
-    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
-
-    return ggx1 * ggx2;
+	float r = roughness + 1.0;
+	float k = (r * r) / 8.0; // Epic suggests using this roughness remapping for analytic lights.
+	return gaSchlickG1(cosLi, k) * gaSchlickG1(cosLo, k);
 }
 
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+vec3 fresnelSchlick(vec3 F0, float cosTheta)
 {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+	return F0 + (vec3(1.0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 CalculateDirectionalLightPBR(vec3 light_dir, vec3 col)
+vec3 CalculateDirectionalLightPBR(vec3 light_dir, vec3 radiance)
 {
-    float ShadowIntensity = 0.98f;
-    float Shadow = min(g_Shadow * ShadowIntensity, 1.0f);
+    vec3 world_pos = v_FragPosition;
 
-	vec3 V = normalize(u_ViewerPosition - v_FragPosition);
-    vec3 L = normalize(light_dir);
-    vec3 H = normalize(V + L);
-	vec3 radiance = col;
+    const float Epsilon = 0.00001;
+    float Shadow = min(g_Shadow, 1.0f);
 
-    float NDF = DistributionGGX(g_Normal, H, g_Roughness);   
-    float G = GeometrySmith(g_Normal, V, L, g_Roughness);      
-    vec3 F = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), g_F0);
-       
-    vec3 nominator = NDF * G * F; 
-    float denominator = 4.0f * max(dot(g_Normal, V), 0.0) * max(dot(g_Normal, L), 0.0);
-    vec3 specular = nominator / max(denominator, 0.001f);
-    
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - g_Metalness;	
+    vec3 Lo = normalize(u_ViewerPosition - world_pos);
 
-    float NdotL = max(dot(g_Normal, L), 0.0);
-	vec3 Result = (kD * g_Albedo / PI + (specular)) * radiance * NdotL;
+	vec3 N = g_Normal;
+	float cosLo = max(0.0, dot(N, Lo));
+	vec3 Lr = 2.0 * cosLo * N - Lo;
+	vec3 F0 = mix(vec3(0.04), g_Albedo, g_Metalness);
 
-    return Result * (1.0f - Shadow);
+    vec3 Li = light_dir;
+	vec3 Lradiance = radiance;
+
+	vec3 Lh = normalize(Li + Lo);
+
+	float cosLi = max(0.0, dot(N, Li));
+	float cosLh = max(0.0, dot(N, Lh));
+
+	vec3 F  = fresnelSchlick(F0, max(0.0, dot(Lh, Lo)));
+	float D = ndfGGX(cosLh, g_Roughness);
+	float G = gaSchlickGGX(cosLi, cosLo, g_Roughness);
+
+	vec3 kd = mix(vec3(1.0) - F, vec3(0.0), g_Metalness);
+	vec3 diffuseBRDF = kd * g_Albedo;
+
+	vec3 specularBRDF = (F * D * G) / max(Epsilon, 4.0 * cosLi * cosLo);
+
+	vec3 Result = (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
+    return clamp(Result, 0.0f, 2.5) * clamp((1.0f - Shadow), 0.0f, 1.0f);
 }
 
 

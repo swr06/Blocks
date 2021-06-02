@@ -139,7 +139,8 @@ void main()
 		PreviousCoord.y > 0.0 && PreviousCoord.y < 1.0
 	);
 
-	BlendFactor *= exp(-length(velocity)) * 0.6f + 0.36f;
+	BlendFactor *= (exp(-length(velocity)) * 0.3f) + 0.825f;
+	BlendFactor = clamp(BlendFactor, 0.01f, 0.96f);
 
 	o_Color = mix(CurrentColor.xyz, PrevColor.xyz, BlendFactor);
 }

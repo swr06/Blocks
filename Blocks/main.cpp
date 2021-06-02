@@ -65,7 +65,7 @@ float ShadowBias = 0.001f;
 float VolumetricScattering = 0.6f;
 float RenderScale = 0.7f;
 float VolumetricRenderScale = 0.5f;
-float SSRRenderScale = 0.25f;
+float SSRRenderScale = 0.75f;
 float SSRefractionRenderScale = 0.2f;
 float WaterParallaxDepth = 8.0f;
 float WaterParallaxHeight = 0.2f;
@@ -170,7 +170,7 @@ public:
 			ImGui::Checkbox("SSAO? (Screen Space Ambient Occlusion?)", &SSAOPass);
 			ImGui::SliderFloat("SSAO Render Scale", &SSAORenderScale, 0.1f, 1.5f);
 			ImGui::SliderInt("SSAO Sample Count", &SSAOSampleCount, 8, 64);
-			ImGui::Checkbox("Freefly (Shouldn't do collisions) ?", &Player.Freefly);
+			//ImGui::Checkbox("Freefly (Shouldn't do collisions) ?", &Player.Freefly);
 			ImGui::SliderFloat("Volumetric Render Resolution", &VolumetricRenderScale, 0.1f, 1.1f);
 			ImGui::SliderInt("Volumetric Lighting Step count", &VolumetricSteps, 8, 200);
 			ImGui::SliderFloat("SSR Render Resolution", &SSRRenderScale, 0.1f, 1.0f);

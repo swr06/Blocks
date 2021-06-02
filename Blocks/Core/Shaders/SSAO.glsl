@@ -1,4 +1,5 @@
 #version 330 core
+#define PI 3.141592653589
 
 layout (location = 0) out float o_AOValue;
 
@@ -58,24 +59,29 @@ vec3 ViewPosFromDepth(float depth)
     return viewSpacePosition.xyz;
 }
 
-float CompareDepthsFar(float depth1, float depth2) 
+vec2 hammersley2d(uint idx, uint num) 
 {
-	float garea = 2.0; 
-	float diff = (depth1 - depth2) * 100.0; 
+	uint bits = idx;
+	bits = (bits << 16u) | (bits >> 16u);
+	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+	float radicalInverse_VdC = float(bits) * 2.3283064365386963e-10; // / 0x100000000
 
-	if (diff < 0.4f)
-	{
-		return 0.0f;
-	} 
-	
-	else 
-	{
-		return 1.0f;
-	}
+	return vec2(float(idx) / float(num), radicalInverse_VdC);
 }
 
-const float Radius = 0.69f; //nice
-const float Bias = 0.14f;
+vec3 hemispherepoint_uniform(float u, float v)
+{
+	float phi = v * 2 * PI;
+	float cosTheta = 1 - u;
+	float sinTheta = sqrt(1 - cosTheta * cosTheta);
+	return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+}
+
+const float Radius = 0.2f; //nice
+const float Bias = 0.01f;
 
 void main()
 {
@@ -102,8 +108,9 @@ void main()
 
 	for (int i = 0 ; i < clamp(SAMPLE_SIZE, 1, KernelSampleCount) ; i++)
 	{
-		vec3 KernelValue = texelFetch(u_SSAOKernel, ivec2(Convert1DTo2DIndex(i, KernelTextureSize)), 0).rgb;
-		vec3 OrientedKernel = TBN * KernelValue;
+		vec2 Hammersley = hammersley2d(i, SAMPLE_SIZE);
+		vec3 Hemisphere = hemispherepoint_uniform(Hammersley.x, Hammersley.y);
+		vec3 OrientedKernel = TBN * Hemisphere;
 
 		vec3 SamplePosition = Position + (OrientedKernel * Radius);
 		vec4 ProjectedPosition = u_ProjectionMatrix * vec4(SamplePosition, 1.0f);
@@ -117,8 +124,7 @@ void main()
 
 			float RangeCheck = smoothstep(0.0, 1.0, Radius / abs(Position.z - SampleDepth));
 
-			//o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck; 
-			o_AOValue += (CompareDepthsFar(SampleDepth, SamplePosition.z + Bias)) * RangeCheck;
+			o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck; 
 		}
 	}
 

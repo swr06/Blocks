@@ -471,9 +471,7 @@ void main()
         if (u_SSAOEnabled)
         {
             ssao = BilateralUpsample(u_SSAOTexture, v_TexCoords, SampledNormal, LinearizedDepth).r;
-            ssao = pow(ssao, 8.2f);
-
-            HDR.xyz *= 8.2;;
+            ssao = pow(ssao, 4.2f);
             HDR.xyz *= ssao;
         }
     }
