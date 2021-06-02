@@ -14,14 +14,9 @@ uniform sampler2D u_SSRMaskTexture;
 uniform mat4 u_ProjectionMatrix;
 uniform mat4 u_InverseProjectionMatrix;
 uniform mat4 u_ViewMatrix;
+uniform mat4 u_InverseViewMatrix;
 uniform float u_zNear;
 uniform float u_zFar;
-
-//Tweakable variables
-const float InitialStepAmount = 0.02f; 
-const float StepRefinementAmount = 0.5f; 
-const int MaxRefinements = 8;
-const int MaxDepth = 1;
 
 // Basic random function used to jitter the ray
 float rand(vec2 co)
@@ -56,70 +51,94 @@ vec3 ViewSpaceToClipSpace(in vec3 view_space)
 	return screenSpace;
 }
 
-vec2 ComputeReflection()
-{	
-	//Values from textures
-	vec2 ScreenSpacePosition2D = v_TexCoords;
-	vec3 ViewSpacePosition = ViewPosFromDepth(texture(u_DepthTexture, ScreenSpacePosition2D).r);
-	vec3 ViewSpaceNormal = vec3(u_ViewMatrix * vec4(texture(u_NormalTexture, ScreenSpacePosition2D).xyz, 0.0f));
+vec3 ViewSpaceToScreenSpace(vec3 ViewSpace) 
+{
+    vec4 ClipSpace = u_ProjectionMatrix * vec4(ViewSpace, 1.0);
+    ClipSpace.xyz = ClipSpace.xyz / ClipSpace.w;
+    return ClipSpace.xyz * 0.5f + 0.5f;
+}
 
-	//Screen space vector
-	vec3 ViewSpaceVector = normalize(reflect(normalize(ViewSpacePosition), normalize(ViewSpaceNormal)));
-	vec3 ScreenSpacePosition = ViewSpaceToClipSpace(ViewSpacePosition);
-	vec3 ViewSpaceVectorPosition = ViewSpacePosition + ViewSpaceVector;
-	vec3 ScreenSpaceVectorPosition = ViewSpaceToClipSpace(ViewSpaceVectorPosition);
-	vec3 ScreenSpaceVector = InitialStepAmount * normalize(ScreenSpaceVectorPosition - ScreenSpacePosition);
-	
-	vec3 OldPosition = ScreenSpacePosition + ScreenSpaceVector;
-	vec3 CurrentPosition = OldPosition + ScreenSpaceVector;
-	
-	//Current State
-	vec4 color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	vec2 final_uv = vec2(-1.0f);
-	int count = 0;
-	int NumRefinements = 0;
-	int depth = 0;
+vec3 convertScreenSpaceToWorldSpace(in vec2 txc)
+{
+    float d = texture(u_DepthTexture, txc).r;
+    return ViewPosFromDepth(d);
+}
 
-	// Ray trace until the ray intersects with the depth buffer
-	// After it intersects, do a binary refinement
-
-	for (int count = 0 ; count < 50 ; count++)
+bool WithinBounds(in vec3 p)
+{
+    if (p.x < 0 || p.x > 1 ||
+		p.y < 0 || p.y > 1 ||
+		p.z < 0 || p.z > 1)
 	{
-		if(CurrentPosition.x < 0 || CurrentPosition.x > 1 ||
-		   CurrentPosition.y < 0 || CurrentPosition.y > 1 ||
-		   CurrentPosition.z < 0 || CurrentPosition.z > 1)
+		return false;
+	}
+
+    return true;
+}
+
+const int MAX_REFINEMENTS = 5;
+
+vec2 ComputeRaytraceReflection()
+{
+    vec3 ViewSpaceNormal = vec3(u_ViewMatrix * vec4(texture(u_NormalTexture, v_TexCoords).xyz, 0.0f));
+    float InitialStepAmount = 1.0 - clamp(0.1f / 100.0, 0.0, 0.99);
+
+    vec3 ViewSpacePosition = ViewPosFromDepth(texture(u_DepthTexture, v_TexCoords).r);
+
+    vec3 ViewSpaceViewDirection = normalize(ViewSpacePosition);
+    vec3 ViewSpaceVector = InitialStepAmount * normalize(reflect(ViewSpaceViewDirection, ViewSpaceNormal));
+    vec3 ViewSpaceVectorFAR = u_zFar * normalize(reflect(ViewSpaceViewDirection, ViewSpaceNormal));
+	vec3 PreviousPosition = ViewSpacePosition;
+    vec3 ViewSpaceVectorPosition = PreviousPosition + ViewSpaceVector;
+    vec3 CurrentPosition = ViewSpaceToScreenSpace(ViewSpaceVectorPosition);
+
+	int NumRefinements = 0;
+	vec2 FinalUV = vec2(-1.0f);
+
+	float finalSampleDepth = 0.0;
+
+    for (int i = 0; i < 64; i++)
+    {
+        if(-ViewSpaceVectorPosition.z > u_zFar * 1.4f || -ViewSpaceVectorPosition.z < 0.0f)
+        {
+		    break;
+		}
+
+        vec2 SamplePos = CurrentPosition.xy;
+        float SampleDepth = convertScreenSpaceToWorldSpace(SamplePos).z;
+        float CurrentDepth = ViewSpaceVectorPosition.z;
+        float diff = SampleDepth - CurrentDepth;
+        float error = length(ViewSpaceVector / pow(2.0f, NumRefinements));
+
+        if(diff >= 0 && diff <= error * 2.0f && NumRefinements <= MAX_REFINEMENTS)
+        {
+        	ViewSpaceVectorPosition -= ViewSpaceVector / pow(2.0f, NumRefinements);
+        	NumRefinements++;
+		}
+
+		else if (diff >= 0 && diff <= error * 4.0f && NumRefinements > MAX_REFINEMENTS)
 		{
+			FinalUV = SamplePos;
+			finalSampleDepth = SampleDepth;
 			break;
 		}
 
-		//intersections
-		vec2 SamplePos = CurrentPosition.xy;
-		float CurrentDepth = linearizeDepth(CurrentPosition.z);
-		float SampleDepth = linearizeDepth(texture(u_DepthTexture, SamplePos).x);
-		float diff = CurrentDepth - SampleDepth;
-		float error = length(ViewSpaceVector / pow(2.0f, NumRefinements - 1.0f));
+        ViewSpaceVectorPosition += ViewSpaceVector / pow(2.0f, NumRefinements);
 
-		if(diff >= 0 && diff < error * 2.0f)
-		{
-			ScreenSpaceVector *= StepRefinementAmount;
-			CurrentPosition = OldPosition;
-			NumRefinements++;
+        if (i > 1)
+        {
+            ViewSpaceVector *= 1.375f;
+        }
 
-			if(NumRefinements >= MaxRefinements)
-			{
-				final_uv = SamplePos;
-				break;
-			}
-		}
+		CurrentPosition = ViewSpaceToScreenSpace(ViewSpaceVectorPosition);
 
-		//Step ray
-		OldPosition = CurrentPosition;
-		CurrentPosition = OldPosition + ScreenSpaceVector;
-	}
+		if (!WithinBounds(CurrentPosition)) 
+        {
+            break;
+        }
+    }
 
-	depth++;
-
-	return final_uv;
+    return FinalUV;
 }
 
 void main()
@@ -128,7 +147,7 @@ void main()
 
 	if (texture(u_SSRMaskTexture, v_TexCoords).r == 1.0f)
 	{
-		vec2 ReflectedUV = ComputeReflection();
-		o_Color = vec3(ReflectedUV, 0.0f);
+		vec2 ReflectedUV = ComputeRaytraceReflection();
+		o_Color = vec3(ReflectedUV, -1.0f);
 	}
 }

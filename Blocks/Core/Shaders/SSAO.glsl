@@ -80,8 +80,8 @@ vec3 hemispherepoint_uniform(float u, float v)
 	return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
-const float Radius = 0.2f; //nice
-const float Bias = 0.01f;
+const float Radius = 0.25f; 
+const float Bias = 0.2f;
 
 void main()
 {
@@ -120,11 +120,13 @@ void main()
 		if (ProjectedPosition.x > 0.0f && ProjectedPosition.y > 0.0f && ProjectedPosition.x < 1.0f && ProjectedPosition.y < 1.0f)
 		{
 			float NonLinearSampleDepth = texture(u_DepthTexture, ProjectedPosition.xy).r;
-			float SampleDepth = ViewPosFromDepth(NonLinearSampleDepth).z;
 
-			float RangeCheck = smoothstep(0.0, 1.0, Radius / abs(Position.z - SampleDepth));
+			{
+				float SampleDepth = ViewPosFromDepth(NonLinearSampleDepth).z;
+				float RangeFix = 1.0f - clamp(abs(Position.z - SampleDepth) * 0.6f, 0.0f, 1.0f);
 
-			o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0) * RangeCheck; 
+				o_AOValue += (SampleDepth >= SamplePosition.z + Bias ? 1.0 : 0.0)  * RangeFix; 
+			}
 		}
 	}
 

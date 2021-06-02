@@ -417,7 +417,7 @@ int main()
 
 	GLClasses::VertexArray FBOVAO;
 	GLClasses::VertexBuffer FBOVBO;
-	GLClasses::DepthBuffer ShadowMap(4096, 4096);
+	GLClasses::DepthBuffer ShadowMap(5120, 5120);
 	GLClasses::CubeReflectionMap ReflectionMap(256);
 
 	Blocks::BloomFBO BloomFBO(800, 600);
@@ -559,7 +559,7 @@ int main()
 
 		AppRenderingTime.Update = update_timer.End();
 
-		if (app.GetCurrentFrame() % 8 == 0 || BlockModified || SunDirectionChanged)
+		if (app.GetCurrentFrame() % 10 == 0 || BlockModified || SunDirectionChanged)
 		{
 			Blocks::Timer shadow_timer;
 			shadow_timer.Start();
@@ -612,10 +612,10 @@ int main()
 			SSRShader.SetMatrix4("u_ProjectionMatrix", Player.Camera.GetProjectionMatrix());
 			SSRShader.SetMatrix4("u_ViewMatrix", Player.Camera.GetViewMatrix());
 			SSRShader.SetMatrix4("u_InverseProjectionMatrix", glm::inverse(Player.Camera.GetProjectionMatrix()));
+			SSRShader.SetMatrix4("u_InverseViewMatrix", glm::inverse(Player.Camera.GetViewMatrix()));
 
-			// Setting these high as a hack to increase the SSR distance :p
-			SSRShader.SetFloat("u_zNear", 2.0f);
-			SSRShader.SetFloat("u_zFar", 5000.0f);
+			SSRShader.SetFloat("u_zNear", 0.1f);
+			SSRShader.SetFloat("u_zFar", 1000.0f);
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, PreviousFrameFBO.GetSSRNormalTexture());

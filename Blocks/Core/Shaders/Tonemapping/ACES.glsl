@@ -460,17 +460,10 @@ void main()
         ColorGrading(HDR.xyz);
         ColorSaturation(HDR.xyz);
 
-        float sharpness_ratio = 0.0f;
-
-        if (u_RenderScale < 1.0f)
-        {
-            sharpness_ratio = (1.0f - u_RenderScale) * 0.78f;
-            HDR = mix(HDR, sharpen(u_FramebufferTexture, v_TexCoords).rgb, sharpness_ratio).rgb;
-        }
-
         if (u_SSAOEnabled)
         {
-            ssao = BilateralUpsample(u_SSAOTexture, v_TexCoords, SampledNormal, LinearizedDepth).r;
+            //ssao = BilateralUpsample(u_SSAOTexture, v_TexCoords, SampledNormal, LinearizedDepth).r;
+            ssao = texture(u_SSAOTexture, v_TexCoords).r;
             ssao = pow(ssao, 4.2f);
             HDR.xyz *= ssao;
         }

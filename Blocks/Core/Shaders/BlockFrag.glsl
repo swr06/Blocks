@@ -390,13 +390,13 @@ void main()
     {
         vec2 ScreenSpaceCoordinates = gl_FragCoord.xy / u_Dimensions;
         vec2 SSR_UV = texture(u_SSRTexture, ScreenSpaceCoordinates).rg;
-        bool Valid = SSR_UV != vec2(-1.0f);
+        bool Valid = SSR_UV.x > 0.04f &&  SSR_UV.x < 0.96f && SSR_UV.y > 0.04f &&  SSR_UV.y < 0.96f;
 
         if (Valid)
         {
             vec3 SSR_Color = texture(u_PreviousFrameColorTexture, SSR_UV).rgb;
-            float ReflectionRatio = g_Metalness * 0.2f;
-            ReflectionRatio *= 1.0f - g_Roughness;
+            float ReflectionRatio = g_Metalness * 0.1f;
+            ReflectionRatio *= clamp(1.0f - g_Roughness, 0.0f, 1.0f);
             o_Color.rgb = mix(o_Color.rgb, SSR_Color, ReflectionRatio); 
         }
 
@@ -405,9 +405,9 @@ void main()
 		    vec3 R = normalize(reflect(ViewDirection, v_Normal + (0.1f * g_Normal)));
             vec3 Sky = texture(u_AtmosphereCubemap, R).rgb;
 
-            float ReflectionRatio = g_Metalness * 0.2f;
+            float ReflectionRatio = g_Metalness * 0.1f;
             ReflectionRatio *= 1.0f - g_Roughness;
-            o_Color.rgb = mix(o_Color.rgb, Sky, ReflectionRatio); 
+            o_Color.rgb = mix(o_Color.rgb, Sky * 1.4f, ReflectionRatio); 
         }
     }
 
