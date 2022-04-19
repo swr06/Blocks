@@ -1,5 +1,5 @@
 # The "Blocks" Voxel Engine
-A Voxel Engine that has emphasis on graphics and performance.
+A **VERY WIP** and **UNFINISHED** Voxel Engine that has emphasis on graphics and performance.
 
 # Planned Features
 - Greedy Meshing
@@ -33,10 +33,8 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Parallax Corrected Cubemaps
 - Temporal Anti Aliasing ✓
 - Screen Space Ambient Occlusion ✓
-- Diffuse Irradiance
 - Reflective Shadow Maps (For indirect single bounce lighting)
 - PCSS Shadows
-- Weather
 - World saving and loading ✓
 
 # Advanced Features (Planned for later) 
@@ -44,16 +42,9 @@ A Voxel Engine that has emphasis on graphics and performance.
 - Atmospheric effect (WIP) ✓
 - Loading worlds created in minecraft
 
-# Test Environment <br>
-CPU : Ryzen 3 2200G <br>
-GPU : Vega 8 iGPU <br>
-RAM : 8GB <br>
-Target FPS : 60 FPS <br>
-
 # Special Thanks (In no particular order)
 - Dekrain
 - UglySwedishFish (WorldTeller)
-- g h o s t
 - DCUB3 
 - ShadaxStack (fuzdex)
 - Kiroma
