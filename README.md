@@ -19,11 +19,6 @@ A **VERY WIP** and **UNFINISHED** Voxel Engine that has emphasis on graphics and
 - Bloom ✓ 
 - Voxel Lighting ✓
 - Water Caustics ✓
-- Voxel GI
-- Depth of Field
-- Motion Blur 
-- Auto exposure
-- Lens Flare
 - Atmospheric Scattering ✓
 - Day/Night cycle ✓
 - Parallax Occlusion Mapping ✓
@@ -39,15 +34,34 @@ A **VERY WIP** and **UNFINISHED** Voxel Engine that has emphasis on graphics and
 
 # Advanced Features (Planned for later) 
 - Volumetric Clouds
-- Atmospheric effect (WIP) ✓
-- Loading worlds created in minecraft
+- Atmosphere ✓
+- Minecraft world loading
 
-# Special Thanks (In no particular order)
-- Dekrain
-- UglySwedishFish (WorldTeller)
-- DCUB3 
-- ShadaxStack (fuzdex)
-- Kiroma
+# Screenshots
+
+</br>
+
+![s1](https://github.com/swr06/Blocks/tree/main/Screenshots/1.png)
+
+</br>
+
+</br>
+
+![s2](https://github.com/swr06/Blocks/tree/main/Screenshots/2.png)
+
+</br>
+
+</br>
+
+![s3](https://github.com/swr06/Blocks/tree/main/Screenshots/3.png)
+
+</br>
+
+</br>
+
+![s4](https://github.com/swr06/Blocks/tree/main/Screenshots/4.png)
+
+</br>
 
 # Note 
 This project is purely educational (To Learn more about Computer Graphics). I own none of the assets (Most of the assets were taken from CC0 and quixel megascans). </br>
