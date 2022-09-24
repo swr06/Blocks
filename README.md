@@ -41,25 +41,25 @@ A **VERY WIP** and **UNFINISHED** Voxel Engine that has emphasis on graphics and
 
 </br>
 
-![s1](https://github.com/swr06/Blocks/tree/main/Screenshots/1.png)
+![s1](https://github.com/swr06/Blocks/blob/main/Screenshots/1.png)
 
 </br>
 
 </br>
 
-![s2](https://github.com/swr06/Blocks/tree/main/Screenshots/2.png)
+![s2](https://github.com/swr06/Blocks/blob/main/Screenshots/2.png)
 
 </br>
 
 </br>
 
-![s3](https://github.com/swr06/Blocks/tree/main/Screenshots/3.png)
+![s3](https://github.com/swr06/Blocks/blob/main/Screenshots/3.png)
 
 </br>
 
 </br>
 
-![s4](https://github.com/swr06/Blocks/tree/main/Screenshots/4.png)
+![s4](https://github.com/swr06/Blocks/blob/main/Screenshots/4.png)
 
 </br>
 
